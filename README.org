@@ -82,9 +82,13 @@
 | =bufferline-show-trunc-markers=   | boolean | =t=                    | Display left/right overflow counts and arrows              |
 | =bufferline-left-trunc-marker=    | string  | =""=                  | Left overflow indicator glyph                              |
 | =bufferline-right-trunc-marker=   | string  | =""=                  | Right overflow indicator glyph                             |
-| =bufferline-show-duplicate-prefix=| boolean | =t=                    | Disambiguate identical basenames with parent directory     |
-| =bufferline-show-diagnostics=     | boolean | =nil=                  | Display Flymake diagnostic count badges                    |
-| =bufferline-exclude-modes=        | list    | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display          |
+| =bufferline-show-duplicate-prefix=| boolean  | =t=                    | Disambiguate identical basenames with parent directory     |
+| =bufferline-show-diagnostics=     | boolean  | =nil=                  | Display Flymake diagnostic count badges                    |
+| =bufferline-diagnostics-error-icon=   | string   | =""=                  | Icon for error diagnostics                                 |
+| =bufferline-diagnostics-warning-icon= | string   | =""=                  | Icon for warning diagnostics                               |
+| =bufferline-diagnostics-info-icon=    | string   | =""=                  | Icon for note/info diagnostics                             |
+| =bufferline-diagnostics-indicator=    | function | =nil=                  | Custom badge formatter function                            |
+| =bufferline-exclude-modes=        | list     | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display          |
 
 ** Interactive Commands
 

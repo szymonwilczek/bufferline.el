@@ -142,6 +142,28 @@ Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'director
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-diagnostics-error-icon ""
+  "Icon displayed for Flymake/LSP error diagnostics."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-diagnostics-warning-icon ""
+  "Icon displayed for Flymake/LSP warning diagnostics."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-diagnostics-info-icon ""
+  "Icon displayed for Flymake/LSP note/info diagnostics."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-diagnostics-indicator nil
+  "Custom function to format diagnostics badge: (count level diags-alist buffer).
+When nil, standard icon and count badge is rendered."
+  :type '(choice (const :tag "Default Icon Badge" nil)
+                 (function :tag "Custom Function"))
+  :group 'bufferline)
+
 (defcustom bufferline-left-trunc-marker bufferline-constants-left-trunc-marker
   "Glyph displayed on the left when buffers are truncated."
   :type 'string
