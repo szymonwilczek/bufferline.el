@@ -53,6 +53,16 @@ When nil, width is derived from `bufferline-separator-style`
   :type 'string
   :group 'bufferline)
 
+(defcustom bufferline-top-padding 0
+  "Top/bottom padding in pixels for the entire buffer line bar."
+  :type 'integer
+  :group 'bufferline)
+
+(defcustom bufferline-tab-padding-vertical 4
+  "Vertical padding in pixels for individual buffer tabs."
+  :type 'integer
+  :group 'bufferline)
+
 (defcustom bufferline-max-name-length 18
   "Maximum character length of buffer names before truncation with ellipsis."
   :type 'integer

@@ -10,7 +10,7 @@
 
 * Overview
 
-=bufferline.el= is an opinionated, minimalist buffer line for GNU Emacs built directly on top of the native =tab-line-mode= engine. It provides predictable FIFO tab indexing, dynamic theme color extraction, icon integration, and cyclic navigation.
+=bufferline.el= is an opinionated, minimalist buffer line for GNU Emacs built directly on top of the native =tab-line-mode= engine. It provides predictable FIFO tab indexing, dynamic theme color extraction, icon integration, buffer pinning, quick letter picking, and cyclic navigation.
 
 * Requirements
 
@@ -61,8 +61,12 @@
 
 | Variable                          | Type    | Default                | Description                                                |
 |-----------------------------------+---------+------------------------+------------------------------------------------------------|
-| =bufferline-separator-style=      | symbol  | ='vertical=            | Separator style: ='vertical=, ='thin=, ='thick=, ='slant=  |
-| =bufferline-indicator=            | string  | ="┃"=                  | Indicator glyph prepended to the active buffer tab         |
+| =bufferline-separator-style=      | symbol  | ='vertical=            | Separator style: ='vertical=, ='bar=, ='thin=, ='thick=... |
+| =bufferline-indicator-width=      | integer | =nil= (auto)           | Explicit pixel thickness for the indicator bar             |
+| =bufferline-indicator-face=       | face    | ='default=             | Face used for indicator foreground color                   |
+| =bufferline-left-margin=          | string  | =" "=                  | Margin string before the first tab on the left edge        |
+| =bufferline-top-padding=          | integer | =0=                    | Top/bottom padding in pixels for the entire tabline bar    |
+| =bufferline-tab-padding-vertical= | integer | =4=                    | Vertical padding in pixels for individual tab boxes        |
 | =bufferline-max-name-length=      | integer | =18=                   | Maximum buffer name length before truncation with =…=       |
 | =bufferline-show-buffer-icons=    | boolean | =t=                    | Display filetype icons via =nerd-icons=                    |
 | =bufferline-icon-size=            | float   | =0.85=                 | Height scaling factor for =nerd-icons=                     |

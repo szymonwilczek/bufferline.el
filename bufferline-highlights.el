@@ -10,6 +10,7 @@
 ;;; Code:
 
 (require 'bufferline-colors)
+(require 'bufferline-config)
 (require 'ef-themes nil t)
 
 (defvar bufferline-highlights--theme-version 0
@@ -30,12 +31,15 @@
            (bg-alt (or (ignore-errors (ef-themes-with-colors bg-alt))
                        (if dark-p
                            (bufferline-colors-darken bg 10)
-                         (bufferline-colors-lighten bg 10)))))
+                         (bufferline-colors-lighten bg 10))))
+           (bar-box (when (> (or bufferline-top-padding 0) 0)
+                      `(:line-width (0 . ,bufferline-top-padding) :color ,bg-alt)))
+           (v-pad (or bufferline-tab-padding-vertical 4)))
 
-      (set-face-attribute 'tab-line nil :background bg-alt :height 1.0 :box nil)
-      (set-face-attribute 'tab-line-tab nil :background bg-dim :box `(:line-width (-1 . 4) :color ,bg-dim))
-      (set-face-attribute 'tab-line-tab-inactive nil :background bg-dim :box `(:line-width (-1 . 4) :color ,bg-dim))
-      (set-face-attribute 'tab-line-tab-current nil :background bg :box `(:line-width (-1 . 4) :color ,bg))))
+      (set-face-attribute 'tab-line nil :background bg-alt :height 1.0 :box bar-box)
+      (set-face-attribute 'tab-line-tab nil :background bg-dim :box `(:line-width (-1 . ,v-pad) :color ,bg-dim))
+      (set-face-attribute 'tab-line-tab-inactive nil :background bg-dim :box `(:line-width (-1 . ,v-pad) :color ,bg-dim))
+      (set-face-attribute 'tab-line-tab-current nil :background bg :box `(:line-width (-1 . ,v-pad) :color ,bg))))
 
   (dolist (f (frame-list))
     (dolist (w (window-list f))
