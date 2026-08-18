@@ -59,36 +59,36 @@
 
 ** Options
 
-| Variable                     | Type    | Default                | Description                                              |
-|------------------------------+---------+------------------------+----------------------------------------------------------|
-| =bufferline-separator=       | string  | ="┃"=                  | Indicator glyph prepended to the active buffer tab       |
-| =bufferline-max-name-length= | integer | =18=                   | Maximum buffer name length before truncation with =…=     |
-| =bufferline-icon-size=       | float   | =0.85=                 | Height scaling factor for =nerd-icons=                   |
-| =bufferline-tab-fixed-width= | integer | =23=                   | Average character capacity estimation for auto-scrolling |
-| =bufferline-exclude-modes=   | list    | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display        |
+| Variable                          | Type    | Default                | Description                                                |
+|-----------------------------------+---------+------------------------+------------------------------------------------------------|
+| =bufferline-separator-style=      | symbol  | ='vertical=            | Separator style: ='vertical=, ='thin=, ='thick=, ='slant=  |
+| =bufferline-indicator=            | string  | ="┃"=                  | Indicator glyph prepended to the active buffer tab         |
+| =bufferline-max-name-length=      | integer | =18=                   | Maximum buffer name length before truncation with =…=       |
+| =bufferline-show-buffer-icons=    | boolean | =t=                    | Display filetype icons via =nerd-icons=                    |
+| =bufferline-icon-size=            | float   | =0.85=                 | Height scaling factor for =nerd-icons=                     |
+| =bufferline-show-modified=        | boolean | =t=                    | Display modified indicator icon                            |
+| =bufferline-modified-icon=        | string  | ="●"=                  | Icon displayed when buffer has unsaved changes             |
+| =bufferline-show-read-only=       | boolean | =t=                    | Display lock icon on read-only buffers                     |
+| =bufferline-read-only-icon=       | string  | =""=                  | Icon displayed when buffer is read-only                    |
+| =bufferline-show-pinned=          | boolean | =t=                    | Display pin icon on pinned buffers                         |
+| =bufferline-pinned-icon=          | string  | ="󰐃"=                  | Icon displayed on pinned tabs                              |
+| =bufferline-show-trunc-markers=   | boolean | =t=                    | Display left/right overflow counts and arrows              |
+| =bufferline-left-trunc-marker=    | string  | =""=                  | Left overflow indicator glyph                              |
+| =bufferline-right-trunc-marker=   | string  | =""=                  | Right overflow indicator glyph                             |
+| =bufferline-show-duplicate-prefix=| boolean | =t=                    | Disambiguate identical basenames with parent directory     |
+| =bufferline-show-diagnostics=     | boolean | =nil=                  | Display Flymake diagnostic count badges                    |
+| =bufferline-exclude-modes=        | list    | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display          |
 
-** Example Customization
+** Interactive Commands
 
-#+begin_src emacs-lisp
-  (use-package bufferline
-    :load-path "~/Dokumenty/GitHub/bufferline.el"
-    :custom
-    (bufferline-separator "┃")
-    (bufferline-max-name-length 20)
-    (bufferline-icon-size 0.85)
-    (bufferline-exclude-modes '(treemacs-mode which-key-mode dashboard-mode help-mode ghostel-mode))
-    :config
-    (global-bufferline-mode 1))
-#+end_src
+- =bufferline-next-tab=: Cycle forward to the next buffer in FIFO order.
+- =bufferline-prev-tab=: Cycle backward to the previous buffer in FIFO order.
+- =bufferline-close-tab=: Close the active buffer without altering window layout.
+- =bufferline-toggle-pin=: Pin or unpin the current buffer to the beginning of the line.
+- =bufferline-pick=: Jump to a visible buffer using single-letter tags.
+- =bufferline-pick-close=: Close a specific buffer using single-letter tags.
 
-* Keybindings
-
-=bufferline.el= provides interactive cyclic navigation commands:
-
-- =bufferline-next-tab=: Switches to the next user buffer in FIFO order.
-- =bufferline-prev-tab=: Switches to the previous user buffer in FIFO order.
-
-** Evil-mode mapping
+** Keybindings
 
 #+begin_src emacs-lisp
   (with-eval-after-load 'evil
@@ -97,6 +97,15 @@
     (define-key evil-normal-state-map (kbd "<backtab>") #'bufferline-prev-tab)
     (define-key evil-normal-state-map (kbd "S-TAB") #'bufferline-prev-tab)
     (define-key evil-normal-state-map (kbd "<S-tab>") #'bufferline-prev-tab))
+
+  (with-eval-after-load 'evil-keys
+    (when (fboundp 'my-leader-def)
+      (my-leader-def
+        "b"  '(:ignore t :which-key "Buffers")
+        "bp" '(bufferline-pick :which-key "Pick Buffer")
+        "bd" '(bufferline-pick-close :which-key "Pick Close Buffer")
+        "bc" '(bufferline-pick-close :which-key "Pick Close Buffer")
+        "bP" '(bufferline-toggle-pin :which-key "Toggle Pin Buffer"))))
 #+end_src
 
 * License
