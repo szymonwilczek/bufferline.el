@@ -10,11 +10,16 @@
 ;;; Code:
 
 (defun bufferline-sorters-by-fifo (buffers)
-  "Sort BUFFERS by their monotonic visit timestamp."
+  "Sort BUFFERS by pinned state first, then by their monotonic visit timestamp."
   (seq-sort
    (lambda (a b)
-     (< (or (buffer-local-value 'bufferline-state--tab-order-id a) 0)
-        (or (buffer-local-value 'bufferline-state--tab-order-id b) 0)))
+     (let ((pa (buffer-local-value 'bufferline-state--pinned a))
+           (pb (buffer-local-value 'bufferline-state--pinned b)))
+       (cond
+        ((and pa (not pb)) t)
+        ((and (not pa) pb) nil)
+        (t (< (or (buffer-local-value 'bufferline-state--tab-order-id a) 0)
+              (or (buffer-local-value 'bufferline-state--tab-order-id b) 0))))))
    buffers))
 
 (defun bufferline-sorters-by-extension (buffers)

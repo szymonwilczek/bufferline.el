@@ -81,10 +81,16 @@
                          (propertize (format " %s" bufferline-modified-icon) 'face `(:foreground ,mod-fg :background ,bg-color :weight bold)))
                      ""))
 
+         ;; pin indicator
+         (pin-icon (if (and bufferline-show-pinned (buffer-local-value 'bufferline-state--pinned buffer))
+                       (let ((pin-fg (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t) "#ef7f00")))
+                         (propertize (format "%s " bufferline-pinned-icon) 'face `(:foreground ,pin-fg :background ,bg-color :weight bold)))
+                     ""))
+
          (pad (propertize "  " 'face `(:background ,bg-color)))
          (mid-pad (propertize " " 'face `(:background ,bg-color)))
 
-         (tab-str (concat (if active sep empty-sep) pad icon mid-pad name ro-icon mod-icon pad))
+         (tab-str (concat (if active sep empty-sep) pad pin-icon icon mid-pad name ro-icon mod-icon pad))
 
          ;; truncation markers rendered on outer edges of first/last tab
          (is-first (eq buffer (car tabs)))

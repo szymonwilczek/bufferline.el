@@ -21,6 +21,9 @@
 (defconst bufferline-constants-folder-icon ""
   "Default folder icon.")
 
+(defconst bufferline-constants-pinned-icon " "
+  "Default pinned buffer glyph.")
+
 (defconst bufferline-constants-read-only-icon ""
   "Default read-only lock glyph.")
 

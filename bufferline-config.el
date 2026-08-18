@@ -73,6 +73,16 @@ Allowed values: 'vertical ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-pinned-icon bufferline-constants-pinned-icon
+  "Icon displayed on pinned buffer tabs."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-show-pinned t
+  "Whether to display the pinned icon on pinned tabs."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/LSP error count badges in tabs."
   :type 'boolean

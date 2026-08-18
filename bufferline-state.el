@@ -15,6 +15,19 @@
 (defvar-local bufferline-state--tab-order-id nil
   "Buffer-local FIFO order index.")
 
+(defvar-local bufferline-state--pinned nil
+  "Non-nil if current buffer is pinned to the front of bufferline.")
+
+(defun bufferline-state-pinned-p (buffer)
+  "Return non-nil if BUFFER is pinned."
+  (buffer-local-value 'bufferline-state--pinned buffer))
+
+(defun bufferline-state-toggle-pin (&optional buffer)
+  "Toggle pinned state of BUFFER (default current buffer)."
+  (let ((buf (or buffer (current-buffer))))
+    (with-current-buffer buf
+      (setq bufferline-state--pinned (not bufferline-state--pinned)))))
+
 (defun bufferline-state-register (buffer)
   "Assign an order index to BUFFER if not already set."
   (with-current-buffer buffer

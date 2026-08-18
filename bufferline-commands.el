@@ -40,5 +40,16 @@
     (bufferline-next-tab)
     (kill-buffer buf)))
 
+;;;###autoload
+(defun bufferline-toggle-pin (&optional buffer)
+  "Toggle pinned status of current or specified BUFFER."
+  (interactive)
+  (let ((buf (or buffer (current-buffer))))
+    (bufferline-state-toggle-pin buf)
+    (force-mode-line-update t)
+    (message "Buffer %s is now %s"
+             (buffer-name buf)
+             (if (bufferline-state-pinned-p buf) "pinned" "unpinned"))))
+
 (provide 'bufferline-commands)
 ;;; bufferline-commands.el ends here
