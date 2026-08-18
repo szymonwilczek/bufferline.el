@@ -33,9 +33,9 @@
                          (bufferline-colors-lighten bg 10)))))
 
       (set-face-attribute 'tab-line nil :background bg-alt :height 1.0 :box nil)
-      (set-face-attribute 'tab-line-tab nil :background bg-dim :box `(:line-width 6 :color ,bg-dim))
-      (set-face-attribute 'tab-line-tab-inactive nil :background bg-dim :box `(:line-width 6 :color ,bg-dim))
-      (set-face-attribute 'tab-line-tab-current nil :background bg :box `(:line-width 6 :color ,bg))))
+      (set-face-attribute 'tab-line-tab nil :background bg-dim :box `(:line-width (-1 . 5) :color ,bg-dim))
+      (set-face-attribute 'tab-line-tab-inactive nil :background bg-dim :box `(:line-width (-1 . 5) :color ,bg-dim))
+      (set-face-attribute 'tab-line-tab-current nil :background bg :box `(:line-width (-1 . 5) :color ,bg))))
 
   (dolist (f (frame-list))
     (dolist (w (window-list f))
