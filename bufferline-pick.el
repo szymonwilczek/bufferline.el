@@ -39,9 +39,38 @@
                         "  "))
     (let ((key (read-key)))
       (let ((chosen (cdr (assoc key items))))
-        (if chosen
+        (if (and chosen (buffer-live-p chosen))
             (switch-to-buffer chosen)
           (message "Pick cancelled"))))))
+
+;;;###autoload
+(defun bufferline-pick-close ()
+  "Interactively close a buffer by selecting its assigned letter."
+  (interactive)
+  (let* ((tabs (bufferline-buffers-get))
+         (alphabet (string-to-list bufferline-pick-alphabet))
+         (index 0)
+         (items nil))
+
+    (dolist (buf tabs)
+      (when (< index (length alphabet))
+        (let ((char (nth index alphabet)))
+          (push (cons char buf) items)
+          (setq index (1+ index)))))
+
+    (message "Close buffer: %s"
+             (mapconcat (lambda (pair)
+                          (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
+                        (nreverse items)
+                        "  "))
+    (let ((key (read-key)))
+      (let ((chosen (cdr (assoc key items))))
+        (if (and chosen (buffer-live-p chosen))
+            (let ((name (buffer-name chosen)))
+              (kill-buffer chosen)
+              (force-mode-line-update t)
+              (message "Closed buffer: %s" name))
+          (message "Pick close cancelled"))))))
 
 (provide 'bufferline-pick)
 ;;; bufferline-pick.el ends here
