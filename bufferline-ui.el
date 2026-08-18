@@ -69,6 +69,12 @@
                       `(:foreground ,fg-comment :weight normal :slant normal :background ,bg-color)))
          (name (propertize (concat num-prefix display-name diag-badge) 'face text-face))
 
+         ;; read-only indicator
+         (ro-icon (if (and bufferline-show-read-only (buffer-local-value 'buffer-read-only buffer))
+                      (let ((ro-fg (bufferline-colors-safe (face-foreground 'font-lock-doc-face nil t) "#888888")))
+                        (propertize (format " %s" bufferline-read-only-icon) 'face `(:foreground ,ro-fg :background ,bg-color)))
+                    ""))
+
          ;; modified indicator
          (mod-icon (if (and bufferline-show-modified (buffer-modified-p buffer))
                        (let ((mod-fg (bufferline-colors-safe (face-foreground 'font-lock-warning-face nil t) "#ff9e3b")))
@@ -78,7 +84,7 @@
          (pad (propertize "  " 'face `(:background ,bg-color)))
          (mid-pad (propertize " " 'face `(:background ,bg-color)))
 
-         (tab-str (concat (if active sep empty-sep) pad icon mid-pad name mod-icon pad))
+         (tab-str (concat (if active sep empty-sep) pad icon mid-pad name ro-icon mod-icon pad))
 
          ;; truncation markers rendered on outer edges of first/last tab
          (is-first (eq buffer (car tabs)))

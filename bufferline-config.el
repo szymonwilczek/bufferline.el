@@ -63,6 +63,16 @@ Allowed values: 'vertical ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-read-only-icon bufferline-constants-read-only-icon
+  "Icon displayed when buffer is read-only."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-show-read-only t
+  "Whether to display the read-only lock icon."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/LSP error count badges in tabs."
   :type 'boolean

@@ -21,6 +21,9 @@
 (defconst bufferline-constants-folder-icon ""
   "Default folder icon.")
 
+(defconst bufferline-constants-read-only-icon ""
+  "Default read-only lock glyph.")
+
 (defconst bufferline-constants-left-trunc-marker ""
   "Default left truncation marker glyph.")
 
