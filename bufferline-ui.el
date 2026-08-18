@@ -102,9 +102,15 @@
                          (propertize (format "%s " bufferline-pinned-icon) 'face `(:foreground ,pin-fg :background ,bg-color :weight bold)))
                      ""))
 
+         (post-pad-str (if (integerp bufferline-tab-padding-horizontal)
+                           (make-string (max 0 bufferline-tab-padding-horizontal) ?\s)
+                         (or bufferline-tab-padding-horizontal "  ")))
+         (mid-pad-str (if (integerp bufferline-icon-spacing)
+                          (make-string (max 0 bufferline-icon-spacing) ?\s)
+                        (or bufferline-icon-spacing " ")))
          (pre-pad (propertize " " 'face `(:background ,bg-color)))
-         (mid-pad (propertize " " 'face `(:background ,bg-color)))
-         (post-pad (propertize "  " 'face `(:background ,bg-color)))
+         (mid-pad (propertize mid-pad-str 'face `(:background ,bg-color)))
+         (post-pad (propertize post-pad-str 'face `(:background ,bg-color)))
 
          (tab-str (concat (if active sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon post-pad))
 

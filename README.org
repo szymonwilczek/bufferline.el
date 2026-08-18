@@ -66,8 +66,10 @@
 | =bufferline-indicator-face=       | face           | ='default=             | Face used for indicator foreground color                   |
 | =bufferline-left-margin=          | integer/string | =8= (pixels)           | Margin before first tab in pixels (e.g. 8) or string       |
 | =bufferline-top-padding=          | integer        | =0=                    | Top/bottom padding in pixels for the entire tabline bar    |
-| =bufferline-tab-padding-vertical= | integer        | =4=                    | Vertical padding in pixels for individual tab boxes        |
-| =bufferline-sort-by=              | symbol         | ='fifo=                | Buffer sorting strategy: ='fifo=, ='name=, ='extension=... |
+| =bufferline-tab-padding-vertical=   | integer        | =4=                    | Vertical padding in pixels for individual tab boxes        |
+| =bufferline-tab-padding-horizontal= | integer/string | =2= (spaces)           | Horizontal end padding for tab boxes (spaces or string)    |
+| =bufferline-icon-spacing=           | integer/string | =1= (space)            | Spacing between file icon and buffer name                  |
+| =bufferline-sort-by=                | symbol         | ='fifo=                | Buffer sorting strategy: ='fifo=, ='name=, ='extension=... |
 | =bufferline-max-name-length=      | integer        | =18=                   | Maximum buffer name length before truncation with =…=       |
 | =bufferline-show-buffer-icons=    | boolean | =t=                    | Display filetype icons via =nerd-icons=                    |
 | =bufferline-icon-size=            | float   | =0.85=                 | Height scaling factor for =nerd-icons=                     |

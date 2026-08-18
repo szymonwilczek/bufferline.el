@@ -66,6 +66,18 @@ Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"), or nil for n
   :type 'integer
   :group 'bufferline)
 
+(defcustom bufferline-tab-padding-horizontal 2
+  "Horizontal padding (number of spaces or custom string) at the end of each tab."
+  :type '(choice (integer :tag "Spaces" 2)
+                 (string :tag "String" "  "))
+  :group 'bufferline)
+
+(defcustom bufferline-icon-spacing 1
+  "Spacing (number of spaces or custom string) between file icon and buffer name."
+  :type '(choice (integer :tag "Spaces" 1)
+                 (string :tag "String" " "))
+  :group 'bufferline)
+
 (defcustom bufferline-sort-by 'fifo
   "Strategy used to sort tabs on the buffer line.
 Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'directory."

@@ -43,10 +43,15 @@
   (let* ((name (if bufferline-show-duplicate-prefix
                    (bufferline-duplicates-format-name buffer live-tabs)
                  (buffer-name buffer)))
-         (len (min (length name) bufferline-max-name-length)))
-
-    ;; 1 char indicator + 2 pad + 2 icon + 1 mid-pad + name + 2 pad + 1 sep
-    (+ len 9)))
+         (len (min (length name) bufferline-max-name-length))
+         (post-len (if (integerp bufferline-tab-padding-horizontal)
+                       bufferline-tab-padding-horizontal
+                     (length (or bufferline-tab-padding-horizontal "  "))))
+         (mid-len (if (integerp bufferline-icon-spacing)
+                      bufferline-icon-spacing
+                    (length (or bufferline-icon-spacing " ")))))
+    ;; 1 indicator + 1 pre-pad + 2 icon + mid-len + name + post-len
+    (+ len 4 mid-len post-len)))
 
 (defun bufferline-buffers-get ()
   "Calculate visible slice of buffers fitting within current window width,
