@@ -4,7 +4,11 @@
 #+OPTIONS: toc:nil num:nil
 
 #+HTML: <div align="center">
-#+HTML:   <img src="assets/screenshot.png" alt="bufferline.el preview" width="850"/>
+#+HTML:   <img src="assets/demo.gif" alt="bufferline.el preview" width="1920"/>
+#+HTML:   <br/><br/>
+#+HTML:   <a href="https://szymonwilczek.github.io/bufferline.el/"><b>[ Live Configurator ]</b></a>
+#+HTML:   &nbsp;&bull;&nbsp;
+#+HTML:   <a href="https://szymonwilczek.github.io/bufferline.el/docs.html"><b>[ Documentation &amp; Reference ]</b></a>
 #+HTML:   <br/><br/>
 #+HTML: </div>
 
@@ -28,15 +32,6 @@
     (global-bufferline-mode 1))
 #+end_src
 
-** Local path
-
-#+begin_src emacs-lisp
-  (use-package bufferline
-    :load-path "~/your/path/bufferline.el"
-    :config
-    (global-bufferline-mode 1))
-#+end_src
-
 ** Elpaca
 
 #+begin_src emacs-lisp
@@ -55,73 +50,24 @@
     (global-bufferline-mode 1))
 #+end_src
 
-* Configuration
-
-** Options
-
-| Variable                          | Type    | Default                | Description                                                |
-|-----------------------------------+---------+------------------------+------------------------------------------------------------|
-| =bufferline-separator-style=      | symbol  | ='vertical=            | Separator style: ='vertical=, ='bar=, ='thin=, ='thick=... |
-| =bufferline-indicator-width=      | integer | =nil= (auto)           | Explicit pixel thickness for the indicator bar             |
-| =bufferline-indicator-face=       | face           | ='default=             | Face used for indicator foreground color                   |
-| =bufferline-left-margin=          | integer/string | =8= (pixels)           | Margin before first tab in pixels (e.g. 8) or string       |
-| =bufferline-top-padding=          | integer        | =0=                    | Top/bottom padding in pixels for the entire tabline bar    |
-| =bufferline-tab-padding-vertical=   | integer        | =4=                    | Vertical padding in pixels for individual tab boxes        |
-| =bufferline-tab-padding-horizontal= | integer/string | =2= (spaces)           | Horizontal end padding for tab boxes (spaces or string)    |
-| =bufferline-icon-spacing=           | integer/string | =1= (space)            | Spacing between file icon and buffer name                  |
-| =bufferline-sort-by=                | symbol         | ='fifo=                | Buffer sorting strategy: ='fifo=, ='name=, ='extension=... |
-| =bufferline-max-name-length=      | integer        | =18=                   | Maximum buffer name length before truncation with =…=       |
-| =bufferline-show-buffer-icons=    | boolean | =t=                    | Display filetype icons via =nerd-icons=                    |
-| =bufferline-icon-size=            | float   | =0.85=                 | Height scaling factor for =nerd-icons=                     |
-| =bufferline-show-modified=        | boolean | =t=                    | Display modified indicator icon                            |
-| =bufferline-modified-icon=        | string  | ="●"=                  | Icon displayed when buffer has unsaved changes             |
-| =bufferline-show-read-only=       | boolean | =t=                    | Display lock icon on read-only buffers                     |
-| =bufferline-read-only-icon=       | string  | =""=                  | Icon displayed when buffer is read-only                    |
-| =bufferline-show-pinned=          | boolean | =t=                    | Display pin icon on pinned buffers                         |
-| =bufferline-pinned-icon=          | string  | ="󰐃"=                  | Icon displayed on pinned tabs                              |
-| =bufferline-show-trunc-markers=   | boolean | =t=                    | Display left/right overflow counts and arrows              |
-| =bufferline-left-trunc-marker=    | string  | =""=                  | Left overflow indicator glyph                              |
-| =bufferline-right-trunc-marker=   | string  | =""=                  | Right overflow indicator glyph                             |
-| =bufferline-show-duplicate-prefix=| boolean  | =t=                    | Disambiguate identical basenames with parent directory     |
-| =bufferline-duplicate-prefix-depth=| integer | =1=                    | Parent directory level depth for duplicate basenames       |
-| =bufferline-show-diagnostics=     | boolean  | =nil=                  | Display Flymake diagnostic count badges                    |
-| =bufferline-diagnostics-error-icon=   | string   | =""=                  | Icon for error diagnostics                                 |
-| =bufferline-diagnostics-warning-icon= | string   | =""=                  | Icon for warning diagnostics                               |
-| =bufferline-diagnostics-info-icon=    | string   | =""=                  | Icon for note/info diagnostics                             |
-| =bufferline-diagnostics-indicator=    | function | =nil=                  | Custom badge formatter function                            |
-| =bufferline-numbers=                  | symbol/fn| =nil=                  | Display buffer numbers: ='ordinal=, ='buffer-id=, ='both=  |
-| =bufferline-numbers-formatter=        | string/fn| ="%d. "=               | Format template string or custom formatter function        |
-| =bufferline-exclude-modes=        | list     | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display          |
-
-** Interactive Commands
-
-- =bufferline-next-tab=: Cycle forward to the next buffer in FIFO order.
-- =bufferline-prev-tab=: Cycle backward to the previous buffer in FIFO order.
-- =bufferline-close-tab=: Close the active buffer without altering window layout.
-- =bufferline-toggle-pin=: Pin or unpin the current buffer to the beginning of the line.
-- =bufferline-pick=: Jump to a visible buffer using single-letter tags.
-- =bufferline-pick-close=: Close a specific buffer using single-letter tags.
-
-** Keybindings
+** Local path
 
 #+begin_src emacs-lisp
-  (with-eval-after-load 'evil
-    (define-key evil-normal-state-map (kbd "TAB") #'bufferline-next-tab)
-    (define-key evil-normal-state-map (kbd "<tab>") #'bufferline-next-tab)
-    (define-key evil-normal-state-map (kbd "<backtab>") #'bufferline-prev-tab)
-    (define-key evil-normal-state-map (kbd "S-TAB") #'bufferline-prev-tab)
-    (define-key evil-normal-state-map (kbd "<S-tab>") #'bufferline-prev-tab))
-
-  (with-eval-after-load 'evil-keys
-    (when (fboundp 'my-leader-def)
-      (my-leader-def
-        "b"  '(:ignore t :which-key "Buffers")
-        "bp" '(bufferline-pick :which-key "Pick Buffer")
-        "bd" '(bufferline-pick-close :which-key "Pick Close Buffer")
-        "bc" '(bufferline-pick-close :which-key "Pick Close Buffer")
-        "bP" '(bufferline-toggle-pin :which-key "Toggle Pin Buffer"))))
+  (use-package bufferline
+    :load-path "~/path/to/bufferline.el"
+    :config
+    (global-bufferline-mode 1))
 #+end_src
+
+* Documentation & Configurator
+
+- [[https://szymonwilczek.github.io/bufferline.el/][Live Configurator]] - Interactive configuration generator with instant preview.
+- [[https://szymonwilczek.github.io/bufferline.el/docs.html][Documentation & Reference]] - Complete variable table, types, defaults, interactive commands, and keybinding setups.
+
+* Credits
+
+- [[https://github.com/akinsho/bufferline.nvim][bufferline.nvim]] by akinsho for visual layout inspiration and indicator design concepts.
 
 * License
 
-This package is licensed under the [[file:LICENSE][GNU General Public License v3.0]].
+Licensed under the [[file:LICENSE][GNU General Public License v3.0]].

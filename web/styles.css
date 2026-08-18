@@ -114,7 +114,7 @@
 }
 
 html, body, button, input, select, textarea, pre, code, kbd, samp {
-  font-family: var(--font-mono);
+    font-family: var(--font-mono);
 }
 
 html, body {
@@ -646,6 +646,118 @@ html, body {
     overflow-x: auto;
     font-size: 0.88rem;
     line-height: 1.55;
+    color: #c5c8c6;
+    margin: 0;
+    font-family: var(--font-mono);
+}
+
+.docs-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--page-border);
+    background-color: #0d0e11;
+}
+
+.docs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.docs-table th,
+.docs-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--page-border);
+    border-right: 1px solid var(--page-border);
+}
+
+.docs-table th:last-child,
+.docs-table td:last-child {
+    border-right: none;
+    white-space: normal;
+}
+
+.docs-table tr:last-child td {
+    border-bottom: none;
+}
+
+.docs-table th {
+    background-color: #121417;
+    color: #81a2be;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px dashed var(--dashed-border);
+}
+
+.docs-table td code {
+    color: #b5bd68;
+    background-color: #1a1c21;
+    padding: 1px 5px;
+    font-size: 0.82rem;
+}
+
+.docs-table td.type-col {
+    color: #de935f;
+}
+
+.docs-table td.default-col {
+    color: #b294bb;
+}
+
+.docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 18px;
+    width: 100%;
+}
+
+.doc-card {
+    border: 1px solid var(--page-border);
+    background-color: transparent;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.doc-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #81a2be;
+    margin: 0;
+}
+
+.doc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--page-fg);
+}
+
+.doc-list li code {
+    color: #b5bd68;
+    background-color: #121417;
+    padding: 2px 6px;
+    border: 1px solid var(--page-border);
+    font-weight: 600;
+}
+
+.doc-code {
+    background-color: #060708;
+    border: 1px solid var(--page-border);
+    padding: 12px;
+    margin: 0;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.5;
     color: #c5c8c6;
 }
 

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bufferline.el - Documentation &amp; Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+
+    <header class="header">
+      <div class="header-inner">
+        <div class="title-block">
+          <h1 class="site-title">bufferline.el</h1>
+          <span class="site-tag">Documentation &amp; Reference Manual</span>
+        </div>
+        <div class="header-links">
+          <a href="index.html" class="raw-link">[ Configurator ]</a>
+          <a href="https://github.com/szymonwilczek/bufferline.el" target="_blank" rel="noopener noreferrer" class="raw-link">[ GitHub ]</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">INSTALLATION</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Native package-vc</h3>
+            <pre class="doc-code"><code>(use-package bufferline
+                :vc (:url "https://github.com/szymonwilczek/bufferline.el")
+                :config
+                (global-bufferline-mode 1))</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Elpaca</h3>
+            <pre class="doc-code"><code>(use-package bufferline
+                :ensure (:host github :repo "szymonwilczek/bufferline.el")
+                :config
+                (global-bufferline-mode 1))</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Straight.el</h3>
+            <pre class="doc-code"><code>(use-package bufferline
+                :straight (:host github :repo "szymonwilczek/bufferline.el")
+                :config
+                (global-bufferline-mode 1))</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Manual load-path</h3>
+            <pre class="doc-code"><code>(use-package bufferline
+                :load-path "~/path/to/bufferline.el"
+                :config
+                (global-bufferline-mode 1))</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">CONFIGURATION VARIABLES</span>
+        </div>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Type</th>
+                <th>Default</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>bufferline-separator-style</code></td>
+                <td class="type-col">symbol</td>
+                <td class="default-col">'vertical</td>
+                <td>Tab indicator style: 'vertical, 'bar, 'thick_bar, 'thin, 'thick, 'slant, 'slope, 'padded_slant, 'none.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-indicator-width</code></td>
+                <td class="type-col">integer / nil</td>
+                <td class="default-col">nil</td>
+                <td>Explicit pixel thickness for vertical indicator bars. nil uses default preset width.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-indicator-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'default</td>
+                <td>Face used for indicator foreground color.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-left-margin</code></td>
+                <td class="type-col">integer / string</td>
+                <td class="default-col">8</td>
+                <td>Margin before first tab. Integer sets pixel width, string sets literal text.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-top-padding</code></td>
+                <td class="type-col">integer</td>
+                <td class="default-col">0</td>
+                <td>Top and bottom pixel padding for the entire tabline bar.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-tab-padding-vertical</code></td>
+                <td class="type-col">integer</td>
+                <td class="default-col">4</td>
+                <td>Vertical pixel padding for individual tabs.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-tab-padding-horizontal</code></td>
+                <td class="type-col">integer / string</td>
+                <td class="default-col">2</td>
+                <td>Horizontal trailing padding for individual tabs (space count or string).</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-icon-spacing</code></td>
+                <td class="type-col">integer / string</td>
+                <td class="default-col">1</td>
+                <td>Spacing between file icon and buffer name.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-sort-by</code></td>
+                <td class="type-col">symbol</td>
+                <td class="default-col">'fifo</td>
+                <td>Buffer sorting strategy: 'fifo (visit history), 'name (alphabetical), 'extension, 'directory.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-max-name-length</code></td>
+                <td class="type-col">integer</td>
+                <td class="default-col">18</td>
+                <td>Maximum buffer name length before truncating with ellipsis.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-buffer-icons</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Render filetype icons using nerd-icons.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-icon-size</code></td>
+                <td class="type-col">float</td>
+                <td class="default-col">0.85</td>
+                <td>Height scale factor for nerd-icons.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-modified</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Display unsaved modification glyph.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-modified-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">"●"</td>
+                <td>Glyph shown when buffer has unsaved changes.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-read-only</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Display lock glyph on read-only buffers.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-read-only-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Glyph shown on read-only buffers.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-pinned</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Display pin glyph on pinned buffers.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-pinned-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Glyph shown on pinned tabs.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-trunc-markers</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Display overflow count badges and arrow markers when tabs exceed window width.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-left-trunc-marker</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Left overflow indicator glyph.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-right-trunc-marker</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Right overflow indicator glyph.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-duplicate-prefix</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>Prepend parent directory to disambiguate identical file names.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-duplicate-prefix-depth</code></td>
+                <td class="type-col">integer</td>
+                <td class="default-col">1</td>
+                <td>Directory depth levels to show for duplicate basenames.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-show-diagnostics</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">nil</td>
+                <td>Display Flymake diagnostic count badges.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-error-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Icon prefix for error diagnostics.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-warning-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Icon prefix for warning diagnostics.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-info-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">""</td>
+                <td>Icon prefix for info diagnostics.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-indicator</code></td>
+                <td class="type-col">function / nil</td>
+                <td class="default-col">nil</td>
+                <td>Custom badge formatter function (lambda (buffer)).</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-numbers</code></td>
+                <td class="type-col">symbol / function</td>
+                <td class="default-col">nil</td>
+                <td>Buffer numbering mode: 'ordinal, 'buffer-id, 'both, or custom function.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-numbers-formatter</code></td>
+                <td class="type-col">string / function</td>
+                <td class="default-col">"%d. "</td>
+                <td>Template string or custom formatter function (lambda (index buffer)).</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-exclude-modes</code></td>
+                <td class="type-col">list</td>
+                <td class="default-col">'(treemacs-mode ...)</td>
+                <td>Major modes where bufferline tab display is disabled.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">INTERACTIVE COMMANDS</span>
+        </div>
+
+        <div class="doc-card">
+          <ul class="doc-list">
+            <li><code>bufferline-next-tab</code>: Switch cyclically to the next tab in active sort order.</li>
+            <li><code>bufferline-prev-tab</code>: Switch cyclically to the previous tab in active sort order.</li>
+            <li><code>bufferline-close-tab</code>: Close current or specified buffer without altering window split layout.</li>
+            <li><code>bufferline-toggle-pin</code>: Toggle pinned state of current or specified buffer.</li>
+            <li><code>bufferline-pick</code>: Interactively jump to a visible buffer using single-letter tags.</li>
+            <li><code>bufferline-pick-close</code>: Interactively close a visible buffer using single-letter tags.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">KEYBINDINGS INTEGRATION</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Evil Mode Tab Navigation</h3>
+            <pre class="doc-code"><code>(with-eval-after-load 'evil
+                (define-key evil-normal-state-map (kbd "TAB") #'bufferline-next-tab)
+                (define-key evil-normal-state-map (kbd "&lt;tab&gt;") #'bufferline-next-tab)
+                (define-key evil-normal-state-map (kbd "&lt;backtab&gt;") #'bufferline-prev-tab)
+                (define-key evil-normal-state-map (kbd "S-TAB") #'bufferline-prev-tab)
+                (define-key evil-normal-state-map (kbd "&lt;S-tab&gt;") #'bufferline-prev-tab))</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Leader Key Bindings (General / Evil)</h3>
+            <pre class="doc-code"><code>(with-eval-after-load 'general
+                (general-def :states 'normal :prefix "SPC"
+                "b p" '(bufferline-pick :which-key "Pick Buffer")
+                "b d" '(bufferline-pick-close :which-key "Pick Close Buffer")
+                "b P" '(bufferline-toggle-pin :which-key "Toggle Pin Buffer")))</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">CREDITS</span>
+        </div>
+
+        <div class="doc-card">
+          <ul class="doc-list">
+            <li><a href="https://github.com/akinsho/bufferline.nvim" target="_blank" rel="noopener noreferrer" class="raw-link">bufferline.nvim</a> by akinsho &dash; visual layout inspiration and indicator design concepts.</li>
+          </ul>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <p>bufferline.el (C) 2026 Szymon Wilczek. Licensed under GNU General Public License v3.0.</p>
+    </footer>
+
+  </body>
+</html>

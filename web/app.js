@@ -762,60 +762,44 @@ Version 3, 29 June 2007`
     }
 
     function generateElispCode() {
-        const lines = [];
+        const customLines = [];
+        if (state.separatorStyle !== 'vertical') customLines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
+        if (state.indicatorWidth !== 3) customLines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
+        if (state.leftMargin !== 8) customLines.push(`  (bufferline-left-margin ${state.leftMargin})`);
+        if (state.topPadding !== 0) customLines.push(`  (bufferline-top-padding ${state.topPadding})`);
+        if (state.tabPaddingVertical !== 4) customLines.push(`  (bufferline-tab-padding-vertical ${state.tabPaddingVertical})`);
+        if (state.tabPaddingHorizontal !== 2) customLines.push(`  (bufferline-tab-padding-horizontal ${state.tabPaddingHorizontal})`);
+        if (state.iconSpacing !== 1) customLines.push(`  (bufferline-icon-spacing ${state.iconSpacing})`);
+        if (state.sortBy !== 'fifo') customLines.push(`  (bufferline-sort-by '${state.sortBy})`);
+        if (state.numbersMode !== 'none') customLines.push(`  (bufferline-numbers '${state.numbersMode})`);
+        if (state.duplicateDepth !== 1) customLines.push(`  (bufferline-duplicate-prefix-depth ${state.duplicateDepth})`);
+        if (!state.showIcons) customLines.push('  (bufferline-show-buffer-icons nil)');
+        if (!state.showModified) customLines.push('  (bufferline-show-modified nil)');
+        if (!state.showReadOnly) customLines.push('  (bufferline-show-read-only nil)');
+        if (!state.showPinned) customLines.push('  (bufferline-show-pinned nil)');
+        if (!state.showDuplicates) customLines.push('  (bufferline-show-duplicate-prefix nil)');
+        if (state.showDiagnostics) customLines.push('  (bufferline-show-diagnostics t)');
+        if (!state.showTruncMarkers) customLines.push('  (bufferline-show-trunc-markers nil)');
 
+        const lines = [];
+        lines.push('(use-package bufferline');
         if (state.activePkgManager === 'use-package') {
-            lines.push('(use-package bufferline');
             lines.push('  :ensure t');
-            lines.push('  :custom');
-            if (state.separatorStyle !== 'vertical') lines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
-            if (state.indicatorWidth !== 3) lines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
-            if (state.leftMargin !== 8) lines.push(`  (bufferline-left-margin ${state.leftMargin})`);
-            if (state.topPadding !== 0) lines.push(`  (bufferline-top-padding ${state.topPadding})`);
-            if (state.tabPaddingVertical !== 4) lines.push(`  (bufferline-tab-padding-vertical ${state.tabPaddingVertical})`);
-            if (state.tabPaddingHorizontal !== 2) lines.push(`  (bufferline-tab-padding-horizontal ${state.tabPaddingHorizontal})`);
-            if (state.iconSpacing !== 1) lines.push(`  (bufferline-icon-spacing ${state.iconSpacing})`);
-            if (state.sortBy !== 'fifo') lines.push(`  (bufferline-sort-by '${state.sortBy})`);
-            if (state.numbersMode !== 'none') lines.push(`  (bufferline-numbers '${state.numbersMode})`);
-            if (state.duplicateDepth !== 1) lines.push(`  (bufferline-duplicate-prefix-depth ${state.duplicateDepth})`);
-            if (!state.showIcons) lines.push('  (bufferline-show-buffer-icons nil)');
-            if (!state.showModified) lines.push('  (bufferline-show-modified nil)');
-            if (!state.showReadOnly) lines.push('  (bufferline-show-read-only nil)');
-            if (!state.showPinned) lines.push('  (bufferline-show-pinned nil)');
-            if (!state.showDuplicates) lines.push('  (bufferline-show-duplicate-prefix nil)');
-            if (state.showDiagnostics) lines.push('  (bufferline-show-diagnostics t)');
-            if (!state.showTruncMarkers) lines.push('  (bufferline-show-trunc-markers nil)');
-            lines.push('  :config');
-            lines.push('  (global-bufferline-mode 1))');
         } else if (state.activePkgManager === 'package-vc') {
-            lines.push('(use-package bufferline');
             lines.push('  :vc (:url "https://github.com/szymonwilczek/bufferline.el")');
-            lines.push('  :custom');
-            if (state.separatorStyle !== 'vertical') lines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
-            if (state.indicatorWidth !== 3) lines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
-            if (state.leftMargin !== 8) lines.push(`  (bufferline-left-margin ${state.leftMargin})`);
-            if (state.topPadding !== 0) lines.push(`  (bufferline-top-padding ${state.topPadding})`);
-            if (state.sortBy !== 'fifo') lines.push(`  (bufferline-sort-by '${state.sortBy})`);
-            lines.push('  :config');
-            lines.push('  (global-bufferline-mode 1))');
         } else if (state.activePkgManager === 'elpaca') {
-            lines.push('(use-package bufferline');
             lines.push('  :ensure (:host github :repo "szymonwilczek/bufferline.el")');
-            lines.push('  :custom');
-            if (state.separatorStyle !== 'vertical') lines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
-            if (state.indicatorWidth !== 3) lines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
-            if (state.leftMargin !== 8) lines.push(`  (bufferline-left-margin ${state.leftMargin})`);
-            lines.push('  :config');
-            lines.push('  (global-bufferline-mode 1))');
         } else if (state.activePkgManager === 'straight') {
-            lines.push('(use-package bufferline');
             lines.push('  :straight (:host github :repo "szymonwilczek/bufferline.el")');
-            lines.push('  :custom');
-            if (state.separatorStyle !== 'vertical') lines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
-            if (state.indicatorWidth !== 3) lines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
-            lines.push('  :config');
-            lines.push('  (global-bufferline-mode 1))');
         }
+
+        if (customLines.length > 0) {
+            lines.push('  :custom');
+            lines.push(...customLines);
+        }
+
+        lines.push('  :config');
+        lines.push('  (global-bufferline-mode 1))');
 
         DOM.codeSnippetOutput.textContent = lines.join('\n');
     }
