@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>bufferline.el</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+
+    <header class="header">
+      <div class="header-inner">
+        <div class="title-block">
+          <h1 class="site-title">bufferline.el</h1>
+          <span class="site-tag">GNU Emacs Tab-Line Buffer Manager</span>
+        </div>
+        <div class="header-links">
+          <a href="https://github.com/szymonwilczek/bufferline.el" target="_blank" rel="noopener noreferrer" class="raw-link">GitHub Repository</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title"></span>
+          <span class="section-hint">TAB / S-TAB to cycle buffers &bull; Click to select</span>
+        </div>
+
+        <div class="emacs-window" id="emacsFrame" tabindex="0">
+          <div class="emacs-titlebar">
+            <span class="titlebar-text" id="frameTitle">emacs@localhost: ~/Dokumenty/GitHub/bufferline.el/bufferline.el</span>
+          </div>
+
+          <div class="bufferline-container" id="bufferlineContainer">
+            <div class="bufferline-bar" id="bufferlineBar">
+            </div>
+          </div>
+
+          <div class="emacs-body">
+            <div class="gutter" id="editorGutter"></div>
+            <div class="buffer-text" id="editorContent"></div>
+          </div>
+
+          <div class="emacs-modeline" id="emacsModeline">
+            <div class="modeline-lhs">
+              <span class="ml-tag evil-tag">NORMAL</span>
+              <span class="ml-item ml-buf" id="modelineFilename">bufferline.el</span>
+            </div>
+            <div class="modeline-rhs">
+              <span class="ml-item" id="modelineLocation">1:1</span>
+              <span class="ml-item" id="modelineMode">emacs-lisp</span>
+              <span class="ml-item ml-diag" id="modelineDiags">[0 0]</span>
+              <span class="ml-item" id="modelineSize">utf-8 4.2KiB</span>
+              <span class="ml-item ml-git">[main]</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">Configuration Settings</span>
+        </div>
+
+        <div class="config-grid">
+          
+          <fieldset class="config-group">
+            <legend>Indicator &amp; Geometry</legend>
+
+            <div class="field-row">
+              <label for="separatorStyle">separator-style</label>
+              <select id="separatorStyle" class="raw-select">
+                <option value="vertical" selected>'vertical (solid bar)</option>
+                <option value="bar">'bar (thin line │)</option>
+                <option value="thick_bar">'thick_bar (heavy line ┃)</option>
+                <option value="thin">'thin (thin block ▏)</option>
+                <option value="thick">'thick (thick block ▌)</option>
+                <option value="slant">'slant ()</option>
+                <option value="slope">'slope ()</option>
+                <option value="padded_slant">'padded_slant</option>
+                <option value="none">'none</option>
+              </select>
+            </div>
+
+            <div class="field-row">
+              <label for="indicatorWidth">indicator-width</label>
+              <div class="slider-wrap">
+                <input type="range" id="indicatorWidth" min="1" max="10" value="3" class="raw-slider" />
+                <span class="slider-val" id="valIndicatorWidth">3px</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="leftMargin">left-margin</label>
+              <div class="slider-wrap">
+                <input type="range" id="leftMargin" min="0" max="32" value="8" class="raw-slider" />
+                <span class="slider-val" id="valLeftMargin">8px</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="topPadding">top-padding</label>
+              <div class="slider-wrap">
+                <input type="range" id="topPadding" min="0" max="12" value="0" class="raw-slider" />
+                <span class="slider-val" id="valTopPadding">0px</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="tabPaddingVertical">tab-padding-vertical</label>
+              <div class="slider-wrap">
+                <input type="range" id="tabPaddingVertical" min="0" max="12" value="4" class="raw-slider" />
+                <span class="slider-val" id="valTabPaddingVertical">4px</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="tabPaddingHorizontal">tab-padding-horizontal</label>
+              <div class="slider-wrap">
+                <input type="range" id="tabPaddingHorizontal" min="0" max="8" value="2" class="raw-slider" />
+                <span class="slider-val" id="valTabPaddingHorizontal">2 sp</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="iconSpacing">icon-spacing</label>
+              <div class="slider-wrap">
+                <input type="range" id="iconSpacing" min="0" max="6" value="1" class="raw-slider" />
+                <span class="slider-val" id="valIconSpacing">1 sp</span>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="config-group">
+            <legend>[ Sorters &amp; Theme ]</legend>
+
+            <div class="field-row">
+              <label for="sortBy">sort-by</label>
+              <select id="sortBy" class="raw-select">
+                <option value="fifo" selected>'fifo (visit order)</option>
+                <option value="name">'name (alphabetical)</option>
+                <option value="extension">'extension</option>
+                <option value="directory">'directory</option>
+              </select>
+            </div>
+
+            <div class="field-row">
+              <label for="numbersMode">numbers</label>
+              <select id="numbersMode" class="raw-select">
+                <option value="none" selected>nil</option>
+                <option value="ordinal">'ordinal (1, 2, ...)</option>
+                <option value="buffer-id">'buffer-id</option>
+                <option value="both">'both (1:42)</option>
+              </select>
+            </div>
+
+            <div class="field-row">
+              <label for="duplicateDepth">duplicate-prefix-depth</label>
+              <div class="slider-wrap">
+                <input type="range" id="duplicateDepth" min="1" max="4" value="1" class="raw-slider" />
+                <span class="slider-val" id="valDuplicateDepth">1</span>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="themePreset">theme</label>
+              <select id="themePreset" class="raw-select">
+                <option value="ef-bio" selected>ef-bio</option>
+                <option value="ef-autumn">ef-autumn</option>
+                <option value="ef-dark">ef-dark</option>
+                <option value="modus-vivendi">modus-vivendi</option>
+                <option value="catppuccin-mocha">catppuccin-mocha</option>
+                <option value="tokyo-night">tokyo-night</option>
+                <option value="gruvbox-dark">gruvbox-dark</option>
+                <option value="nord">nord</option>
+                <option value="custom">custom (url / code)...</option>
+              </select>
+            </div>
+
+            <div class="field-row hidden" id="customThemeContainer">
+              <label for="customThemeInput">custom-theme</label>
+              <div class="custom-input-wrap">
+                <input type="text" id="customThemeInput" class="raw-input" placeholder="URL to theme.el or raw code" />
+                <button type="button" id="btnLoadTheme" class="raw-btn">Apply</button>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="config-group full-col">
+            <legend>Feature Flags</legend>
+            <div class="checkbox-grid">
+              <label class="raw-checkbox"><input type="checkbox" id="showIcons" checked /> show-buffer-icons</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showModified" checked /> show-modified (●)</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showReadOnly" checked /> show-read-only ()</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showPinned" checked /> show-pinned (󰐃)</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showDuplicates" checked /> show-duplicate-prefix</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showDiagnostics" checked /> show-diagnostics</label>
+              <label class="raw-checkbox"><input type="checkbox" id="showTruncMarkers" checked /> show-trunc-markers</label>
+            </div>
+          </fieldset>
+
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">GENERATED ELISP CONFIGURATION</span>
+          <div class="pkg-switch" id="pkgSwitcher">
+            <button type="button" class="pkg-btn active" data-pkg="use-package">use-package</button>
+            <button type="button" class="pkg-btn" data-pkg="package-vc">package-vc</button>
+            <button type="button" class="pkg-btn" data-pkg="elpaca">elpaca</button>
+            <button type="button" class="pkg-btn" data-pkg="straight">straight.el</button>
+          </div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-actions">
+            <button type="button" id="btnCopyCode" class="raw-btn copy-btn">Copy Config</button>
+          </div>
+          <pre><code id="codeSnippetOutput">;; Generating config...</code></pre>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <p>bufferline.el &copy; 2026 Szymon Wilczek. Licensed under GNU General Public License v3.0.</p>
+    </footer>
+
+    <div class="toast" id="toastMessage">Copied to clipboard.</div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
