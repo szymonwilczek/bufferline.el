@@ -172,5 +172,14 @@
       (set-window-parameter win 'tab-line-cache nil)
       (force-mode-line-update t))))
 
+(defun bufferline-ui-refresh ()
+  "Invalidate tab-line cache across windows and force immediate redisplay."
+  (walk-windows
+   (lambda (win)
+     (set-window-parameter win 'tab-line-cache nil)
+     (force-window-update win))
+   nil t)
+  (force-mode-line-update t))
+
 (provide 'bufferline-ui)
 ;;; bufferline-ui.el ends here

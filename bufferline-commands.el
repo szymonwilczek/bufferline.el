@@ -10,7 +10,9 @@
 ;;; Code:
 
 (require 'bufferline-buffers)
+(require 'bufferline-state)
 (require 'bufferline-pick)
+(require 'bufferline-ui)
 
 ;;;###autoload
 (defun bufferline-next-tab ()
@@ -38,7 +40,10 @@
   (interactive)
   (let ((buf (or buffer (current-buffer))))
     (bufferline-next-tab)
-    (kill-buffer buf)))
+    (kill-buffer buf)
+    (if (fboundp 'bufferline-ui-refresh)
+        (bufferline-ui-refresh)
+      (force-mode-line-update t))))
 
 ;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)
@@ -46,7 +51,9 @@
   (interactive)
   (let ((buf (or buffer (current-buffer))))
     (bufferline-state-toggle-pin buf)
-    (force-mode-line-update t)
+    (if (fboundp 'bufferline-ui-refresh)
+        (bufferline-ui-refresh)
+      (force-mode-line-update t))
     (message "Buffer %s is now %s"
              (buffer-name buf)
              (if (bufferline-state-pinned-p buf) "pinned" "unpinned"))))
