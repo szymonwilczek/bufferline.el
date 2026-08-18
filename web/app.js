@@ -368,12 +368,6 @@ Version 3, 29 June 2007`
         bufferlineContainer: document.getElementById('bufferlineContainer'),
         editorGutter: document.getElementById('editorGutter'),
         editorContent: document.getElementById('editorContent'),
-        frameTitle: document.getElementById('frameTitle'),
-        modelineFilename: document.getElementById('modelineFilename'),
-        modelineLocation: document.getElementById('modelineLocation'),
-        modelineMode: document.getElementById('modelineMode'),
-        modelineDiags: document.getElementById('modelineDiags'),
-        modelineSize: document.getElementById('modelineSize'),
         
         // form controls
         separatorStyle: document.getElementById('separatorStyle'),
@@ -752,12 +746,6 @@ Version 3, 29 June 2007`
 
     function renderEditor() {
         const activeBuf = MOCK_BUFFERS.find(b => b.id === state.activeBufferId) || MOCK_BUFFERS[0];
-        DOM.frameTitle.textContent = `emacs@localhost: ~/Dokumenty/GitHub/bufferline.el/${activeBuf.name}`;
-        DOM.modelineFilename.textContent = activeBuf.name + (activeBuf.modified ? ' [+]' : '') + (activeBuf.readOnly ? ' [RO]' : '');
-        DOM.modelineMode.textContent = activeBuf.mode;
-        DOM.modelineSize.textContent = `utf-8 ${activeBuf.size}`;
-        DOM.modelineDiags.textContent = activeBuf.diags ? `[${activeBuf.diags.err} ${activeBuf.diags.warn}]` : '[0 0]';
-
         const lines = activeBuf.code.split('\n');
         DOM.editorGutter.innerHTML = lines.map((_, i) => `<div>${i + 1}</div>`).join('');
 

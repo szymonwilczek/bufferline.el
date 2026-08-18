@@ -96,8 +96,9 @@
     --page-bg: #0c0d10;
     --page-fg: #d0d3d6;
     --page-fg-dim: #787f87;
-    --page-border: #282a2e;
+    --page-border: #383c46;
     --page-border-focus: #81a2be;
+    --dashed-border: #6a7182;
     --font-mono: 'Typus Mono 95', 'Typus Mono', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
     --font-icons: 'Symbols Nerd Font Mono', 'Symbols Nerd Font',
                   'JetBrainsMono Nerd Font', 'FiraCode Nerd Font Mono',
@@ -204,7 +205,7 @@ html, body {
     gap: 10px;
     margin-bottom: 10px;
     padding-bottom: 6px;
-    border-bottom: 1px dashed var(--page-border);
+    border-bottom: 1px dashed var(--dashed-border);
 }
 
 .section-title {
@@ -231,17 +232,6 @@ html, body {
 
 .emacs-window:focus-within {
     border-color: #555a64;
-}
-
-.emacs-titlebar {
-    background-color: var(--emacs-bg-alt);
-    color: var(--emacs-fg-dim);
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .bufferline-container {
@@ -456,51 +446,6 @@ html, body {
 .syn-fn      { color: var(--emacs-fn); }
 .syn-type    { color: var(--emacs-type); }
 
-.emacs-modeline {
-    background-color: var(--emacs-bg-alt);
-    padding: 5px 12px;
-    font-size: 0.8rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    user-select: none;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.modeline-lhs, .modeline-rhs {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ml-tag.evil-tag {
-    background-color: var(--emacs-keyword);
-    color: var(--emacs-bg);
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 2px;
-    font-size: 0.72rem;
-}
-
-.ml-item {
-    color: var(--emacs-fg-dim);
-}
-
-.ml-item.ml-buf {
-    font-weight: 600;
-    color: var(--emacs-fg);
-}
-
-.ml-item.ml-git {
-    color: var(--emacs-keyword);
-}
-
-.ml-item.ml-diag {
-    color: var(--emacs-comment);
-}
-
 .config-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -692,7 +637,7 @@ html, body {
     display: flex;
     justify-content: flex-end;
     padding: 6px 10px;
-    border-bottom: 1px dashed var(--page-border);
+    border-bottom: 1px dashed var(--dashed-border);
     background-color: #0d0e11;
 }
 
