@@ -36,13 +36,17 @@
          (fg-comment (bufferline-colors-safe theme-comment (bufferline-colors-safe (face-foreground 'font-lock-comment-face nil t) "#888888")))
          (sep-color keyword-color)
 
-         ;; disambiguate and truncate name
-         (full-name (if bufferline-show-duplicate-prefix
-                        (bufferline-duplicates-format-name buffer tabs)
-                      (buffer-name buffer)))
-         (display-name (if (> (length full-name) bufferline-max-name-length)
-                           (concat (substring full-name 0 (1- bufferline-max-name-length)) bufferline-constants-ellipsis)
-                         full-name))
+         ;; disambiguate and format duplicate directory prefix
+         (name-pair (bufferline-duplicates-resolve buffer tabs))
+         (dir-prefix (car name-pair))
+         (base-name (cdr name-pair))
+         (display-base (if (> (length base-name) bufferline-max-name-length)
+                           (concat (substring base-name 0 (1- bufferline-max-name-length)) bufferline-constants-ellipsis)
+                         base-name))
+
+         ;; directory prefix face: italic, light weight, comment color
+         (dir-face `(:foreground ,fg-comment :weight light :slant italic :background ,bg-color))
+         (dir-str (if dir-prefix (propertize dir-prefix 'face dir-face) ""))
 
          ;; separator / indicator
          (sep-pair (or (cdr (assq bufferline-separator-style bufferline-constants-separators)) '("┃" " ")))
@@ -67,7 +71,9 @@
          (text-face (if active
                         `(:foreground ,fg-main :weight demi-bold :slant italic :background ,bg-color)
                       `(:foreground ,fg-comment :weight normal :slant normal :background ,bg-color)))
-         (name (propertize (concat num-prefix display-name diag-badge) 'face text-face))
+         (name (concat (propertize num-prefix 'face text-face)
+                       dir-str
+                       (propertize (concat display-base diag-badge) 'face text-face)))
 
          ;; read-only indicator
          (ro-icon (if (and bufferline-show-read-only (buffer-local-value 'buffer-read-only buffer))

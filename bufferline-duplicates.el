@@ -9,12 +9,15 @@
 
 ;;; Code:
 
-(defun bufferline-duplicates-format-name (buffer live-buffers)
-  "Return formatted name for BUFFER, prepending parent directory if duplicated."
+(require 'bufferline-config)
+
+(defun bufferline-duplicates-resolve (buffer live-buffers)
+  "Return a cons cell (DIR-PREFIX . BASE-NAME) for BUFFER.
+DIR-PREFIX is a string with a trailing slash if BUFFER shares its basename with another buffer, or nil."
   (let* ((file (buffer-file-name buffer))
          (raw-name (buffer-name buffer)))
     (if (not file)
-        raw-name
+        (cons nil raw-name)
       (let* ((base (file-name-nondirectory file))
              (duplicates (seq-filter
                           (lambda (b)
@@ -22,10 +25,17 @@
                               (and bf (not (eq b buffer))
                                    (string= (file-name-nondirectory bf) base))))
                           live-buffers)))
-        (if duplicates
+        (if (and duplicates bufferline-show-duplicate-prefix)
             (let* ((parent-dir (file-name-nondirectory (directory-file-name (file-name-directory file)))))
-              (format "%s/%s" parent-dir base))
-          raw-name)))))
+              (cons (concat parent-dir "/") base))
+          (cons nil raw-name))))))
+
+(defun bufferline-duplicates-format-name (buffer live-buffers)
+  "Return full formatted name string for BUFFER for measurement purposes."
+  (let ((pair (bufferline-duplicates-resolve buffer live-buffers)))
+    (if (car pair)
+        (concat (car pair) (cdr pair))
+      (cdr pair))))
 
 (provide 'bufferline-duplicates)
 ;;; bufferline-duplicates.el ends here
