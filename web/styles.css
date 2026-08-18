@@ -19,6 +19,11 @@
     --page-border: #282a2e;
     --page-border-focus: #81a2be;
     --font-mono: 'JetBrains Mono', 'Typus Mono 95', Menlo, Monaco, Consolas, monospace;
+    --font-icons: 'Symbols Nerd Font Mono', 'Symbols Nerd Font',
+                  'JetBrainsMono Nerd Font', 'FiraCode Nerd Font Mono',
+                  'Hack Nerd Font', 'MesloLGS NF', 'DejaVu Sans Mono',
+                  var(--font-mono);
+    --sp: 8px;
 }
 
 *, *::before, *::after {
@@ -159,13 +164,13 @@ html, body {
 
 .emacs-tab {
     display: inline-flex;
-    align-items: center;
+    align-items: stretch;
     background-color: var(--emacs-bg-dim);
     color: var(--emacs-comment);
     font-size: 0.9rem;
+    line-height: 1.5;
     cursor: pointer;
     position: relative;
-    height: 100%;
     flex-shrink: 0;
     border: none;
 }
@@ -181,38 +186,77 @@ html, body {
     font-style: italic;
 }
 
-.tab-indicator {
-    align-self: stretch;
-    background-color: transparent;
+.tab-content {
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
+    min-width: 0;
+    padding-left: var(--sp);
+}
+
+.tab-sep-left, .tab-sep-right {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    align-self: stretch;
+    flex-shrink: 0;
+    overflow: visible;
+    font-style: normal;
 }
 
-.emacs-tab.active .tab-indicator {
+.tab-sep-left.pixel-bar {
+    background-color: transparent;
+}
+
+.emacs-tab.active .tab-sep-left.pixel-bar {
     background-color: var(--emacs-indicator);
 }
 
-.tab-pre-pad {
-    padding-left: 6px;
+.tab-sep-left.glyph, .tab-sep-right.glyph {
+    font-family: var(--font-icons);
+    font-size: 1.05rem;
+    line-height: 1.5;
+    font-style: normal;
+    font-weight: normal;
+    padding: 0;
+}
+
+.tab-pin-icon,
+.tab-file-icon,
+.tab-ro-icon,
+.tab-mod-icon,
+.tab-diag-badge,
+.tab-overflow-marker {
+    font-family: var(--font-icons);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5;
+    flex-shrink: 0;
+    overflow: visible;
+    font-style: normal;
+    font-variant-ligatures: none;
+    text-rendering: geometricPrecision;
 }
 
 .tab-pin-icon {
     color: var(--emacs-keyword);
     font-weight: bold;
-    margin-right: 4px;
+    margin-right: var(--sp);
 }
 
 .tab-file-icon {
-    margin-right: 6px;
-    display: inline-flex;
-    align-items: center;
+    font-size: 1.02rem;
+}
+
+.tab-label {
+    display: inline-block;
+    white-space: pre;
+    min-width: 0;
 }
 
 .tab-num-prefix {
     color: var(--emacs-comment);
-    margin-right: 4px;
 }
 
 .tab-dir-prefix {
@@ -228,35 +272,39 @@ html, body {
 
 .tab-ro-icon {
     color: var(--emacs-comment);
-    margin-left: 6px;
+    margin-left: var(--sp);
 }
 
 .tab-mod-icon {
     color: var(--emacs-warning);
     font-weight: bold;
-    margin-left: 6px;
+    margin-left: var(--sp);
 }
 
 .tab-diag-badge {
     color: var(--emacs-error);
-    font-size: 0.82rem;
-    margin-left: 6px;
+    margin-left: var(--sp);
+    gap: var(--sp);
 }
 
 .tab-diag-badge.warning {
     color: var(--emacs-warning);
 }
 
+.tab-diag-badge .diag-count {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
 .tab-overflow-marker {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 10px;
+    align-self: stretch;
+    padding: 0 var(--sp);
     background-color: var(--emacs-bg-alt);
     color: var(--emacs-keyword);
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 1rem;
     cursor: pointer;
-    flex-shrink: 0;
     user-select: none;
 }
 
@@ -265,9 +313,18 @@ html, body {
 }
 
 .tab-overflow-marker .overflow-count {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
     color: var(--emacs-comment);
     font-weight: normal;
-    margin: 0 4px;
+}
+
+.tab-overflow-marker .overflow-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    margin: 0 var(--sp);
 }
 
 .emacs-body {
@@ -375,22 +432,29 @@ html, body {
 }
 
 .field-row {
-    display: grid;
-    grid-template-columns: 160px 1fr;
-    align-items: center;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
 }
 
-@media (max-width: 520px) {
-    .field-row {
-        grid-template-columns: 1fr;
-        gap: 6px;
-    }
+.field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+    min-width: 0;
 }
 
-.field-row label {
+.field-header label {
     color: var(--page-fg-dim);
     font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .field-row.hidden {

@@ -234,6 +234,190 @@
 
     <div class="toast" id="toastMessage">Copied to clipboard.</div>
 
-    <script src="app.js"></script>
-  </body>
+    <div class="field-row">
+      <div class="field-header">
+        <label for="separatorStyle">separator-style</label>
+      </div>
+      <select id="separatorStyle" class="raw-select">
+        <option value="vertical" selected>'vertical (solid bar)</option>
+        <option value="bar">'bar (thin line │)</option>
+        <option value="thick_bar">'thick_bar (heavy line ┃)</option>
+        <option value="thin">'thin (thin block ▏)</option>
+        <option value="thick">'thick (thick block ▌)</option>
+        <option value="slant">'slant ()</option>
+        <option value="slope">'slope ()</option>
+        <option value="padded_slant">'padded_slant</option>
+        <option value="none">'none</option>
+      </select>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="indicatorWidth">indicator-width</label>
+        <span class="slider-val" id="valIndicatorWidth">3px</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="indicatorWidth" min="1" max="10" value="3" class="raw-slider" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="leftMargin">left-margin</label>
+        <span class="slider-val" id="valLeftMargin">8px</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="leftMargin" min="0" max="32" value="8" class="raw-slider" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="topPadding">top-padding</label>
+        <span class="slider-val" id="valTopPadding">0px</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="topPadding" min="0" max="12" value="0" class="raw-slider" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="tabPaddingVertical">tab-padding-vertical</label>
+        <span class="slider-val" id="valTabPaddingVertical">4px</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="tabPaddingVertical" min="0" max="12" value="4" class="raw-slider" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="tabPaddingHorizontal">tab-padding-horizontal</label>
+        <span class="slider-val" id="valTabPaddingHorizontal">2 sp</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="tabPaddingHorizontal" min="0" max="8" value="2" class="raw-slider" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-header">
+        <label for="iconSpacing">icon-spacing</label>
+        <span class="slider-val" id="valIconSpacing">1 sp</span>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="iconSpacing" min="0" max="6" value="1" class="raw-slider" />
+      </div>
+    </div>
+</fieldset>
+
+<fieldset class="config-group">
+  <legend>[ Sorters &amp; Theme ]</legend>
+
+  <div class="field-row">
+    <div class="field-header">
+      <label for="sortBy">sort-by</label>
+    </div>
+    <select id="sortBy" class="raw-select">
+      <option value="fifo" selected>'fifo (visit order)</option>
+      <option value="name">'name (alphabetical)</option>
+      <option value="extension">'extension</option>
+      <option value="directory">'directory</option>
+    </select>
+  </div>
+
+  <div class="field-row">
+    <div class="field-header">
+      <label for="numbersMode">numbers</label>
+    </div>
+    <select id="numbersMode" class="raw-select">
+      <option value="none" selected>nil</option>
+      <option value="ordinal">'ordinal (1, 2, ...)</option>
+      <option value="buffer-id">'buffer-id</option>
+      <option value="both">'both (1:42)</option>
+    </select>
+  </div>
+
+  <div class="field-row">
+    <div class="field-header">
+      <label for="duplicateDepth">duplicate-prefix-depth</label>
+      <span class="slider-val" id="valDuplicateDepth">1</span>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="duplicateDepth" min="1" max="4" value="1" class="raw-slider" />
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field-header">
+      <label for="themePreset">theme</label>
+    </div>
+    <select id="themePreset" class="raw-select">
+      <option value="ef-bio" selected>ef-bio</option>
+      <option value="ef-autumn">ef-autumn</option>
+      <option value="ef-dark">ef-dark</option>
+      <option value="modus-vivendi">modus-vivendi</option>
+      <option value="catppuccin-mocha">catppuccin-mocha</option>
+      <option value="tokyo-night">tokyo-night</option>
+      <option value="gruvbox-dark">gruvbox-dark</option>
+      <option value="nord">nord</option>
+      <option value="custom">custom (url / code)...</option>
+    </select>
+  </div>
+
+  <div class="field-row hidden" id="customThemeContainer">
+    <label for="customThemeInput">custom-theme</label>
+    <div class="custom-input-wrap">
+      <input type="text" id="customThemeInput" class="raw-input" placeholder="URL to theme.el or raw code" />
+      <button type="button" id="btnLoadTheme" class="raw-btn">[ Apply ]</button>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="config-group full-col">
+  <legend>[ Feature Flags ]</legend>
+  <div class="checkbox-grid">
+    <label class="raw-checkbox"><input type="checkbox" id="showIcons" checked /> show-buffer-icons</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showModified" checked /> show-modified (●)</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showReadOnly" checked /> show-read-only ()</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showPinned" checked /> show-pinned (󰐃)</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showDuplicates" checked /> show-duplicate-prefix</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showDiagnostics" checked /> show-diagnostics</label>
+    <label class="raw-checkbox"><input type="checkbox" id="showTruncMarkers" checked /> show-trunc-markers</label>
+  </div>
+</fieldset>
+
+</div>
+</section>
+
+<section class="section">
+  <div class="section-header">
+    <span class="section-title">:: GENERATED ELISP CONFIGURATION</span>
+    <div class="pkg-switch" id="pkgSwitcher">
+      <button type="button" class="pkg-btn active" data-pkg="use-package">use-package</button>
+      <button type="button" class="pkg-btn" data-pkg="package-vc">package-vc</button>
+      <button type="button" class="pkg-btn" data-pkg="elpaca">elpaca</button>
+      <button type="button" class="pkg-btn" data-pkg="straight">straight.el</button>
+    </div>
+  </div>
+
+  <div class="code-box">
+    <div class="code-actions">
+      <button type="button" id="btnCopyCode" class="raw-btn copy-btn">[ Copy Config ]</button>
+    </div>
+    <pre><code id="codeSnippetOutput">;; Generating config...</code></pre>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <p>bufferline.el &copy; 2026 Szymon Wilczek. Licensed under GNU General Public License v3.0.</p>
+</footer>
+
+<div class="toast" id="toastMessage">Copied to clipboard.</div>
+
+<script src="app.js"></script>
+</body>
 </html>
