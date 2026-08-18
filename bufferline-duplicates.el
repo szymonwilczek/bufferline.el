@@ -11,6 +11,19 @@
 
 (require 'bufferline-config)
 
+(defun bufferline-duplicates--extract-prefix (filepath depth)
+  "Extract up to DEPTH parent directory components from FILEPATH with trailing slash."
+  (let* ((dir (file-name-directory filepath))
+         (parts (when dir
+                  (split-string (directory-file-name dir) "/" t)))
+         (n (max 1 (or depth 1)))
+         (sub-parts (if (<= (length parts) n)
+                        parts
+                      (seq-drop parts (- (length parts) n)))))
+    (if sub-parts
+        (concat (string-join sub-parts "/") "/")
+      "")))
+
 (defun bufferline-duplicates-resolve (buffer live-buffers)
   "Return a cons cell (DIR-PREFIX . BASE-NAME) for BUFFER.
 DIR-PREFIX is a string with a trailing slash if BUFFER shares its basename with another buffer, or nil."
@@ -26,8 +39,7 @@ DIR-PREFIX is a string with a trailing slash if BUFFER shares its basename with 
                                    (string= (file-name-nondirectory bf) base))))
                           live-buffers)))
         (if (and duplicates bufferline-show-duplicate-prefix)
-            (let* ((parent-dir (file-name-nondirectory (directory-file-name (file-name-directory file)))))
-              (cons (concat parent-dir "/") base))
+            (cons (bufferline-duplicates--extract-prefix file bufferline-duplicate-prefix-depth) base)
           (cons nil raw-name))))))
 
 (defun bufferline-duplicates-format-name (buffer live-buffers)

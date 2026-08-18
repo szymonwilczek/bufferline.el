@@ -83,6 +83,7 @@
 | =bufferline-left-trunc-marker=    | string  | =""=                  | Left overflow indicator glyph                              |
 | =bufferline-right-trunc-marker=   | string  | =""=                  | Right overflow indicator glyph                             |
 | =bufferline-show-duplicate-prefix=| boolean  | =t=                    | Disambiguate identical basenames with parent directory     |
+| =bufferline-duplicate-prefix-depth=| integer | =1=                    | Parent directory level depth for duplicate basenames       |
 | =bufferline-show-diagnostics=     | boolean  | =nil=                  | Display Flymake diagnostic count badges                    |
 | =bufferline-diagnostics-error-icon=   | string   | =""=                  | Icon for error diagnostics                                 |
 | =bufferline-diagnostics-warning-icon= | string   | =""=                  | Icon for warning diagnostics                               |

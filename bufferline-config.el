@@ -107,6 +107,11 @@ Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'director
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-duplicate-prefix-depth 1
+  "Number of parent directory levels prepended to disambiguate identical basenames."
+  :type 'integer
+  :group 'bufferline)
+
 (defcustom bufferline-modified-icon "●"
   "Icon displayed when buffer has unsaved modifications."
   :type 'string
