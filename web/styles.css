@@ -1,3 +1,59 @@
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-Italic.ttf') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-SemiBoldItalic.ttf') format('truetype');
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Typus Mono 95';
+    src: url('fonts/TypusMono95-BoldItalic.ttf') format('truetype');
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
 :root {
     --emacs-bg: #111111;
     --emacs-bg-dim: #222522;
@@ -18,7 +74,7 @@
     --page-fg-dim: #787f87;
     --page-border: #282a2e;
     --page-border-focus: #81a2be;
-    --font-mono: 'JetBrains Mono', 'Typus Mono 95', Menlo, Monaco, Consolas, monospace;
+    --font-mono: 'Typus Mono 95', 'Typus Mono', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
     --font-icons: 'Symbols Nerd Font Mono', 'Symbols Nerd Font',
                   'JetBrainsMono Nerd Font', 'FiraCode Nerd Font Mono',
                   'Hack Nerd Font', 'MesloLGS NF', 'DejaVu Sans Mono',
