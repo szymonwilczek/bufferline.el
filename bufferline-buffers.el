@@ -1,4 +1,4 @@
-;;; Buffer filtering, sorting, and window truncation -*- lexical-binding: t; -*-
+;;; bufferline-buffers.el -- Buffer filtering, sorting, and window truncation -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Szymon Wilczek
 ;; Author: Szymon Wilczek <swilczek.lx@gmail.com>
