@@ -34,7 +34,7 @@
          (fg-default (bufferline-colors-safe fg-default-raw "#ffffff"))
          (fg-main (if active fg-default "#ffffff"))
          (fg-comment (bufferline-colors-safe theme-comment (bufferline-colors-safe (face-foreground 'font-lock-comment-face nil t) "#888888")))
-         (sep-color keyword-color)
+         (indicator-color (bufferline-colors-safe (face-foreground bufferline-indicator-face nil t) fg-main))
 
          ;; disambiguate and format duplicate directory prefix
          (name-pair (bufferline-duplicates-resolve buffer tabs))
@@ -49,9 +49,17 @@
          (dir-str (if dir-prefix (propertize dir-prefix 'face dir-face) ""))
 
          ;; separator / indicator
-         (sep-pair (or (cdr (assq bufferline-separator-style bufferline-constants-separators)) '("┃" " ")))
-         (sep (propertize (car sep-pair) 'face `(:foreground ,sep-color :background ,bg-color :weight semi-bold)))
-         (empty-sep (propertize (cadr sep-pair) 'face `(:background ,bg-color)))
+         (sep-pair (or (cdr (assq bufferline-separator-style bufferline-constants-separators)) '("▎" " ")))
+         (sep-pixel-width (cond ((eq bufferline-separator-style 'thin) 2)
+                                ((eq bufferline-separator-style 'thick) 5)
+                                ((eq bufferline-separator-style 'vertical) 3)
+                                (t nil)))
+         (sep (if sep-pixel-width
+                  (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,indicator-color))
+                (propertize (car sep-pair) 'face `(:foreground ,indicator-color :background ,bg-color :weight normal))))
+         (empty-sep (if sep-pixel-width
+                        (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,bg-color))
+                      (propertize (cadr sep-pair) 'face `(:background ,bg-color))))
 
          ;; file icon
          (file-or-name (or (buffer-file-name buffer) (buffer-name buffer)))
@@ -93,14 +101,17 @@
                          (propertize (format "%s " bufferline-pinned-icon) 'face `(:foreground ,pin-fg :background ,bg-color :weight bold)))
                      ""))
 
-         (pad (propertize "  " 'face `(:background ,bg-color)))
+         (pre-pad (propertize " " 'face `(:background ,bg-color)))
          (mid-pad (propertize " " 'face `(:background ,bg-color)))
+         (post-pad (propertize "  " 'face `(:background ,bg-color)))
 
-         (tab-str (concat (if active sep empty-sep) pad pin-icon icon mid-pad name ro-icon mod-icon pad))
+         (tab-str (concat (if active sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon post-pad))
 
          ;; truncation markers rendered on outer edges of first/last tab
          (is-first (eq buffer (car tabs)))
          (is-last (eq buffer (car (last tabs))))
+         (left-gap (when (and is-first (not (and (> (or bufferline-buffers--left-count 0) 0))) bufferline-left-margin)
+                     (propertize bufferline-left-margin 'face `(:background ,bar-bg))))
          (left-marker (when (and is-first (> (or bufferline-buffers--left-count 0) 0))
                         (let* ((arrow-face `(:foreground ,keyword-color :weight bold :background ,bar-bg))
                                (count-face `(:foreground ,fg-comment :weight normal :background ,bar-bg))
@@ -126,13 +137,20 @@
                                                  (define-key km [tab-line mouse-1] #'bufferline-next-tab)
                                                  km))))))
 
-    (concat left-marker
+    (concat left-gap
+            left-marker
             (propertize tab-str
                         'tab tab
                         'theme-version bufferline-highlights--theme-version
                         'help-echo nil
                         'mouse-face nil
-                        'keymap tab-line-tab-map)
+                        'keymap (let ((km (make-sparse-keymap)))
+                                  (define-key km [tab-line mouse-1] #'tab-line-select-tab)
+                                  (define-key km [tab-line mouse-2] #'tab-line-close-tab)
+                                  (define-key km [tab-line down-mouse-3] #'tab-line-tab-context-menu)
+                                  (define-key km [tab-line touchscreen-begin] #'tab-line-select-tab)
+                                  (define-key km (kbd "RET") #'tab-line-select-tab)
+                                  km))
             right-marker)))
 
 (defun bufferline-ui-follow-active (&rest _)

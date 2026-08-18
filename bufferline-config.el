@@ -18,18 +18,30 @@
 
 (defcustom bufferline-separator-style 'vertical
   "Separator style between buffer tabs.
-Allowed values: 'vertical ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope, 'padded_slant, 'none."
-  :type '(choice (const :tag "Vertical Bar (┃)" vertical)
-                 (const :tag "Thin (▏)" thin)
-                 (const :tag "Thick (▌)" thick)
+Allowed values: 'vertical ('▎'), 'bar ('│'), 'thick_bar ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope, 'padded_slant, 'none."
+  :type '(choice (const :tag "Vertical Block (▎)" vertical)
+                 (const :tag "Thin Box Line (│)" bar)
+                 (const :tag "Thick Box Line (┃)" thick_bar)
+                 (const :tag "Thin Block (▏)" thin)
+                 (const :tag "Thick Block (▌)" thick)
                  (const :tag "Slant ()" slant)
                  (const :tag "Slope ()" slope)
                  (const :tag "Padded Slant" padded_slant)
                  (const :tag "None" none))
   :group 'bufferline)
 
-(defcustom bufferline-indicator "┃"
+(defcustom bufferline-indicator bufferline-constants-indicator
   "Indicator string prepended to the active buffer tab."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-indicator-face 'default
+  "Face used to resolve the active indicator foreground color (matching TabLineSel)."
+  :type 'face
+  :group 'bufferline)
+
+(defcustom bufferline-left-margin " "
+  "Margin string prepended before the first tab on the left edge."
   :type 'string
   :group 'bufferline)
 

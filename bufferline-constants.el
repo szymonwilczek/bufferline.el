@@ -34,9 +34,11 @@
   "Default right truncation marker glyph.")
 
 (defconst bufferline-constants-separators
-  '((thin         . ("▏" "▕"))
-    (thick        . ("▌" "▐"))
-    (vertical     . ("┃" " "))
+  '((vertical     . ("▎" " "))
+    (bar          . ("│" " "))
+    (thick_bar    . ("┃" " "))
+    (thin         . ("▏" " "))
+    (thick        . ("▌" " "))
     (slant        . ("" ""))
     (slope        . ("" ""))
     (padded_slant . (" " " "))
