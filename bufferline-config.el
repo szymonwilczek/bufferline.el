@@ -53,6 +53,16 @@ Allowed values: 'vertical ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-modified-icon "●"
+  "Icon displayed when buffer has unsaved modifications."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-show-modified t
+  "Whether to display the modified indicator icon."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/LSP error count badges in tabs."
   :type 'boolean
