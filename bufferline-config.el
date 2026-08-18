@@ -40,6 +40,14 @@ Allowed values: 'vertical ('▎'), 'bar ('│'), 'thick_bar ('┃'), 'thin ('▏
   :type 'face
   :group 'bufferline)
 
+(defcustom bufferline-indicator-width nil
+  "Explicit pixel width for the active tab indicator bar.
+When nil, width is derived from `bufferline-separator-style`
+(2px for 'thin, 3px for 'vertical, 5px for 'thick)."
+  :type '(choice (const :tag "Auto from style" nil)
+                 (integer :tag "Pixels"))
+  :group 'bufferline)
+
 (defcustom bufferline-left-margin " "
   "Margin string prepended before the first tab on the left edge."
   :type 'string

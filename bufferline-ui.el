@@ -50,10 +50,11 @@
 
          ;; separator / indicator
          (sep-pair (or (cdr (assq bufferline-separator-style bufferline-constants-separators)) '("▎" " ")))
-         (sep-pixel-width (cond ((eq bufferline-separator-style 'thin) 2)
-                                ((eq bufferline-separator-style 'thick) 5)
-                                ((eq bufferline-separator-style 'vertical) 3)
-                                (t nil)))
+         (sep-pixel-width (or bufferline-indicator-width
+                              (cond ((eq bufferline-separator-style 'thin) 2)
+                                    ((eq bufferline-separator-style 'thick) 5)
+                                    ((eq bufferline-separator-style 'vertical) 3)
+                                    (t nil))))
          (sep (if sep-pixel-width
                   (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,indicator-color))
                 (propertize (car sep-pair) 'face `(:foreground ,indicator-color :background ,bg-color :weight normal))))
