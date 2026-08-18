@@ -66,6 +66,15 @@ Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"), or nil for n
   :type 'integer
   :group 'bufferline)
 
+(defcustom bufferline-sort-by 'fifo
+  "Strategy used to sort tabs on the buffer line.
+Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'directory."
+  :type '(choice (const :tag "FIFO (Visit Order)" fifo)
+                 (const :tag "Alphabetical (Name)" name)
+                 (const :tag "File Extension" extension)
+                 (const :tag "Directory Path" directory))
+  :group 'bufferline)
+
 (defcustom bufferline-max-name-length 18
   "Maximum character length of buffer names before truncation with ellipsis."
   :type 'integer

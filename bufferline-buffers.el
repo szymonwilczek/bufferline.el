@@ -36,7 +36,7 @@
     (dolist (buf tabs)
       (bufferline-state-register buf))
 
-    (bufferline-sorters-by-fifo tabs)))
+    (bufferline-sorters-apply tabs)))
 
 (defun bufferline-buffers-tab-width (buffer live-tabs)
   "Calculate estimated rendered character width for BUFFER tab."
