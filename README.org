@@ -1,0 +1,104 @@
+#+TITLE: bufferline.el
+#+AUTHOR: Szymon Wilczek
+#+LANGUAGE: en
+#+OPTIONS: toc:nil num:nil
+
+#+HTML: <div align="center">
+#+HTML:   <img src="assets/screenshot.png" alt="bufferline.el preview" width="850"/>
+#+HTML:   <br/><br/>
+#+HTML: </div>
+
+* Overview
+
+=bufferline.el= is an opinionated, minimalist buffer line for GNU Emacs built directly on top of the native =tab-line-mode= engine. It provides predictable FIFO tab indexing, dynamic theme color extraction, icon integration, and cyclic navigation.
+
+* Requirements
+
+- GNU Emacs >= 28.1
+- =nerd-icons.el= (for filetype icon rendering)
+
+* Installation
+
+** Native =package-vc= (Emacs 30+)
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :vc (:url "https://github.com/szymonwilczek/bufferline.el")
+    :config
+    (global-bufferline-mode 1))
+#+end_src
+
+** Local path
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :load-path "~/your/path/bufferline.el"
+    :config
+    (global-bufferline-mode 1))
+#+end_src
+
+** Elpaca
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :ensure (:host github :repo "szymonwilczek/bufferline.el")
+    :config
+    (global-bufferline-mode 1))
+#+end_src
+
+** Straight.el
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :straight (:host github :repo "szymonwilczek/bufferline.el")
+    :config
+    (global-bufferline-mode 1))
+#+end_src
+
+* Configuration
+
+** Options
+
+| Variable                     | Type    | Default                | Description                                              |
+|------------------------------+---------+------------------------+----------------------------------------------------------|
+| =bufferline-separator=       | string  | ="┃"=                  | Indicator glyph prepended to the active buffer tab       |
+| =bufferline-max-name-length= | integer | =18=                   | Maximum buffer name length before truncation with =…=     |
+| =bufferline-icon-size=       | float   | =0.85=                 | Height scaling factor for =nerd-icons=                   |
+| =bufferline-tab-fixed-width= | integer | =23=                   | Average character capacity estimation for auto-scrolling |
+| =bufferline-exclude-modes=   | list    | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display        |
+
+** Example Customization
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :load-path "~/Dokumenty/GitHub/bufferline.el"
+    :custom
+    (bufferline-separator "┃")
+    (bufferline-max-name-length 20)
+    (bufferline-icon-size 0.85)
+    (bufferline-exclude-modes '(treemacs-mode which-key-mode dashboard-mode help-mode ghostel-mode))
+    :config
+    (global-bufferline-mode 1))
+#+end_src
+
+* Keybindings
+
+=bufferline.el= provides interactive cyclic navigation commands:
+
+- =bufferline-next-tab=: Switches to the next user buffer in FIFO order.
+- =bufferline-prev-tab=: Switches to the previous user buffer in FIFO order.
+
+** Evil-mode mapping
+
+#+begin_src emacs-lisp
+  (with-eval-after-load 'evil
+    (define-key evil-normal-state-map (kbd "TAB") #'bufferline-next-tab)
+    (define-key evil-normal-state-map (kbd "<tab>") #'bufferline-next-tab)
+    (define-key evil-normal-state-map (kbd "<backtab>") #'bufferline-prev-tab)
+    (define-key evil-normal-state-map (kbd "S-TAB") #'bufferline-prev-tab)
+    (define-key evil-normal-state-map (kbd "<S-tab>") #'bufferline-prev-tab))
+#+end_src
+
+* License
+
+This package is licensed under the [[file:LICENSE][GNU General Public License v3.0]].
