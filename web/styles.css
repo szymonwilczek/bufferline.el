@@ -93,12 +93,12 @@
     --emacs-error: #ef6560;
     --emacs-indicator: #cfdfd5;
 
-    --page-bg: #0c0d10;
+    --page-bg: #000000;
     --page-fg: #d0d3d6;
-    --page-fg-dim: #787f87;
-    --page-border: #383c46;
-    --page-border-focus: #81a2be;
-    --dashed-border: #6a7182;
+    --page-fg-dim: #777777;
+    --page-border: #282828;
+    --page-border-focus: #ffffff;
+    --dashed-border: #404040;
     --font-mono: 'Typus Mono 95', 'Typus Mono', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
     --font-icons: 'Symbols Nerd Font Mono', 'Symbols Nerd Font',
                   'JetBrainsMono Nerd Font', 'FiraCode Nerd Font Mono',
@@ -210,7 +210,7 @@ html, body {
 
 .section-title {
     font-weight: 700;
-    color: #de935f;
+    color: #ffffff;
     font-size: 0.9rem;
     letter-spacing: 0.04em;
 }
@@ -467,7 +467,7 @@ html, body {
 }
 
 .config-group legend {
-    color: #81a2be;
+    color: #ffffff;
     font-weight: 700;
     padding: 0 6px;
     font-size: 0.85rem;
@@ -505,7 +505,7 @@ html, body {
 
 .raw-select, .raw-input {
     width: 100%;
-    background-color: #121417;
+    background-color: #080808;
     color: var(--page-fg);
     border: 1px solid var(--page-border);
     font-family: var(--font-mono);
@@ -554,7 +554,7 @@ html, body {
     min-width: 40px;
     text-align: right;
     font-size: 0.8rem;
-    color: #b5bd68;
+    color: #ffffff;
 }
 
 .custom-input-wrap {
@@ -571,7 +571,7 @@ html, body {
     font-family: var(--font-mono);
     font-size: 0.82rem;
     background-color: transparent;
-    color: #81a2be;
+    color: #ffffff;
     border: 1px solid var(--page-border);
     padding: 6px 12px;
     cursor: pointer;
@@ -579,7 +579,7 @@ html, body {
 }
 
 .raw-btn:hover {
-    background-color: var(--page-border);
+    background-color: #222222;
     color: #ffffff;
 }
 
@@ -599,7 +599,7 @@ html, body {
 }
 
 .raw-checkbox input {
-    accent-color: #81a2be;
+    accent-color: #ffffff;
     width: 14px;
     height: 14px;
 }
@@ -622,8 +622,8 @@ html, body {
 
 .pkg-btn.active {
     color: #ffffff;
-    border-color: var(--page-border);
-    background-color: #121417;
+    border-color: #444444;
+    background-color: #222222;
 }
 
 .code-box {
@@ -684,8 +684,8 @@ html, body {
 }
 
 .docs-table th {
-    background-color: #121417;
-    color: #81a2be;
+    background-color: #111111;
+    color: #ffffff;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.78rem;
@@ -694,18 +694,19 @@ html, body {
 }
 
 .docs-table td code {
-    color: #b5bd68;
-    background-color: #1a1c21;
+    color: #ffffff;
+    background-color: #141414;
+    border: 1px solid #282828;
     padding: 1px 5px;
     font-size: 0.82rem;
 }
 
 .docs-table td.type-col {
-    color: #de935f;
+    color: var(--page-fg-dim);
 }
 
 .docs-table td.default-col {
-    color: #b294bb;
+    color: #cccccc;
 }
 
 .docs-grid {
@@ -727,7 +728,7 @@ html, body {
 .doc-card-title {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #81a2be;
+    color: #ffffff;
     margin: 0;
 }
 
@@ -743,8 +744,8 @@ html, body {
 }
 
 .doc-list li code {
-    color: #b5bd68;
-    background-color: #121417;
+    color: #ffffff;
+    background-color: #141414;
     padding: 2px 6px;
     border: 1px solid var(--page-border);
     font-weight: 600;
