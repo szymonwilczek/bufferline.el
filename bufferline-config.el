@@ -48,9 +48,12 @@ When nil, width is derived from `bufferline-separator-style`
                  (integer :tag "Pixels"))
   :group 'bufferline)
 
-(defcustom bufferline-left-margin " "
-  "Margin string prepended before the first tab on the left edge."
-  :type 'string
+(defcustom bufferline-left-margin 8
+  "Margin before the first tab on the left edge.
+Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"), or nil for no margin."
+  :type '(choice (integer :tag "Pixels" 8)
+                 (string :tag "String" " ")
+                 (const :tag "None" nil))
   :group 'bufferline)
 
 (defcustom bufferline-top-padding 0

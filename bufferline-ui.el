@@ -112,7 +112,12 @@
          (is-first (eq buffer (car tabs)))
          (is-last (eq buffer (car (last tabs))))
          (left-gap (when (and is-first (not (and (> (or bufferline-buffers--left-count 0) 0))) bufferline-left-margin)
-                     (propertize bufferline-left-margin 'face `(:background ,bar-bg))))
+                     (cond
+                      ((and (integerp bufferline-left-margin) (> bufferline-left-margin 0))
+                       (propertize " " 'display `(space :width (,bufferline-left-margin)) 'face `(:background ,bar-bg)))
+                      ((stringp bufferline-left-margin)
+                       (propertize bufferline-left-margin 'face `(:background ,bar-bg)))
+                      (t nil))))
          (left-marker (when (and is-first (> (or bufferline-buffers--left-count 0) 0))
                         (let* ((arrow-face `(:foreground ,keyword-color :weight bold :background ,bar-bg))
                                (count-face `(:foreground ,fg-comment :weight normal :background ,bar-bg))
