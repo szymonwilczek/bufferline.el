@@ -88,6 +88,8 @@
 | =bufferline-diagnostics-warning-icon= | string   | =""=                  | Icon for warning diagnostics                               |
 | =bufferline-diagnostics-info-icon=    | string   | =""=                  | Icon for note/info diagnostics                             |
 | =bufferline-diagnostics-indicator=    | function | =nil=                  | Custom badge formatter function                            |
+| =bufferline-numbers=                  | symbol/fn| =nil=                  | Display buffer numbers: ='ordinal=, ='buffer-id=, ='both=  |
+| =bufferline-numbers-formatter=        | string/fn| ="%d. "=               | Format template string or custom formatter function        |
 | =bufferline-exclude-modes=        | list     | ='(treemacs-mode ...)= | Major modes excluded from the buffer line display          |
 
 ** Interactive Commands

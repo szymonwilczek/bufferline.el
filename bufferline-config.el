@@ -195,6 +195,23 @@ When nil, standard icon and count badge is rendered."
   :type 'integer
   :group 'bufferline)
 
+(defcustom bufferline-numbers nil
+  "How to display buffer numbers in tabs: nil, 'ordinal, 'buffer-id, 'both, or a custom function."
+  :type '(choice (const :tag "None" nil)
+                 (const :tag "Ordinal (1, 2, ...)" ordinal)
+                 (const :tag "Buffer ID" buffer-id)
+                 (const :tag "Both (Ordinal:ID)" both)
+                 (function :tag "Custom Function"))
+  :group 'bufferline)
+
+(defcustom bufferline-numbers-formatter "%d. "
+  "Format template or function used to render buffer numbers.
+Can be a format string with %d (e.g. \"%d. \", \"(%d) \", \"%d \")
+or a function taking (num buffer) returning a string."
+  :type '(choice (string :tag "Format String" "%d. ")
+                 (function :tag "Custom Formatter Function"))
+  :group 'bufferline)
+
 (defcustom bufferline-pick-alphabet "asdfghjklqwertyuiopzxcvbnm"
   "Alphabet string used for bufferline-pick quick jumping keys."
   :type 'string

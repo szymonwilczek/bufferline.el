@@ -9,19 +9,23 @@
 
 ;;; Code:
 
-(defcustom bufferline-numbers nil
-  "How to display buffer numbers in tabs: nil, 'ordinal, or 'buffer-id."
-  :type '(choice (const :tag "None" nil)
-                 (const :tag "Ordinal (1, 2, ...)" ordinal)
-                 (const :tag "Buffer ID" buffer-id))
-  :group 'bufferline)
+(require 'bufferline-config)
 
 (defun bufferline-numbers-format (buffer index)
   "Format number prefix for BUFFER at INDEX based on `bufferline-numbers`."
-  (pcase bufferline-numbers
-    ('ordinal (format "%d. " (1+ index)))
-    ('buffer-id (format "%d. " (buffer-local-value 'bufferline-state--tab-order-id buffer)))
-    (_ "")))
+  (let* ((ordinal (1+ index))
+         (id (or (buffer-local-value 'bufferline-state--tab-order-id buffer) ordinal)))
+    (cond
+     ((functionp bufferline-numbers)
+      (funcall bufferline-numbers ordinal id buffer))
+     ((eq bufferline-numbers 'both)
+      (format "%d:%d " ordinal id))
+     ((or (eq bufferline-numbers 'ordinal) (eq bufferline-numbers 'buffer-id))
+      (let ((num (if (eq bufferline-numbers 'ordinal) ordinal id)))
+        (if (functionp bufferline-numbers-formatter)
+            (funcall bufferline-numbers-formatter num buffer)
+          (format (or bufferline-numbers-formatter "%d. ") num))))
+     (t ""))))
 
 (provide 'bufferline-numbers)
 ;;; bufferline-numbers.el ends here
