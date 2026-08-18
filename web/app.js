@@ -626,7 +626,7 @@ Version 3, 29 June 2007`
             if (state.showPinned && buf.pinned) {
                 const pin = document.createElement('span');
                 pin.className = 'tab-pin-icon';
-                pin.textContent = '󰐃';
+                pin.textContent = '';
                 contentEl.appendChild(pin);
             }
 
