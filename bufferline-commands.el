@@ -38,8 +38,13 @@
 (defun bufferline-close-tab (&optional buffer)
   "Close current or specified BUFFER without disturbing window layout."
   (interactive)
-  (let ((buf (or buffer (current-buffer))))
-    (bufferline-next-tab)
+  (let* ((buf (or buffer (current-buffer)))
+         (win (selected-window))
+         (tabs (delq buf (bufferline-buffers-all))))
+    (when (eq buf (window-buffer win))
+      (if tabs
+          (switch-to-buffer (car tabs))
+        (previous-buffer)))
     (kill-buffer buf)
     (if (fboundp 'bufferline-ui-refresh)
         (bufferline-ui-refresh)

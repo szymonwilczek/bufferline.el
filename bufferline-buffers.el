@@ -23,15 +23,23 @@
 
 (defun bufferline-buffers-all ()
   "Filter and return sorted list of live user buffers for current window."
-  (let ((tabs (seq-filter
-               (lambda (buf)
-                 (let ((name (buffer-name buf))
-                       (mode (buffer-local-value 'major-mode buf)))
-                   (and (buffer-live-p buf)
-                        (not (string-prefix-p " " name))
-                        (not (string-prefix-p "*" name))
-                        (not (memq mode bufferline-exclude-modes)))))
-               (tab-line-tabs-window-buffers))))
+  (let* ((curr-win (selected-window))
+         (curr-buf (window-buffer curr-win))
+         (tabs (seq-filter
+                (lambda (buf)
+                  (let ((name (buffer-name buf))
+                        (mode (buffer-local-value 'major-mode buf))
+                        (other-win (get-buffer-window buf nil)))
+                    (and (buffer-live-p buf)
+                         (not (string-prefix-p " " name))
+                         (not (string-prefix-p "*" name))
+                         (not (memq mode bufferline-exclude-modes))
+
+                         ;; Isolate tabs: exclude buffers already visible in other windows
+                         (or (eq buf curr-buf)
+                             (null other-win)
+                             (eq other-win curr-win)))))
+                (tab-line-tabs-window-buffers))))
 
     (dolist (buf tabs)
       (bufferline-state-register buf))
