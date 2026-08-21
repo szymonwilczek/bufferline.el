@@ -32,7 +32,8 @@
                         (other-win (get-buffer-window buf nil)))
                     (and (buffer-live-p buf)
                          (not (string-prefix-p " " name))
-                         (not (string-prefix-p "*" name))
+                         (or bufferline-show-special-buffers
+                             (not (string-prefix-p "*" name)))
                          (not (memq mode bufferline-exclude-modes))
 
                          ;; Isolate tabs: exclude buffers already visible in other windows

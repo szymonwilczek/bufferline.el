@@ -261,6 +261,20 @@ console.log("bufferline.el preview initialized");`
             size: '35KiB',
             code: `GNU GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007`
+        },
+        {
+            id: 15,
+            name: '*scratch*',
+            dir: '~/',
+            pinned: false,
+            modified: false,
+            readOnly: false,
+            icon: '',
+            iconColor: '#7f5af0',
+            mode: 'lisp-interaction',
+            size: '180B',
+            code: `;; This buffer is for text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with C-x C-f and enter text in its buffer.`
         }
     ];
 
@@ -348,6 +362,7 @@ Version 3, 29 June 2007`
         showDuplicates: true,
         showDiagnostics: true,
         showTruncMarkers: true,
+        showSpecialBuffers: true,
         activePkgManager: 'use-package',
         customPalette: null
     };
@@ -401,6 +416,7 @@ Version 3, 29 June 2007`
         showDuplicates: document.getElementById('showDuplicates'),
         showDiagnostics: document.getElementById('showDiagnostics'),
         showTruncMarkers: document.getElementById('showTruncMarkers'),
+        showSpecialBuffers: document.getElementById('showSpecialBuffers'),
         
         // snippet and clipboard
         codeSnippetOutput: document.getElementById('codeSnippetOutput'),
@@ -452,6 +468,9 @@ Version 3, 29 June 2007`
 
     function getPreparedBuffers() {
         let list = [...MOCK_BUFFERS];
+        if (!state.showSpecialBuffers) {
+            list = list.filter(b => !b.name.startsWith('*'));
+        }
 
         // detect duplicates
         const counts = {};
@@ -780,6 +799,7 @@ Version 3, 29 June 2007`
         if (!state.showDuplicates) customLines.push('  (bufferline-show-duplicate-prefix nil)');
         if (state.showDiagnostics) customLines.push('  (bufferline-show-diagnostics t)');
         if (!state.showTruncMarkers) customLines.push('  (bufferline-show-trunc-markers nil)');
+        if (!state.showSpecialBuffers) customLines.push('  (bufferline-show-special-buffers nil)');
 
         const lines = [];
         lines.push('(use-package bufferline');
@@ -934,7 +954,8 @@ Version 3, 29 June 2007`
             { el: DOM.showPinned, prop: 'showPinned' },
             { el: DOM.showDuplicates, prop: 'showDuplicates' },
             { el: DOM.showDiagnostics, prop: 'showDiagnostics' },
-            { el: DOM.showTruncMarkers, prop: 'showTruncMarkers' }
+            { el: DOM.showTruncMarkers, prop: 'showTruncMarkers' },
+            { el: DOM.showSpecialBuffers, prop: 'showSpecialBuffers' }
         ];
 
         toggleMap.forEach(({ el, prop }) => {

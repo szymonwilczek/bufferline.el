@@ -184,6 +184,12 @@ When nil, standard icon and count badge is rendered."
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-show-special-buffers t
+  "Whether to display special buffers (names starting with '*') in the bufferline.
+When nil, buffers with names starting with '*' (e.g. *scratch*, *Messages*) are filtered out."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-exclude-modes
   '(treemacs-mode
     which-key-mode
