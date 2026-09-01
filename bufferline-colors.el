@@ -13,23 +13,20 @@
 
 (defun bufferline-colors-safe (color fallback)
   "Return COLOR if it represents a valid non-empty string, otherwise return FALLBACK."
-  (if (or (null color)
-          (eq color 'unspecified)
-          (equal color "unspecified")
-          (equal color "unspecified-bg")
-          (equal color "unspecified-fg"))
-      fallback
-    color))
+  (if (and (stringp color)
+           (not (member color '("unspecified" "unspecified-bg" "unspecified-fg" ""))))
+      color
+    fallback))
 
 (defun bufferline-colors-darken (hex percent)
   "Safely darken HEX by PERCENT."
-  (or (ignore-errors (color-darken-name (bufferline-colors-safe hex "#111111") percent))
-      hex))
+  (when (and (stringp hex) (color-defined-p hex))
+    (ignore-errors (color-darken-name hex percent))))
 
 (defun bufferline-colors-lighten (hex percent)
   "Safely lighten HEX by PERCENT."
-  (or (ignore-errors (color-lighten-name (bufferline-colors-safe hex "#111111") percent))
-      hex))
+  (when (and (stringp hex) (color-defined-p hex))
+    (ignore-errors (color-lighten-name hex percent))))
 
 (defun bufferline-colors-get-icon-hex (icon-str fallback)
   "Extract the foreground hex color from an icon string produced by nerd-icons."

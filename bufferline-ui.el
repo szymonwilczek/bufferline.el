@@ -26,14 +26,18 @@
   (let* ((buffer (if (bufferp tab) tab (cdr (assq 'buffer tab))))
          (active (if (bufferp tab) (eq tab (current-buffer)) (cdr (assq 'selected tab))))
          (bg-face (if active 'tab-line-tab-current 'tab-line-tab-inactive))
-         (bg-color (bufferline-colors-safe (face-background bg-face nil t) "#111111"))
-         (bar-bg (bufferline-colors-safe (face-background 'tab-line nil t) "#111111"))
-         (theme-comment (ignore-errors (ef-themes-with-colors comment)))
-         (keyword-color (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t) "#ef7f00"))
-         (fg-default-raw (face-foreground 'default nil t))
-         (fg-default (bufferline-colors-safe fg-default-raw "#ffffff"))
-         (fg-main (if active fg-default "#ffffff"))
-         (fg-comment (bufferline-colors-safe theme-comment (bufferline-colors-safe (face-foreground 'font-lock-comment-face nil t) "#888888")))
+         (def-bg (face-background 'default nil t))
+         (def-fg (face-foreground 'default nil t))
+         (bg-color (bufferline-colors-safe (face-background bg-face nil t) def-bg))
+         (bar-bg (bufferline-colors-safe (face-background 'tab-line nil t) bg-color))
+         (fg-main (bufferline-colors-safe (face-foreground (if active 'tab-line-tab-current 'default) nil t) def-fg))
+         (fg-comment (bufferline-colors-safe
+                      (when (fboundp 'ef-themes-get-color-value)
+                        (ignore-errors (ef-themes-get-color-value 'fg-dim)))
+                      (bufferline-colors-safe (face-foreground 'font-lock-comment-face nil t)
+                                              (bufferline-colors-safe (face-foreground 'shadow nil t) def-fg))))
+         (keyword-color (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t)
+                                                (bufferline-colors-safe (face-foreground 'font-lock-builtin-face nil t) fg-main)))
          (indicator-color (bufferline-colors-safe (face-foreground bufferline-indicator-face nil t) fg-main))
 
          ;; disambiguate and format duplicate directory prefix
@@ -92,19 +96,20 @@
 
          ;; read-only indicator
          (ro-icon (if (and bufferline-show-read-only (buffer-local-value 'buffer-read-only buffer))
-                      (let ((ro-fg (bufferline-colors-safe (face-foreground 'font-lock-doc-face nil t) "#888888")))
+                      (let ((ro-fg (bufferline-colors-safe (face-foreground 'font-lock-doc-face nil t) fg-comment)))
                         (propertize (format " %s" bufferline-read-only-icon) 'face `(:foreground ,ro-fg :background ,bg-color)))
                     ""))
 
          ;; modified indicator
          (mod-icon (if (and bufferline-show-modified (buffer-modified-p buffer))
-                       (let ((mod-fg (bufferline-colors-safe (face-foreground 'font-lock-warning-face nil t) "#ff9e3b")))
+                       (let ((mod-fg (bufferline-colors-safe (face-foreground 'font-lock-warning-face nil t)
+                                                             (bufferline-colors-safe (face-foreground 'warning nil t) keyword-color))))
                          (propertize (format " %s" bufferline-modified-icon) 'face `(:foreground ,mod-fg :background ,bg-color :weight bold)))
                      ""))
 
          ;; pin indicator
          (pin-icon (if (and bufferline-show-pinned (buffer-local-value 'bufferline-state--pinned buffer))
-                       (let ((pin-fg (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t) "#ef7f00")))
+                       (let ((pin-fg (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t) keyword-color)))
                          (propertize (format "%s " bufferline-pinned-icon) 'face `(:foreground ,pin-fg :background ,bg-color :weight bold)))
                      ""))
 

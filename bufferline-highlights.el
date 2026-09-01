@@ -25,17 +25,23 @@
       (when (frame-live-p f)
         (with-selected-frame f
           (let* ((graphic (display-graphic-p f))
-                 (bg-raw (face-background 'default f t))
-                 (bg (bufferline-colors-safe bg-raw "#111111"))
                  (dark-p (eq (frame-parameter f 'background-mode) 'dark))
-                 (bg-dim (or (ignore-errors (ef-themes-with-colors bg-dim))
-                             (if dark-p
-                                 (bufferline-colors-darken bg 5)
-                               (bufferline-colors-lighten bg 5))))
-                 (bg-alt (or (ignore-errors (ef-themes-with-colors bg-alt))
-                             (if dark-p
-                                 (bufferline-colors-darken bg 10)
-                               (bufferline-colors-lighten bg 10))))
+                 (theme-bg (face-background 'default f t))
+                 (theme-dim (when (fboundp 'ef-themes-get-color-value)
+                              (ignore-errors (ef-themes-get-color-value 'bg-dim))))
+                 (theme-alt (when (fboundp 'ef-themes-get-color-value)
+                              (ignore-errors (ef-themes-get-color-value 'bg-alt))))
+                 (bg (bufferline-colors-safe theme-bg (if dark-p "#111111" "#ffffff")))
+                 (bg-dim (bufferline-colors-safe
+                          theme-dim
+                          (if dark-p
+                              (bufferline-colors-lighten bg 6)
+                            (bufferline-colors-darken bg 6))))
+                 (bg-alt (bufferline-colors-safe
+                          theme-alt
+                          (if dark-p
+                              (bufferline-colors-lighten bg 12)
+                            (bufferline-colors-darken bg 12))))
                  (bar-box (when (and graphic (> (or bufferline-top-padding 0) 0))
                             `(:line-width (0 . ,bufferline-top-padding) :color ,bg-alt)))
                  (v-pad (or bufferline-tab-padding-vertical 4))
