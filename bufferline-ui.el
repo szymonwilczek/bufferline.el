@@ -49,18 +49,24 @@
          (dir-str (if dir-prefix (propertize dir-prefix 'face dir-face) ""))
 
          ;; separator / indicator
+         (graphic (display-graphic-p))
          (sep-pair (or (cdr (assq bufferline-separator-style bufferline-constants-separators)) '("▎" " ")))
-         (sep-pixel-width (or bufferline-indicator-width
-                              (cond ((eq bufferline-separator-style 'thin) 2)
-                                    ((eq bufferline-separator-style 'thick) 5)
-                                    ((eq bufferline-separator-style 'vertical) 3)
-                                    (t nil))))
+         (sep-pixel-width (when graphic
+                            (or bufferline-indicator-width
+                                (cond ((eq bufferline-separator-style 'thin) 2)
+                                      ((eq bufferline-separator-style 'thick) 5)
+                                      ((eq bufferline-separator-style 'vertical) 3)
+                                      (t nil)))))
          (sep (if sep-pixel-width
                   (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,indicator-color))
                 (propertize (car sep-pair) 'face `(:foreground ,indicator-color :background ,bg-color :weight normal))))
-         (empty-sep (if sep-pixel-width
-                        (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,bg-color))
-                      (propertize (cadr sep-pair) 'face `(:background ,bg-color))))
+         (empty-sep (if graphic
+                        (if sep-pixel-width
+                            (propertize " " 'display `(space :width (,sep-pixel-width)) 'face `(:background ,bg-color))
+                          (propertize (cadr sep-pair) 'face `(:background ,bg-color)))
+                      (if (memq bufferline-separator-style '(slant slope padded_slant padded_slope))
+                          (propertize (cadr sep-pair) 'face `(:background ,bg-color))
+                        "")))
 
          ;; file icon
          (file-or-name (or (buffer-file-name buffer) (buffer-name buffer)))
@@ -120,7 +126,9 @@
          (left-gap (when (and is-first (not (and (> (or bufferline-buffers--left-count 0) 0))) bufferline-left-margin)
                      (cond
                       ((and (integerp bufferline-left-margin) (> bufferline-left-margin 0))
-                       (propertize " " 'display `(space :width (,bufferline-left-margin)) 'face `(:background ,bar-bg)))
+                       (if graphic
+                           (propertize " " 'display `(space :width (,bufferline-left-margin)) 'face `(:background ,bar-bg))
+                         ""))
                       ((stringp bufferline-left-margin)
                        (propertize bufferline-left-margin 'face `(:background ,bar-bg)))
                       (t nil))))
