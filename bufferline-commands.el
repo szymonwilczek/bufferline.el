@@ -50,6 +50,59 @@
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
 
+(defun bufferline-commands--swap-order (a b)
+  "Swap the positions of tabs A and B, then redraw the bufferline."
+  (unless (eq bufferline-sort-by 'fifo)
+    (user-error "Tabs can only be reordered when `bufferline-sort-by' is fifo"))
+  (unless (eq (bufferline-state-pinned-p a) (bufferline-state-pinned-p b))
+    (user-error "Pinned tabs stay ahead of unpinned ones"))
+  (let ((id (buffer-local-value 'bufferline-state--tab-order-id a)))
+    (with-current-buffer a
+      (setq bufferline-state--tab-order-id
+            (buffer-local-value 'bufferline-state--tab-order-id b)))
+    (with-current-buffer b
+      (setq bufferline-state--tab-order-id id)))
+  (if (fboundp 'bufferline-ui-refresh)
+      (bufferline-ui-refresh)
+    (force-mode-line-update t)))
+
+(defun bufferline-commands--move-tab (step)
+  "Swap the current tab with its neighbour STEP positions away (1 or -1)."
+  (let* ((buf (current-buffer))
+         (tabs (bufferline-buffers-all))
+         (pos (or (seq-position tabs buf)
+                  (user-error "Current buffer is not a tab")))
+         (target (+ pos step)))
+    (when (or (< target 0) (>= target (length tabs)))
+      (user-error "Tab is already the %s one" (if (< step 0) "first" "last")))
+    (bufferline-commands--swap-order buf (nth target tabs))))
+
+;;;###autoload
+(defun bufferline-move-tab-right ()
+  "Move the current tab one position to the right."
+  (interactive)
+  (bufferline-commands--move-tab 1))
+
+;;;###autoload
+(defun bufferline-move-tab-left ()
+  "Move the current tab one position to the left."
+  (interactive)
+  (bufferline-commands--move-tab -1))
+
+;;;###autoload
+(defun bufferline-swap-tab ()
+  "Swap the current tab with another one picked by its letter."
+  (interactive)
+  (let ((buf (current-buffer)))
+    (unless (memq buf (bufferline-buffers-all))
+      (user-error "Current buffer is not a tab"))
+    (let ((other (bufferline-pick-read-buffer
+                  (format "Swap %s with: " (buffer-name buf)))))
+      (cond
+       ((null other) (message "Swap cancelled"))
+       ((eq other buf) (message "That is the current tab"))
+       (t (bufferline-commands--swap-order buf other))))))
+
 ;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)
   "Toggle pinned status of current or specified BUFFER."

@@ -12,6 +12,25 @@
 (require 'bufferline-config)
 (require 'bufferline-buffers)
 
+(defun bufferline-pick-read-buffer (prompt)
+  "Ask for a visible tab by its assigned letter with PROMPT.
+Return the chosen live buffer, or nil when the key matches no tab."
+  (let ((alphabet (string-to-list bufferline-pick-alphabet))
+        (index 0)
+        items)
+    (dolist (buf (bufferline-buffers-get))
+      (when (< index (length alphabet))
+        (push (cons (nth index alphabet) buf) items)
+        (setq index (1+ index))))
+    (setq items (nreverse items))
+    (when items
+      (let* ((labels (mapconcat (lambda (pair)
+                                  (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
+                                items
+                                "  "))
+             (chosen (cdr (assoc (read-key (concat prompt labels " ")) items))))
+        (and chosen (buffer-live-p chosen) chosen)))))
+
 ;;;###autoload
 (defun bufferline-pick ()
   "Interactively jump to a visible buffer by selecting its assigned letter."
