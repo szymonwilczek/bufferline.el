@@ -325,6 +325,24 @@
                 </td>
               </tr>
               <tr>
+                <td><code>bufferline-pick-in-place</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Draw pick letters on the tabs themselves, in place of their
+                  icons, instead of listing them in the minibuffer prompt.
+                  Applies to <code>bufferline-pick</code>,
+                  <code>bufferline-pick-close</code> and
+                  <code>bufferline-swap-tab</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-pick-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'error</td>
+                <td>Face whose foreground colors the in-place pick letters.</td>
+              </tr>
+              <tr>
                 <td><code>bufferline-custom-filter</code></td>
                 <td class="type-col">function / nil</td>
                 <td class="default-col">nil</td>
@@ -420,6 +438,12 @@
             <li>
               <code>bufferline-pick-close</code>: Interactively close a visible
               buffer using single-letter tags.
+            </li>
+            <li>
+              The pick commands list each letter with its tab name in the
+              minibuffer. With <code>bufferline-pick-in-place</code> the letters
+              appear on the tabs for as long as the key is awaited, and any key
+              without a letter cancels the pick.
             </li>
           </ul>
         </div>
