@@ -35,5 +35,11 @@
       (setq bufferline-state--tab-order-counter (1+ bufferline-state--tab-order-counter))
       (setq bufferline-state--tab-order-id bufferline-state--tab-order-counter))))
 
+(defun bufferline-state-move-to-end (buffer)
+  "Give BUFFER a fresh order index, placing it after every other tab."
+  (with-current-buffer buffer
+    (setq bufferline-state--tab-order-counter (1+ bufferline-state--tab-order-counter))
+    (setq bufferline-state--tab-order-id bufferline-state--tab-order-counter)))
+
 (provide 'bufferline-state)
 ;;; bufferline-state.el ends here

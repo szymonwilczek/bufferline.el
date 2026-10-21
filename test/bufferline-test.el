@@ -52,6 +52,26 @@ each switch, as redisplay does, so they get their order in opening order."
            (progn ,@body)
          (mapc #'kill-buffer bufferline-test--buffers)))))
 
+;;; Tab order state
+
+(ert-deftest bufferline-test-state-move-to-end ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-state-move-to-end a)
+     (should (equal (bufferline-test--tabs (selected-window)) (list b c a))))))
+
+(ert-deftest bufferline-test-state-move-to-end-keeps-pinned-first ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-state-toggle-pin b)
+     (bufferline-state-move-to-end a)
+     (should (equal (bufferline-test--tabs (selected-window)) (list b a))))))
+
 ;;; Reordering within a window
 
 (ert-deftest bufferline-test-move-tab-right ()
