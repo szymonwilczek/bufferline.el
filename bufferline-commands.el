@@ -106,7 +106,8 @@
 (defun bufferline-commands--move-to-window (direction)
   "Move the current tab to the window in DIRECTION and follow it there.
 DIRECTION is one of `left', `right', `above' or `below'.  The tab joins
-the end of the target window's tabs."
+the end of the target window's tabs.  When it was the last tab of its
+window, that window is closed once the tab has moved."
   (let* ((buf (current-buffer))
          (source (selected-window))
          (tabs (bufferline-buffers-all))
@@ -120,13 +121,16 @@ the end of the target window's tabs."
     (when (window-dedicated-p target)
       (user-error "Window %s is dedicated to its buffer" direction))
     (let ((rest (delq buf tabs)))
+      (when (and (null rest) (not (eq (window-deletable-p source) t)))
+        (user-error "Cannot close this window after moving its last tab"))
+      (when rest
+        (switch-to-buffer (car rest) nil t)
+        (bufferline-buffers-forget buf source))
+      (bufferline-state-move-to-end buf)
+      (select-window target)
+      (switch-to-buffer buf nil t)
       (unless rest
-        (user-error "Cannot move the last tab out of its window"))
-      (switch-to-buffer (car rest) nil t))
-    (bufferline-buffers-forget buf source)
-    (bufferline-state-move-to-end buf)
-    (select-window target)
-    (switch-to-buffer buf nil t)
+        (delete-window source)))
     (if (fboundp 'bufferline-ui-refresh)
         (bufferline-ui-refresh)
       (force-mode-line-update t))))

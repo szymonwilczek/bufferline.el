@@ -178,7 +178,7 @@ each switch, as redisplay does, so they get their order in opening order."
      (bufferline-move-tab-to-window-right)
      (should (equal (bufferline-test--tabs right) (list c a))))))
 
-(ert-deftest bufferline-test-move-last-tab-to-window ()
+(ert-deftest bufferline-test-move-last-tab-closes-split ()
   (bufferline-test-with-frame
    (let* ((left (selected-window))
           (right (split-window-right))
@@ -186,8 +186,45 @@ each switch, as redisplay does, so they get their order in opening order."
           (c (bufferline-test--buffer "c")))
      (bufferline-test--show right c)
      (bufferline-test--show left a)
-     (should-error (bufferline-move-tab-to-window-right) :type 'user-error)
-     (should (eq (window-buffer left) a)))))
+     (bufferline-move-tab-to-window-right)
+     
+     ;; the emptied split closes, after the tab has landed in the target
+     (should-not (window-live-p left))
+     (should (eq (selected-window) right))
+     (should (eq (window-buffer right) a))
+     (should (equal (bufferline-test--tabs right) (list c a))))))
+
+(ert-deftest bufferline-test-move-last-tab-closes-split-in-three ()
+  (bufferline-test-with-frame
+   (let* ((top (selected-window))
+          (middle (split-window-below))
+          (bottom (with-selected-window middle (split-window-below)))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c")))
+     (bufferline-test--show top b)
+     (bufferline-test--show bottom c)
+     (bufferline-test--show middle a)
+     (bufferline-move-tab-to-window-up)
+     (should-not (window-live-p middle))
+     (should (eq (selected-window) top))
+     (should (equal (bufferline-test--tabs top) (list b a)))
+     (should (eq (window-buffer bottom) c)))))
+
+(ert-deftest bufferline-test-move-last-tab-from-undeletable-window ()
+  (bufferline-test-with-frame
+   (let* ((main (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (side (display-buffer-in-side-window c '((side . right)))))
+     (set-window-dedicated-p side nil)
+     (bufferline-test--show main a)
+     (should (equal (cadr (should-error (bufferline-move-tab-to-window-right)
+                                        :type 'user-error))
+                    "Cannot close this window after moving its last tab"))
+     (should (window-live-p main))
+     (should (eq (window-buffer main) a))
+     (should (eq (window-buffer side) c)))))
 
 (ert-deftest bufferline-test-move-to-window-without-neighbour ()
   (bufferline-test-with-frame
