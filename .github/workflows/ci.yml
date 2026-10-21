@@ -1,4 +1,4 @@
-name: CI / Byte-Compile
+name: CI / Byte-Compile and Test
 
 on:
   push:
@@ -42,3 +42,6 @@ jobs:
             --eval "(package-initialize)" \
             -L . \
             -f batch-byte-compile *.el
+
+      - name: Run ERT tests
+        run: make test
