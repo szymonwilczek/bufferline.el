@@ -126,6 +126,63 @@ each switch, as redisplay does, so they get their order in opening order."
      (let ((bufferline-exclude-modes nil))
        (should (equal (bufferline-test--tabs (selected-window)) (list b a)))))))
 
+(ert-deftest bufferline-test-custom-filter-rejects-buffers ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (let ((bufferline-custom-filter
+            (lambda (buf) (not (equal (buffer-name buf) "b")))))
+       (should-not (bufferline-buffers-candidate-p b))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a c)))))))
+
+(ert-deftest bufferline-test-custom-filter-receives-each-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         seen)
+     (bufferline-test--show (selected-window) a b)
+     (let ((bufferline-custom-filter (lambda (buf) (push buf seen) t)))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b))))
+     (should (memq a seen))
+     (should (memq b seen))
+     (should (seq-every-p #'bufferp seen)))))
+
+(ert-deftest bufferline-test-custom-filter-runs-after-built-in-filters ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (hidden (bufferline-test--buffer " hidden"))
+         seen)
+     (bufferline-test--show (selected-window) hidden a)
+     (let ((bufferline-custom-filter (lambda (buf) (push buf seen) t)))
+       (bufferline-test--tabs (selected-window)))
+     (should-not (memq hidden seen)))))
+
+(ert-deftest bufferline-test-custom-filter-can-hide-current-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (let ((bufferline-custom-filter (lambda (buf) (not (eq buf b)))))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a)))))))
+
+(ert-deftest bufferline-test-custom-filter-error-keeps-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (let ((bufferline-custom-filter (lambda (_buf) (error "Broken filter"))))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b)))))))
+
+(ert-deftest bufferline-test-custom-filter-nil-keeps-everything ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (let ((bufferline-custom-filter nil))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b)))))))
+
 (ert-deftest bufferline-test-filter-dead-buffer ()
   (let ((buf (generate-new-buffer "dead")))
     (kill-buffer buf)

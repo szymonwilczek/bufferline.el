@@ -200,6 +200,19 @@ When nil, buffers with names starting with '*' (e.g. *scratch*, *Messages*) are 
   :type '(repeat symbol)
   :group 'bufferline)
 
+(defcustom bufferline-custom-filter nil
+  "Predicate deciding whether a buffer gets a tab, or nil for none.
+It is called with a buffer that passed every built-in filter and the
+buffer gets a tab only when it returns non-nil.  When it signals an
+error the buffer keeps its tab, so a broken predicate cannot empty the
+bufferline.  For example, to show only buffers visiting a file:
+
+  (setq bufferline-custom-filter
+        (lambda (buffer) (buffer-file-name buffer)))"
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Predicate"))
+  :group 'bufferline)
+
 (defcustom bufferline-tab-fixed-width 23
   "Average tab width estimation used for viewport scrolling."
   :type 'integer

@@ -30,7 +30,16 @@ whether BUFFER can be a tab at all, in whichever window it is shown."
               (or bufferline-show-special-buffers
                   (not (string-prefix-p "*" name)))
               (not (memq (buffer-local-value 'major-mode buffer)
-                         bufferline-exclude-modes))))))
+                         bufferline-exclude-modes))
+              (bufferline-buffers--custom-filter-p buffer)))))
+
+(defun bufferline-buffers--custom-filter-p (buffer)
+  "Return non-nil if `bufferline-custom-filter' lets BUFFER have a tab.
+A missing predicate, or one that signals an error, lets every buffer in."
+  (or (not (functionp bufferline-custom-filter))
+      (condition-case nil
+          (funcall bufferline-custom-filter buffer)
+        (error t))))
 
 (defun bufferline-buffers-all ()
   "Filter and return sorted list of live user buffers for current window."
