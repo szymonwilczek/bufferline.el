@@ -353,6 +353,28 @@
                   buffer.
                 </td>
               </tr>
+              <tr>
+                <td><code>bufferline-hide-single-tab</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Hide the tab line of a window with at most one tab. It comes
+                  back as soon as the window has a second tab.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-hide-in-excluded-buffers</code></td>
+                <td class="type-col">boolean / list</td>
+                <td class="default-col">nil</td>
+                <td>
+                  When <code>t</code>, hide the tab line of a window showing a
+                  buffer that gets no tab (excluded mode, rejected by the custom
+                  filter, or a special buffer while special buffers are hidden).
+                  When a list of major modes such as
+                  <code>'(dired-mode magit-mode)</code>, hide it over buffers in
+                  those modes or modes deriving from them.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -444,6 +466,41 @@
               minibuffer. With <code>bufferline-pick-in-place</code> the letters
               appear on the tabs for as long as the key is awaited, and any key
               without a letter cancels the pick.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">HIDING THE TAB LINE</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Hide a Lone Tab</h3>
+            <pre
+              class="doc-code"
+            ><code>(setq bufferline-hide-single-tab t)</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Hide Over Helper Buffers</h3>
+            <pre
+              class="doc-code"
+            ><code>(setq bufferline-hide-in-excluded-buffers
+      '(dired-mode magit-mode))</code></pre>
+          </div>
+        </div>
+
+        <div class="doc-card">
+          <ul class="doc-list">
+            <li>
+              Both options work per window and can be combined. The tab line is
+              hidden through the <code>tab-line-format</code> window parameter;
+              bufferline only ever clears a value it set itself, and disabling
+              <code>global-bufferline-mode</code> shows every hidden tab line
+              again.
             </li>
           </ul>
         </div>
