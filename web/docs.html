@@ -211,6 +211,30 @@
                 <td>Display pin glyph on pinned buffers.</td>
               </tr>
               <tr>
+                <td><code>bufferline-show-tab-close-icon</code></td>
+                <td class="type-col">boolean / symbol</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Draw a close button at the end of every tab (<code>t</code>)
+                  or only the current one (<code>'active</code>). Clicking it
+                  closes that tab in the clicked window.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-close-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">"󰅖"</td>
+                <td>Glyph drawn as the close button.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-close-icon-hover-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'error</td>
+                <td>
+                  Face whose foreground colors the close button under the mouse.
+                </td>
+              </tr>
+              <tr>
                 <td><code>bufferline-pinned-icon</code></td>
                 <td class="type-col">string</td>
                 <td class="default-col">""</td>
@@ -398,6 +422,11 @@
             <li>
               <code>bufferline-close-tab</code>: Close current or specified
               buffer without altering window split layout.
+            </li>
+            <li>
+              <code>bufferline-close-tab-at-click</code>: Close the tab whose
+              close button was clicked; bound to mouse-1 on the button drawn by
+              <code>bufferline-show-tab-close-icon</code>.
             </li>
             <li>
               <code>bufferline-close-other-tabs</code>: Close every tab of the
