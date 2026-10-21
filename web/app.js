@@ -107,10 +107,11 @@
             pinned: false,
             modified: false,
             readOnly: false,
-            icon: "",
-            iconColor: "#dea584",
-            mode: "rust-ts",
-            size: "5.6KiB",
+            icon: '',
+            iconColor: '#dea584',
+            mode: 'rust-ts',
+            diags: { err: 0, warn: 2 },
+            size: '5.6KiB',
             code: `use serde::{Deserialize, Serialize};
 
             #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -477,6 +478,7 @@
         showPinned: true,
         showDuplicates: true,
         showDiagnostics: true,
+        diagHighlight: 'none',
         showTruncMarkers: true,
         showSpecialBuffers: true,
         closeKeepPinned: true,
@@ -532,6 +534,7 @@
         sortBy: document.getElementById('sortBy'),
         numbersMode: document.getElementById('numbersMode'),
         closeIcon: document.getElementById('closeIcon'),
+        diagHighlight: document.getElementById('diagHighlight'),
         duplicateDepth: document.getElementById('duplicateDepth'),
         valDuplicateDepth: document.getElementById('valDuplicateDepth'),
         themePreset: document.getElementById('themePreset'),
@@ -736,6 +739,15 @@
         return state.closeIcon === 't';
     }
 
+    // color a tab takes from its diagnostics, mirroring
+    // bufferline-diagnostics-highlight-color: errors win over warnings
+    function diagHighlightColor(buf) {
+        if (state.diagHighlight === 'none' || !buf.diags) return null;
+        if (buf.diags.err > 0) return 'var(--emacs-error)';
+        if (buf.diags.warn > 0) return 'var(--emacs-warning)';
+        return null;
+    }
+
     function estimateTabCharWidth(buf, idx) {
         let w = buf.name.length;
         if (buf.dirPrefix) w += buf.dirPrefix.length;
@@ -876,6 +888,9 @@
 
             // separator / indicator
             const styleDef = SEPARATORS[state.separatorStyle] || SEPARATORS.vertical;
+            const diagColor = diagHighlightColor(buf);
+            const diagName = diagColor && (state.diagHighlight === 'name' || state.diagHighlight === 'both');
+            const diagSep = diagColor && (state.diagHighlight === 'separator' || state.diagHighlight === 'both');
 
             if (styleDef.type === "pixel") {
                 const indEl = document.createElement("span");
@@ -887,23 +902,21 @@
                               ? 5
                               : state.indicatorWidth;
                 indEl.style.width = `${w}px`;
+                // a highlighted separator is drawn on inactive tabs too
+                if (diagSep) indEl.style.backgroundColor = diagColor;
                 tabEl.appendChild(indEl);
             } else if (styleDef.type === "glyph") {
                 const indEl = document.createElement("span");
                 indEl.className = "tab-sep-left glyph";
                 indEl.textContent = styleDef.left;
-                indEl.style.color = isActive
-                    ? "var(--emacs-indicator)"
-                    : "var(--emacs-comment)";
+                indEl.style.color = diagSep ? diagColor : (isActive ? 'var(--emacs-indicator)' : 'var(--emacs-comment)');
                 tabEl.appendChild(indEl);
             } else if (styleDef.type === "powerline") {
                 const indEl = document.createElement("span");
                 indEl.className = "tab-sep-left glyph";
                 indEl.textContent = styleDef.left;
-                indEl.style.color = isActive
-                    ? "var(--emacs-bg)"
-                    : "var(--emacs-bg-dim)";
-                indEl.style.backgroundColor = "var(--emacs-bg-alt)";
+                indEl.style.color = diagSep ? diagColor : (isActive ? 'var(--emacs-bg)' : 'var(--emacs-bg-dim)');
+                indEl.style.backgroundColor = 'var(--emacs-bg-alt)';
                 tabEl.appendChild(indEl);
             }
 
@@ -958,6 +971,7 @@
             const name = document.createElement("span");
             name.className = "tab-base-name";
             name.textContent = buf.name;
+            if (diagName) name.style.color = diagColor;
             label.appendChild(name);
 
             contentEl.appendChild(label);
@@ -1221,6 +1235,7 @@
         if (state.pickInPlace) customLines.push('  (bufferline-pick-in-place t)');
         if (state.closeIcon === 't') customLines.push('  (bufferline-show-tab-close-icon t)');
         if (state.closeIcon === 'active') customLines.push("  (bufferline-show-tab-close-icon 'active)");
+        if (state.diagHighlight !== 'none') customLines.push(`  (bufferline-diagnostics-highlight '${state.diagHighlight})`);
         if (state.hideSingleTab) customLines.push('  (bufferline-hide-single-tab t)');
         if (state.hideInExcluded === 't') customLines.push('  (bufferline-hide-in-excluded-buffers t)');
         if (state.hideInExcluded === 'modes' && hideModeList().length > 0) {
@@ -1413,6 +1428,11 @@
 
         DOM.closeIcon.addEventListener('change', (e) => {
             state.closeIcon = e.target.value;
+            renderAll();
+        });
+
+        DOM.diagHighlight.addEventListener('change', (e) => {
+            state.diagHighlight = e.target.value;
             renderAll();
         });
 
