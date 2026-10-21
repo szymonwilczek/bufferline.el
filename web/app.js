@@ -481,6 +481,7 @@
         showSpecialBuffers: true,
         closeKeepPinned: true,
         pickInPlace: false,
+        closeIcon: 'none',
         hideSingleTab: false,
         hideInExcluded: 'none',
         hideModes: 'dired-mode magit-mode',
@@ -515,29 +516,30 @@
         editorContent: document.getElementById("editorContent"),
 
         // form controls
-        separatorStyle: document.getElementById("separatorStyle"),
-        indicatorWidth: document.getElementById("indicatorWidth"),
-        valIndicatorWidth: document.getElementById("valIndicatorWidth"),
-        leftMargin: document.getElementById("leftMargin"),
-        valLeftMargin: document.getElementById("valLeftMargin"),
-        topPadding: document.getElementById("topPadding"),
-        valTopPadding: document.getElementById("valTopPadding"),
-        tabPaddingVertical: document.getElementById("tabPaddingVertical"),
-        valTabPaddingVertical: document.getElementById("valTabPaddingVertical"),
-        tabPaddingHorizontal: document.getElementById("tabPaddingHorizontal"),
-        valTabPaddingHorizontal: document.getElementById("valTabPaddingHorizontal"),
-        iconSpacing: document.getElementById("iconSpacing"),
-        valIconSpacing: document.getElementById("valIconSpacing"),
-        sortBy: document.getElementById("sortBy"),
-        numbersMode: document.getElementById("numbersMode"),
-        duplicateDepth: document.getElementById("duplicateDepth"),
-        valDuplicateDepth: document.getElementById("valDuplicateDepth"),
-        themePreset: document.getElementById("themePreset"),
-        fontPreset: document.getElementById("fontPreset"),
-        customThemeContainer: document.getElementById("customThemeContainer"),
-        customThemeInput: document.getElementById("customThemeInput"),
-        btnLoadTheme: document.getElementById("btnLoadTheme"),
-
+        separatorStyle: document.getElementById('separatorStyle'),
+        indicatorWidth: document.getElementById('indicatorWidth'),
+        valIndicatorWidth: document.getElementById('valIndicatorWidth'),
+        leftMargin: document.getElementById('leftMargin'),
+        valLeftMargin: document.getElementById('valLeftMargin'),
+        topPadding: document.getElementById('topPadding'),
+        valTopPadding: document.getElementById('valTopPadding'),
+        tabPaddingVertical: document.getElementById('tabPaddingVertical'),
+        valTabPaddingVertical: document.getElementById('valTabPaddingVertical'),
+        tabPaddingHorizontal: document.getElementById('tabPaddingHorizontal'),
+        valTabPaddingHorizontal: document.getElementById('valTabPaddingHorizontal'),
+        iconSpacing: document.getElementById('iconSpacing'),
+        valIconSpacing: document.getElementById('valIconSpacing'),
+        sortBy: document.getElementById('sortBy'),
+        numbersMode: document.getElementById('numbersMode'),
+        closeIcon: document.getElementById('closeIcon'),
+        duplicateDepth: document.getElementById('duplicateDepth'),
+        valDuplicateDepth: document.getElementById('valDuplicateDepth'),
+        themePreset: document.getElementById('themePreset'),
+        fontPreset: document.getElementById('fontPreset'),
+        customThemeContainer: document.getElementById('customThemeContainer'),
+        customThemeInput: document.getElementById('customThemeInput'),
+        btnLoadTheme: document.getElementById('btnLoadTheme'),
+        
         // toggles
         showIcons: document.getElementById('showIcons'),
         showModified: document.getElementById('showModified'),
@@ -728,6 +730,12 @@
         return list;
     }
 
+    // mirror of `bufferline-buffers-close-icon-p'
+    function hasCloseIcon(buf) {
+        if (state.closeIcon === 'active') return buf.id === state.activeBufferId;
+        return state.closeIcon === 't';
+    }
+
     function estimateTabCharWidth(buf, idx) {
         let w = buf.name.length;
         if (buf.dirPrefix) w += buf.dirPrefix.length;
@@ -736,10 +744,11 @@
         if (state.showModified && buf.modified) w += 2;
         if (state.showReadOnly && buf.readOnly) w += 2;
         if (state.showDiagnostics && buf.diags) w += 4;
-        if (state.numbersMode === "ordinal") w += `${idx + 1}. `.length;
-        else if (state.numbersMode === "buffer-id") w += `${buf.id}. `.length;
-        else if (state.numbersMode === "both") w += `${idx + 1}:${buf.id} `.length;
-        w += state.tabPaddingHorizontal + 2;
+        if (hasCloseIcon(buf)) w += 2;
+        if (state.numbersMode === 'ordinal') w += (`${idx + 1}. `).length;
+        else if (state.numbersMode === 'buffer-id') w += (`${buf.id}. `).length;
+        else if (state.numbersMode === 'both') w += (`${idx + 1}:${buf.id} `).length;
+        w += (state.tabPaddingHorizontal + 2);
         return Math.max(8, w);
     }
 
@@ -988,6 +997,22 @@
                 contentEl.appendChild(diag);
             }
 
+            // close button
+            if (hasCloseIcon(buf)) {
+                const close = document.createElement('span');
+                close.className = 'tab-close-icon';
+                close.textContent = '󰅖';
+                close.title = 'Close tab';
+                close.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    state.pick = null;
+                    state.echo = '';
+                    closeTab(buf.id);
+                    renderAll();
+                });
+                contentEl.appendChild(close);
+            }
+
             tabEl.appendChild(contentEl);
 
             // right separator
@@ -1056,13 +1081,11 @@
         state.pick = { kind, items };
     }
 
-    // the window shows a neighbouring tab once its buffer is killed
+    // mirror of `bufferline-close-tab': the window falls back to its first tab
     function closeTab(id) {
-        const tabs = getPreparedBuffers();
-        const pos = tabs.findIndex(b => b.id === id);
         state.closedIds.add(id);
         if (id === state.activeBufferId) {
-            const next = tabs[pos + 1] || tabs[pos - 1];
+            const next = getPreparedBuffers()[0];
             if (next) state.activeBufferId = next.id;
         }
     }
@@ -1196,6 +1219,8 @@
         if (!state.showSpecialBuffers) customLines.push('  (bufferline-show-special-buffers nil)');
         if (!state.closeKeepPinned) customLines.push('  (bufferline-close-keep-pinned nil)');
         if (state.pickInPlace) customLines.push('  (bufferline-pick-in-place t)');
+        if (state.closeIcon === 't') customLines.push('  (bufferline-show-tab-close-icon t)');
+        if (state.closeIcon === 'active') customLines.push("  (bufferline-show-tab-close-icon 'active)");
         if (state.hideSingleTab) customLines.push('  (bufferline-hide-single-tab t)');
         if (state.hideInExcluded === 't') customLines.push('  (bufferline-hide-in-excluded-buffers t)');
         if (state.hideInExcluded === 'modes' && hideModeList().length > 0) {
@@ -1384,6 +1409,11 @@
                 state[prop] = e.target.checked;
                 renderAll();
             });
+        });
+
+        DOM.closeIcon.addEventListener('change', (e) => {
+            state.closeIcon = e.target.value;
+            renderAll();
         });
 
         // tab line visibility

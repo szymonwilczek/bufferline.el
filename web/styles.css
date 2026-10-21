@@ -371,6 +371,20 @@ html, body {
     margin-left: var(--sp);
 }
 
+.tab-close-icon {
+    font-family: var(--font-icons);
+    display: inline-flex;
+    align-items: center;
+    margin-left: var(--sp);
+    color: var(--emacs-comment);
+    cursor: pointer;
+}
+
+.tab-close-icon:hover {
+    color: var(--emacs-error);
+    font-weight: bold;
+}
+
 .tab-mod-icon {
     color: var(--emacs-warning);
     font-weight: bold;

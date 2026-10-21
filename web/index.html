@@ -253,6 +253,15 @@
             </div>
 
             <div class="field-row">
+              <label for="closeIcon">show-tab-close-icon</label>
+              <select id="closeIcon" class="raw-select">
+                <option value="none" selected>nil (no close button)</option>
+                <option value="t">t (every tab)</option>
+                <option value="active">'active (current tab only)</option>
+              </select>
+            </div>
+
+            <div class="field-row">
               <label for="duplicateDepth">duplicate-prefix-depth</label>
               <div class="slider-wrap">
                 <input
