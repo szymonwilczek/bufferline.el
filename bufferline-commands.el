@@ -49,6 +49,21 @@
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
 
+(defun bufferline-close-tab-at-click (event)
+  "Close the tab whose close button was clicked with mouse EVENT.
+The tab is closed in the window whose tab line was clicked, which stays
+as selected as it was."
+  (interactive "e")
+  (let* ((posn (event-start event))
+         (window (posn-window posn))
+         (clicked (posn-string posn))
+         (tab (and clicked
+                   (get-text-property (or (cdr clicked) 0) 'tab (car clicked))))
+         (buffer (if (bufferp tab) tab (cdr (assq 'buffer tab)))))
+    (when (and (buffer-live-p buffer) (window-live-p window))
+      (with-selected-window window
+        (bufferline-close-tab buffer)))))
+
 (defun bufferline-commands--close-buffers (buffers)
   "Kill BUFFERS, redraw the bufferline and return how many were closed.
 Pinned buffers are left open while `bufferline-close-keep-pinned' is

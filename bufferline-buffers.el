@@ -63,6 +63,13 @@ A missing predicate, or one that signals an error, lets every buffer in."
   "Drop BUFFER from the tabs of WINDOW by erasing it from its history."
   (unrecord-window-buffer window buffer))
 
+(defun bufferline-buffers-close-icon-p (buffer)
+  "Return non-nil if the tab of BUFFER gets a close button.
+See `bufferline-show-tab-close-icon'."
+  (if (eq bufferline-show-tab-close-icon 'active)
+      (eq buffer (window-buffer (selected-window)))
+    (and bufferline-show-tab-close-icon t)))
+
 (defun bufferline-buffers-tab-width (buffer live-tabs)
   "Calculate estimated rendered character width for BUFFER tab."
   (let* ((name (if bufferline-show-duplicate-prefix
@@ -74,9 +81,12 @@ A missing predicate, or one that signals an error, lets every buffer in."
                      (length (or bufferline-tab-padding-horizontal "  "))))
          (mid-len (if (integerp bufferline-icon-spacing)
                       bufferline-icon-spacing
-                    (length (or bufferline-icon-spacing " ")))))
-    ;; 1 indicator + 1 pre-pad + 2 icon + mid-len + name + post-len
-    (+ len 4 mid-len post-len)))
+                    (length (or bufferline-icon-spacing " "))))
+         (close-len (if (bufferline-buffers-close-icon-p buffer)
+                        (1+ (string-width bufferline-close-icon))
+                      0)))
+    ;; 1 indicator + 1 pre-pad + 2 icon + mid-len + name + close + post-len
+    (+ len 4 mid-len close-len post-len)))
 
 (defun bufferline-buffers-get ()
   "Calculate visible slice of buffers fitting within current window width,

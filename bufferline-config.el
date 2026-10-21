@@ -141,6 +141,28 @@ Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'director
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-show-tab-close-icon nil
+  "Where to draw a close button on the tabs.
+When t, every tab ends with `bufferline-close-icon', and clicking it
+closes that tab.  When `active', only the current tab of each window
+has one.  When nil, no tab has a close button and tabs close with
+mouse-2 or the close commands."
+  :type '(choice (const :tag "None" nil)
+                 (const :tag "Every tab" t)
+                 (const :tag "Current tab only" active))
+  :group 'bufferline)
+
+(defcustom bufferline-close-icon "󰅖"
+  "Icon drawn as the close button of a tab.
+See `bufferline-show-tab-close-icon'."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-close-icon-hover-face 'error
+  "Face used to resolve the color of a close button under the mouse."
+  :type 'face
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/LSP error count badges in tabs."
   :type 'boolean

@@ -128,7 +128,21 @@
          (mid-pad (propertize mid-pad-str 'face `(:background ,bg-color)))
          (post-pad (propertize post-pad-str 'face `(:background ,bg-color)))
 
-         (tab-str (concat (if active sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon post-pad))
+         ;; close button, set apart from the indicators by one space
+         (close-icon (if (bufferline-buffers-close-icon-p buffer)
+                         (concat (propertize " " 'face `(:background ,bg-color))
+                                 (propertize bufferline-close-icon 'face `(:foreground ,fg-comment :background ,bg-color)))
+                       ""))
+
+         (tab-head (concat (if active sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon))
+         (tab-str (concat tab-head close-icon post-pad))
+         (tab-map (let ((km (make-sparse-keymap)))
+                    (define-key km [tab-line mouse-1] #'tab-line-select-tab)
+                    (define-key km [tab-line mouse-2] #'tab-line-close-tab)
+                    (define-key km [tab-line down-mouse-3] #'tab-line-tab-context-menu)
+                    (define-key km [tab-line touchscreen-begin] #'tab-line-select-tab)
+                    (define-key km (kbd "RET") #'tab-line-select-tab)
+                    km))
 
          ;; truncation markers rendered on outer edges of first/last tab
          (is-first (eq buffer (car tabs)))
@@ -167,20 +181,29 @@
                                                  (define-key km [tab-line mouse-1] #'bufferline-next-tab)
                                                  km))))))
 
+    (setq tab-str (propertize tab-str
+                              'tab tab
+                              'theme-version bufferline-highlights--theme-version
+                              'help-echo nil
+                              'mouse-face nil
+                              'keymap tab-map))
+    ;; the close button keeps the tab properties but answers mouse-1 itself
+    (unless (equal close-icon "")
+      (let ((start (1+ (length tab-head)))
+            (close-map (make-sparse-keymap))
+            (hover-fg (bufferline-colors-safe (face-foreground bufferline-close-icon-hover-face nil t)
+                                              keyword-color)))
+        (set-keymap-parent close-map tab-map)
+        (define-key close-map [tab-line mouse-1] #'bufferline-close-tab-at-click)
+        (add-text-properties start (+ start (length bufferline-close-icon))
+                             (list 'keymap close-map
+                                   'help-echo "Close tab"
+                                   'mouse-face `(:foreground ,hover-fg :background ,bg-color :weight bold))
+                             tab-str)))
+
     (concat left-gap
             left-marker
-            (propertize tab-str
-                        'tab tab
-                        'theme-version bufferline-highlights--theme-version
-                        'help-echo nil
-                        'mouse-face nil
-                        'keymap (let ((km (make-sparse-keymap)))
-                                  (define-key km [tab-line mouse-1] #'tab-line-select-tab)
-                                  (define-key km [tab-line mouse-2] #'tab-line-close-tab)
-                                  (define-key km [tab-line down-mouse-3] #'tab-line-tab-context-menu)
-                                  (define-key km [tab-line touchscreen-begin] #'tab-line-select-tab)
-                                  (define-key km (kbd "RET") #'tab-line-select-tab)
-                                  km))
+            tab-str
             right-marker)))
 
 (defun bufferline-ui-follow-active (&rest _)

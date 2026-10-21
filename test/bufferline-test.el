@@ -887,6 +887,170 @@ The letter is the only character drawn in the color of `bufferline-pick-face'."
        (should (eq (current-buffer) b)))
      (should (eq (selected-window) left)))))
 
+;;; Close button on tabs
+
+(defun bufferline-test--close-start (string)
+  "Return the index where the close button starts in STRING, or nil."
+  (seq-position (number-sequence 0 (1- (length string)))
+                nil
+                (lambda (i _) (equal (get-text-property i 'help-echo string) "Close tab"))))
+
+(defun bufferline-test--click-close (window buffer)
+  "Click the close button of BUFFER's tab in WINDOW's tab line."
+  (let* ((string (bufferline-test--render window buffer))
+         (index (bufferline-test--close-start string)))
+    (bufferline-close-tab-at-click
+     (list 'mouse-1 (list window 'tab-line '(0 . 0) 0 (cons string index)
+                          nil '(0 . 0) nil '(0 . 0) '(0 . 0))))))
+
+(ert-deftest bufferline-test-close-icon-off-by-default ()
+  (should-not (default-value 'bufferline-show-tab-close-icon))
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (dolist (buf (list a b))
+       (let ((string (bufferline-test--render (selected-window) buf)))
+         (should-not (bufferline-test--close-start string))
+         (should-not (string-search bufferline-close-icon string)))))))
+
+(ert-deftest bufferline-test-close-icon-on-every-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-tab-close-icon t)
+         (bufferline-tab-padding-horizontal 2))
+     (bufferline-test--show (selected-window) a b)
+     (dolist (buf (list a b))
+       (let ((string (bufferline-test--render (selected-window) buf)))
+         ;; one space before the icon, the tab padding after it
+         (should (string-suffix-p (concat (buffer-name buf) " " bufferline-close-icon "  ")
+                                  (substring-no-properties string)))
+         (should (= (bufferline-test--close-start string)
+                    (- (length string) 2 (length bufferline-close-icon)))))))))
+
+(ert-deftest bufferline-test-close-icon-after-indicators ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-show-tab-close-icon t)
+         (bufferline-show-modified t))
+     (bufferline-test--show (selected-window) a)
+     (with-current-buffer a (insert "change"))
+     (should (string-search (concat bufferline-modified-icon " " bufferline-close-icon)
+                            (substring-no-properties
+                             (bufferline-test--render (selected-window) a)))))))
+
+(ert-deftest bufferline-test-close-icon-active-only ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-tab-close-icon 'active))
+     (bufferline-test--show (selected-window) a b)
+     (should (bufferline-test--close-start (bufferline-test--render (selected-window) b)))
+     (should-not (bufferline-test--close-start (bufferline-test--render (selected-window) a)))
+     (bufferline-test--show (selected-window) a)
+     (should (bufferline-test--close-start (bufferline-test--render (selected-window) a)))
+     (should-not (bufferline-test--close-start (bufferline-test--render (selected-window) b))))))
+
+(ert-deftest bufferline-test-close-icon-properties ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-show-tab-close-icon t)
+          (bufferline-close-icon-hover-face 'bufferline-test-pick)
+          (_ (bufferline-test--show (selected-window) a b))
+          (string (bufferline-test--render (selected-window) a))
+          (start (bufferline-test--close-start string))
+          (icon-map (get-text-property start 'keymap string))
+          (space-map (get-text-property (1- start) 'keymap string)))
+     (should (eq (lookup-key icon-map [tab-line mouse-1]) #'bufferline-close-tab-at-click))
+     ;; the rest of the tab bindings still work on the icon
+     (should (eq (lookup-key icon-map [tab-line mouse-2]) #'tab-line-close-tab))
+     (should (eq (get-text-property start 'tab string) a))
+     (should (equal (plist-get (get-text-property start 'mouse-face string) :foreground)
+                    "#ff0000"))
+     ;; the space before it belongs to the tab
+     (should (eq (lookup-key space-map [tab-line mouse-1]) #'tab-line-select-tab))
+     (should-not (get-text-property (1- start) 'mouse-face string))
+     (should-not (get-text-property (1- start) 'help-echo string)))))
+
+(ert-deftest bufferline-test-close-icon-custom-string ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-show-tab-close-icon t)
+         (bufferline-close-icon "[x]"))
+     (bufferline-test--show (selected-window) a)
+     (let* ((string (bufferline-test--render (selected-window) a))
+            (start (bufferline-test--close-start string)))
+       (should (equal (substring-no-properties string start (+ start 3)) "[x]"))
+       (dotimes (i 3)
+         (should (equal (get-text-property (+ start i) 'help-echo string) "Close tab")))
+       (should-not (get-text-property (+ start 3) 'help-echo string))))))
+
+(ert-deftest bufferline-test-close-icon-click-inactive-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-show-tab-close-icon t))
+     (bufferline-test--show (selected-window) a b c a)
+     (bufferline-test--click-close (selected-window) b)
+     (should-not (buffer-live-p b))
+     (should (eq (window-buffer) a))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a c))))))
+
+(ert-deftest bufferline-test-close-icon-click-current-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-tab-close-icon t))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test--click-close (selected-window) b)
+     (should-not (buffer-live-p b))
+     (should (eq (window-buffer) a)))))
+
+(ert-deftest bufferline-test-close-icon-click-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d"))
+          (bufferline-show-tab-close-icon t))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a)
+     (bufferline-test--click-close right d)
+     (should-not (buffer-live-p d))
+     ;; the clicked window falls back to its other tab, selection stays
+     (should (eq (window-buffer right) c))
+     (should (eq (window-buffer left) a))
+     (should (eq (selected-window) left)))))
+
+(ert-deftest bufferline-test-close-icon-click-without-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-close-tab-at-click
+      (list 'mouse-1 (list (selected-window) 'tab-line '(0 . 0) 0 (cons "plain" 0)
+                           nil '(0 . 0) nil '(0 . 0) '(0 . 0))))
+     (should (buffer-live-p a))
+     (should (eq (window-buffer) a)))))
+
+(ert-deftest bufferline-test-close-icon-tab-width ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (let* ((tabs (bufferline-test--tabs (selected-window)))
+            (plain (bufferline-buffers-tab-width a tabs))
+            (extra (1+ (string-width bufferline-close-icon))))
+       (let ((bufferline-show-tab-close-icon t))
+         (should (= (bufferline-buffers-tab-width a tabs) (+ plain extra)))
+         (should (= (bufferline-buffers-tab-width b tabs) (+ plain extra))))
+       (let ((bufferline-show-tab-close-icon 'active))
+         (should (= (bufferline-buffers-tab-width a tabs) plain))
+         (should (= (bufferline-buffers-tab-width b tabs) (+ plain extra))))))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()
