@@ -1,6 +1,6 @@
 EMACS ?= emacs
 
-.PHONY: test
+.PHONY: test check-web
 
 test:
 	$(EMACS) -Q --batch \
@@ -8,3 +8,6 @@ test:
 		-L . -L test \
 		-l bufferline-test \
 		-f ert-run-tests-batch-and-exit
+
+check-web:
+	node --check web/app.js

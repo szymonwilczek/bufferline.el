@@ -45,3 +45,6 @@ jobs:
 
       - name: Run ERT tests
         run: make test
+
+      - name: Check the configurator script parses
+        run: make check-web
