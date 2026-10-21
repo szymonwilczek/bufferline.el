@@ -1375,6 +1375,43 @@ Errors and warnings are colored by faces batch Emacs can resolve."
                                                                                     (bufferline-test--render (selected-window) warns) "warns")
                                                                                    "#ffaa00")))))))
 
+(ert-deftest bufferline-test-diagnostics-cache-key-unchanged-when-off ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (key (list (list a) "a"))
+          (bufferline-show-diagnostics nil)
+          (bufferline-diagnostics-highlight nil))
+     (bufferline-test-with-flymake `((,a :error))
+                                   (should (eq (bufferline-ui--cache-key (lambda (_) key) (list a)) key))))))
+
+(ert-deftest bufferline-test-diagnostics-cache-key-follows-counts ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (base (lambda (tabs) (list tabs))))
+     (dolist (options '((t . nil) (nil . name)))
+       (let ((bufferline-show-diagnostics (car options))
+             (bufferline-diagnostics-highlight (cdr options)))
+         (let ((clean (bufferline-test-with-flymake `((,a))
+                                                    (bufferline-ui--cache-key base (list a b))))
+               (broken (bufferline-test-with-flymake `((,a :error))
+                                                     (bufferline-ui--cache-key base (list a b)))))
+           (should (equal (car clean) (list a b)))
+           (should (equal (cadr clean) '(((error . 0) (warning . 0) (note . 0)) nil)))
+           (should-not (equal clean broken))))))))
+
+(ert-deftest bufferline-test-diagnostics-cache-key-function ()
+  (skip-unless (boundp 'tab-line-cache-key-function))
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-show-diagnostics t)
+         (tab-line-cache-key-function (lambda (tabs) (list tabs))))
+     ;; the let binding takes the advice, so it goes away with it
+     (add-function :around tab-line-cache-key-function #'bufferline-ui--cache-key)
+     (bufferline-test-with-flymake `((,a :warning))
+                                   (should (equal (funcall tab-line-cache-key-function (list a))
+                                                  (list (list a) '(((error . 0) (warning . 1) (note . 0))))))))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()

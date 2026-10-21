@@ -212,6 +212,19 @@
             tab-str
             right-marker)))
 
+(defun bufferline-ui--cache-key (key-function tabs)
+  "Return the tab line cache key KEY-FUNCTION builds for TABS.
+While diagnostics are drawn or highlighted, the key also holds the
+diagnostic counts of TABS, so a tab is redrawn once its counts change."
+  (let ((key (funcall key-function tabs)))
+    (if (or bufferline-show-diagnostics bufferline-diagnostics-highlight)
+        (append key
+                (list (mapcar (lambda (tab)
+                                (bufferline-diagnostics-counts
+                                 (if (bufferp tab) tab (cdr (assq 'buffer tab)))))
+                              tabs)))
+      key)))
+
 (defun bufferline-ui-follow-active (&rest _)
   "Update window tab cache to recompute visible buffer window."
   (let ((win (selected-window)))
