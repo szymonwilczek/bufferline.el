@@ -275,7 +275,7 @@
             mode: "lisp-interaction",
             size: "180B",
             code: `;; This buffer is for text that is not saved, and for Lisp evaluation.
-            ;; To create a file, visit it with C-x C-f and enter text in its buffer.`,
+            ;; To create a file, visit it with C-x C-f and enter text in its buffer.`
         },
         // helper buffers, opened from the M-x strip
         {
@@ -296,7 +296,7 @@
             -rw-r--r-- 1 user user 42318 Oct 21 14:00 app.js
             -rw-r--r-- 1 user user 21907 Oct 21 14:00 docs.html
             -rw-r--r-- 1 user user 13026 Oct 21 14:00 index.html
-            -rw-r--r-- 1 user user 15112 Oct 21 14:00 styles.css`,
+            -rw-r--r-- 1 user user 15112 Oct 21 14:00 styles.css`
         },
         {
             id: 17,
@@ -317,8 +317,8 @@
 
             (bufferline-close-other-tabs)
 
-            Close every tab of the selected window except the current one.`,
-        },
+            Close every tab of the selected window except the current one.`
+        }
     ];
 
     const PALETTES = {
