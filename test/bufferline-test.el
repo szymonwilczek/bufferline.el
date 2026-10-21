@@ -12,6 +12,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'flymake)
 (require 'bufferline)
 
 (defvar bufferline-test--buffers nil
@@ -1050,6 +1051,105 @@ The letter is the only character drawn in the color of `bufferline-pick-face'."
        (let ((bufferline-show-tab-close-icon 'active))
          (should (= (bufferline-buffers-tab-width a tabs) plain))
          (should (= (bufferline-buffers-tab-width b tabs) (+ plain extra))))))))
+
+;;; Diagnostics
+
+(defvar bufferline-test--flymake nil
+  "Alist of (BUFFER . TYPES) reported by the stubbed `flymake-diagnostics'.")
+
+(defmacro bufferline-test-with-flymake (spec &rest body)
+  "Run BODY with Flymake on in the buffers of SPEC, reporting their TYPES.
+SPEC is an alist of (BUFFER . TYPES), one diagnostic per type."
+  (declare (indent 1) (debug t))
+  `(let ((bufferline-test--flymake ,spec))
+     (dolist (pair bufferline-test--flymake)
+       (with-current-buffer (car pair)
+         (setq-local flymake-mode t)))
+     (cl-letf (((symbol-function 'flymake-diagnostics)
+                (lambda (&rest _)
+                  (mapcar (lambda (type)
+                            (flymake-make-diagnostic (current-buffer) 1 1 type "msg"))
+                          (cdr (assq (current-buffer) bufferline-test--flymake))))))
+       ,@body)))
+
+(put 'bufferline-test-lsp-error 'flymake-category 'flymake-error)
+(put 'bufferline-test-lsp-warning 'flymake-category 'flymake-warning)
+
+(ert-deftest bufferline-test-diagnostics-without-checker ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (should-not (bufferline-diagnostics-counts a))
+     (should (equal (bufferline-diagnostics-badge a) "")))))
+
+(ert-deftest bufferline-test-diagnostics-flymake-counts ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test-with-flymake `((,a :error :warning :warning :note))
+                                   (should (equal (bufferline-diagnostics-counts a)
+                                                  '((error . 1) (warning . 2) (note . 1))))))))
+
+(ert-deftest bufferline-test-diagnostics-flymake-clean ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test-with-flymake `((,a))
+                                   (should (equal (bufferline-diagnostics-counts a)
+                                                  '((error . 0) (warning . 0) (note . 0))))
+                                   (should-not (bufferline-diagnostics-level (bufferline-diagnostics-counts a)))
+                                   (should (equal (bufferline-diagnostics-badge a) ""))))))
+
+(ert-deftest bufferline-test-diagnostics-flymake-backend-types ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     ;; types inheriting a Flymake category count as that level
+     (bufferline-test-with-flymake `((,a bufferline-test-lsp-error
+                                         bufferline-test-lsp-warning
+                                         bufferline-test-unknown))
+                                   (should (equal (bufferline-diagnostics-counts a)
+                                                  '((error . 1) (warning . 1) (note . 0))))))))
+
+(ert-deftest bufferline-test-diagnostics-level ()
+  (should (eq (bufferline-diagnostics-level '((error . 1) (warning . 3) (note . 2))) 'error))
+  (should (eq (bufferline-diagnostics-level '((error . 0) (warning . 3) (note . 2))) 'warning))
+  (should (eq (bufferline-diagnostics-level '((error . 0) (warning . 0) (note . 2))) 'note))
+  (should-not (bufferline-diagnostics-level '((error . 0) (warning . 0) (note . 0))))
+  (should-not (bufferline-diagnostics-level nil)))
+
+(ert-deftest bufferline-test-diagnostics-badge ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-diagnostics-error-icon "E")
+         (bufferline-diagnostics-warning-icon "W")
+         (bufferline-diagnostics-info-icon "I"))
+     (bufferline-test-with-flymake `((,a :error :error :warning)
+                                     (,b :warning :note)
+                                     (,c :note))
+                                   ;; only the most severe level is shown
+                                   (should (equal (bufferline-diagnostics-badge a) " E 2"))
+                                   (should (equal (bufferline-diagnostics-badge b) " W 1"))
+                                   (should (equal (bufferline-diagnostics-badge c) " I 1"))))))
+
+(ert-deftest bufferline-test-diagnostics-custom-indicator ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (seen nil)
+          (bufferline-diagnostics-indicator
+           (lambda (&rest args) (setq seen args) "!")))
+     (bufferline-test-with-flymake `((,a :warning :note))
+                                   (should (equal (bufferline-diagnostics-badge a) "!"))
+                                   (should (equal seen (list 2 'warning '((error . 0) (warning . 1) (note . 1)) a)))))))
+
+(ert-deftest bufferline-test-diagnostics-badge-on-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-diagnostics-error-icon "E"))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-test-with-flymake `((,a :error))
+                                   (let ((bufferline-show-diagnostics t))
+                                     (should (string-search "a E 1" (bufferline-test--render (selected-window) a))))
+                                   (let ((bufferline-show-diagnostics nil))
+                                     (should-not (string-search "E 1" (bufferline-test--render (selected-window) a))))))))
 
 ;;; Moving tabs between windows
 
