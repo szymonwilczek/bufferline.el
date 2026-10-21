@@ -1070,137 +1070,159 @@ function renderTabline() {
             tabEl.appendChild(indEl);
         }
 
-        // pin icon
-        if (state.showPinned && buf.pinned) {
-            const pin = document.createElement("span");
-            pin.className = "tab-pin-icon";
-            pin.textContent = "";
-            contentEl.appendChild(pin);
+        function cycleBuffer(direction) {
+            const buffers = getPreparedBuffers();
+            if (buffers.length === 0) return;
+            const currentIdx = buffers.findIndex((b) => b.id === state.activeBufferId);
+            let nextIdx = (currentIdx + direction + buffers.length) % buffers.length;
+            state.activeBufferId = buffers[nextIdx].id;
+            state.echo = "";
+            renderAll();
         }
 
-        // file icon
-        const icon = document.createElement("span");
-        icon.className = "tab-file-icon";
-        const pickChar = pickLabel(buf);
-        if (pickChar) {
-            // in-place pick letter takes the place of the icon
-            icon.className = "tab-pick-letter";
-            icon.textContent = pickChar;
-        } else if (state.showIcons && buf.icon) {
-            icon.textContent = buf.icon;
-            icon.style.color = buf.iconColor || "var(--emacs-fg)";
-        } else {
-            icon.style.width = "8px";
-        }
-        contentEl.appendChild(icon);
-
-        // label: number prefix + directory prefix + base name
-        const label = document.createElement("span");
-        label.className = "tab-label";
-        label.style.marginLeft = `${state.iconSpacing * 8}px`;
-
-        if (state.numbersMode !== "none") {
-            const num = document.createElement("span");
-            num.className = "tab-num-prefix";
-            if (state.numbersMode === "ordinal")
-                num.textContent = `${originalIdx + 1}. `;
-            else if (state.numbersMode === "buffer-id")
-                num.textContent = `${buf.id}. `;
-            else if (state.numbersMode === "both")
-                num.textContent = `${originalIdx + 1}:${buf.id} `;
-            label.appendChild(num);
+        // mirror of `bufferline-pick--assign'
+        function pickAssign(buffers) {
+            return buffers.slice(0, PICK_ALPHABET.length)
+                   .map((buf, i) => ({ key: PICK_ALPHABET[i], buf }));
         }
 
-        if (buf.dirPrefix) {
-            const dir = document.createElement("span");
-            dir.className = "tab-dir-prefix";
-            dir.textContent = buf.dirPrefix;
-            label.appendChild(dir);
+        function pickLabel(buf) {
+            if (!state.pick || !state.pickInPlace) return null;
+            const item = state.pick.items.find(it => it.buf.id === buf.id);
+            return item ? item.key : null;
         }
 
-        const name = document.createElement("span");
-        name.className = "tab-base-name";
-        name.textContent = buf.name;
-        if (diagName) name.style.color = diagColor;
-        label.appendChild(name);
+        function startPick(kind) {
+            const items = pickAssign(getPreparedBuffers());
+            state.pick = null;
+            if (items.length === 0) {
+                state.echo = kind === 'pick' ? 'No buffers to pick' : 'No buffers to close';
+                return;
+            }
 
-        contentEl.appendChild(label);
+            // file icon
+            const icon = document.createElement("span");
+            icon.className = "tab-file-icon";
+            const pickChar = pickLabel(buf);
+            if (pickChar) {
+                // in-place pick letter takes the place of the icon
+                icon.className = "tab-pick-letter";
+                icon.textContent = pickChar;
+            } else if (state.showIcons && buf.icon) {
+                icon.textContent = buf.icon;
+                icon.style.color = buf.iconColor || "var(--emacs-fg)";
+            } else {
+                icon.style.width = "8px";
+            }
+            contentEl.appendChild(icon);
 
-        // read-only
-        if (state.showReadOnly && buf.readOnly) {
-            const ro = document.createElement("span");
-            ro.className = "tab-ro-icon";
-            ro.textContent = "";
-            contentEl.appendChild(ro);
-        }
+            // label: number prefix + directory prefix + base name
+            const label = document.createElement("span");
+            label.className = "tab-label";
+            label.style.marginLeft = `${state.iconSpacing * 8}px`;
 
-        // modified
-        if (state.showModified && buf.modified) {
-            const mod = document.createElement("span");
-            mod.className = "tab-mod-icon";
-            mod.textContent = "●";
-            contentEl.appendChild(mod);
-        }
+            if (state.numbersMode !== "none") {
+                const num = document.createElement("span");
+                num.className = "tab-num-prefix";
+                if (state.numbersMode === "ordinal")
+                    num.textContent = `${originalIdx + 1}. `;
+                else if (state.numbersMode === "buffer-id")
+                    num.textContent = `${buf.id}. `;
+                else if (state.numbersMode === "both")
+                    num.textContent = `${originalIdx + 1}:${buf.id} `;
+                label.appendChild(num);
+            }
 
-        // diagnostics
-        if (state.showDiagnostics && buf.diags) {
-            const isError = buf.diags.err > 0;
-            const diag = document.createElement("span");
-            diag.className = `tab-diag-badge ${isError ? "error" : "warning"}`;
+            if (buf.dirPrefix) {
+                const dir = document.createElement("span");
+                dir.className = "tab-dir-prefix";
+                dir.textContent = buf.dirPrefix;
+                label.appendChild(dir);
+            }
 
-            const diagIcon = document.createElement("span");
-            diagIcon.className = "diag-icon";
-            diagIcon.textContent = isError ? "" : "";
-            diag.appendChild(diagIcon);
+            const name = document.createElement("span");
+            name.className = "tab-base-name";
+            name.textContent = buf.name;
+            if (diagName) name.style.color = diagColor;
+            label.appendChild(name);
 
-            const diagCount = document.createElement("span");
-            diagCount.className = "diag-count";
-            diagCount.textContent = `${isError ? buf.diags.err : buf.diags.warn}`;
-            diag.appendChild(diagCount);
+            contentEl.appendChild(label);
 
-            contentEl.appendChild(diag);
-        }
+            // read-only
+            if (state.showReadOnly && buf.readOnly) {
+                const ro = document.createElement("span");
+                ro.className = "tab-ro-icon";
+                ro.textContent = "";
+                contentEl.appendChild(ro);
+            }
 
-        // close button
-        if (hasCloseIcon(buf)) {
-            const close = document.createElement("span");
-            close.className = "tab-close-icon";
-            close.textContent = "󰅖";
-            close.title = "Close tab";
-            close.addEventListener("click", (e) => {
-                e.stopPropagation();
-                state.pick = null;
+            // modified
+            if (state.showModified && buf.modified) {
+                const mod = document.createElement("span");
+                mod.className = "tab-mod-icon";
+                mod.textContent = "●";
+                contentEl.appendChild(mod);
+            }
+
+            // diagnostics
+            if (state.showDiagnostics && buf.diags) {
+                const isError = buf.diags.err > 0;
+                const diag = document.createElement("span");
+                diag.className = `tab-diag-badge ${isError ? "error" : "warning"}`;
+
+                const diagIcon = document.createElement("span");
+                diagIcon.className = "diag-icon";
+                diagIcon.textContent = isError ? "" : "";
+                diag.appendChild(diagIcon);
+
+                const diagCount = document.createElement("span");
+                diagCount.className = "diag-count";
+                diagCount.textContent = `${isError ? buf.diags.err : buf.diags.warn}`;
+                diag.appendChild(diagCount);
+
+                contentEl.appendChild(diag);
+            }
+
+            // close button
+            if (hasCloseIcon(buf)) {
+                const close = document.createElement("span");
+                close.className = "tab-close-icon";
+                close.textContent = "󰅖";
+                close.title = "Close tab";
+                close.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    state.pick = null;
+                    state.echo = "";
+                    closeTab(buf.id);
+                    renderAll();
+                });
+                contentEl.appendChild(close);
+            }
+
+            tabEl.appendChild(contentEl);
+
+            // right separator
+            if (styleDef.type === "powerline" && styleDef.right) {
+                const rightSepEl = document.createElement("span");
+                rightSepEl.className = "tab-sep-right glyph";
+                rightSepEl.textContent = styleDef.right;
+                rightSepEl.style.color = isActive
+                    ? "var(--emacs-bg)"
+                    : "var(--emacs-bg-dim)";
+                rightSepEl.style.backgroundColor = "var(--emacs-bg-alt)";
+                tabEl.appendChild(rightSepEl);
+            }
+
+            // tab selection click
+            tabEl.addEventListener("click", () => {
+                state.activeBufferId = buf.id;
                 state.echo = "";
-                closeTab(buf.id);
+                state.pick = null;
                 renderAll();
             });
-            contentEl.appendChild(close);
-        }
 
-        tabEl.appendChild(contentEl);
-
-        // right separator
-        if (styleDef.type === "powerline" && styleDef.right) {
-            const rightSepEl = document.createElement("span");
-            rightSepEl.className = "tab-sep-right glyph";
-            rightSepEl.textContent = styleDef.right;
-            rightSepEl.style.color = isActive
-                ? "var(--emacs-bg)"
-                : "var(--emacs-bg-dim)";
-            rightSepEl.style.backgroundColor = "var(--emacs-bg-alt)";
-            tabEl.appendChild(rightSepEl);
-        }
-
-        // tab selection click
-        tabEl.addEventListener("click", () => {
-            state.activeBufferId = buf.id;
-            state.echo = "";
-            state.pick = null;
-            renderAll();
+            DOM.bufferlineBar.appendChild(tabEl);
         });
-
-        DOM.bufferlineBar.appendChild(tabEl);
-    });
 
     // right overflow arrow
     if (state.showTruncMarkers && rightCount > 0) {
