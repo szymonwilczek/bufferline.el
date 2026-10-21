@@ -1151,6 +1151,81 @@ SPEC is an alist of (BUFFER . TYPES), one diagnostic per type."
                                    (let ((bufferline-show-diagnostics nil))
                                      (should-not (string-search "E 1" (bufferline-test--render (selected-window) a))))))))
 
+(defvar bufferline-test--flycheck nil
+  "Alist of (BUFFER . LEVELS) reported by the stubbed Flycheck.")
+
+(defvar-local flycheck-current-errors nil)
+
+(defmacro bufferline-test-with-flycheck (spec &rest body)
+  "Run BODY with Flycheck on in the buffers of SPEC, reporting their LEVELS.
+SPEC is an alist of (BUFFER . LEVELS), one error per level.  Errors are
+stood in for by their level, counted by a stubbed `flycheck-count-errors'."
+  (declare (indent 1) (debug t))
+  `(let ((bufferline-test--flycheck ,spec))
+     (dolist (pair bufferline-test--flycheck)
+       (with-current-buffer (car pair)
+         (setq-local flycheck-mode t)
+         (setq flycheck-current-errors (cdr pair))))
+     (cl-letf (((symbol-function 'flycheck-count-errors)
+                (lambda (errors)
+                  (let (counts)
+                    (dolist (level errors)
+                      (let ((cell (assq level counts)))
+                        (if cell
+                            (setcdr cell (1+ (cdr cell)))
+                          (push (cons level 1) counts))))
+                    counts))))
+       ,@body)))
+
+(ert-deftest bufferline-test-diagnostics-flycheck-counts ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test-with-flycheck `((,a error warning warning info info info))
+                                    (should (equal (bufferline-diagnostics-counts a)
+                                                   '((error . 1) (warning . 2) (note . 3))))))))
+
+(ert-deftest bufferline-test-diagnostics-flycheck-clean ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test-with-flycheck `((,a))
+                                    (should (equal (bufferline-diagnostics-counts a)
+                                                   '((error . 0) (warning . 0) (note . 0))))))))
+
+(ert-deftest bufferline-test-diagnostics-flycheck-badge ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-diagnostics-warning-icon "W"))
+     (bufferline-test-with-flycheck `((,a warning warning))
+                                    (should (equal (bufferline-diagnostics-badge a) " W 2"))))))
+
+(ert-deftest bufferline-test-diagnostics-flycheck-off ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test-with-flycheck nil
+                                    (with-current-buffer a
+                                      (setq flycheck-current-errors '(error)))
+                                    (should-not (bufferline-diagnostics-counts a))))))
+
+(ert-deftest bufferline-test-diagnostics-sources-order ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test-with-flymake `((,a :error))
+                                   (bufferline-test-with-flycheck `((,a warning) (,b warning))
+                                                                  ;; the first enabled source wins, nothing is counted twice
+                                                                  (let ((bufferline-diagnostics-sources '(flymake flycheck)))
+                                                                    (should (equal (bufferline-diagnostics-counts a)
+                                                                                   '((error . 1) (warning . 0) (note . 0))))
+                                                                    (should (equal (bufferline-diagnostics-counts b)
+                                                                                   '((error . 0) (warning . 1) (note . 0)))))
+                                                                  (let ((bufferline-diagnostics-sources '(flycheck flymake)))
+                                                                    (should (equal (bufferline-diagnostics-counts a)
+                                                                                   '((error . 0) (warning . 1) (note . 0)))))
+                                                                  (let ((bufferline-diagnostics-sources '(flymake)))
+                                                                    (should-not (bufferline-diagnostics-counts b)))
+                                                                  (let ((bufferline-diagnostics-sources nil))
+                                                                    (should-not (bufferline-diagnostics-counts a))))))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()

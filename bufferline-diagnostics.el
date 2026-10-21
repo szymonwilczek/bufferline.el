@@ -12,6 +12,7 @@
 
 (declare-function flymake-diagnostics "flymake")
 (declare-function flymake-diagnostic-type "flymake")
+(declare-function flycheck-count-errors "flycheck")
 
 (defun bufferline-diagnostics--flymake-level (diagnostic)
   "Return the level of Flymake DIAGNOSTIC: `error', `warning', `note' or nil.
@@ -34,10 +35,26 @@ Flymake category they inherit from."
               (setcdr cell (1+ (cdr cell))))))
         counts))))
 
+(defun bufferline-diagnostics--flycheck-counts (buffer)
+  "Return the Flycheck diagnostic counts of BUFFER, or nil without Flycheck.
+Flycheck `info' diagnostics count as notes."
+  (with-current-buffer buffer
+    (when (and (bound-and-true-p flycheck-mode)
+               (fboundp 'flycheck-count-errors))
+      (let ((counts (flycheck-count-errors (bound-and-true-p flycheck-current-errors))))
+        (list (cons 'error (or (cdr (assq 'error counts)) 0))
+              (cons 'warning (or (cdr (assq 'warning counts)) 0))
+              (cons 'note (or (cdr (assq 'info counts)) 0)))))))
+
 (defun bufferline-diagnostics-counts (buffer)
   "Return the diagnostic counts of BUFFER, or nil when nothing checks it.
-The counts are an alist ((error . N) (warning . N) (note . N))."
-  (bufferline-diagnostics--flymake-counts buffer))
+The counts are an alist ((error . N) (warning . N) (note . N)), taken
+from the first of `bufferline-diagnostics-sources' enabled in BUFFER."
+  (seq-some (lambda (source)
+              (pcase source
+                ('flymake (bufferline-diagnostics--flymake-counts buffer))
+                ('flycheck (bufferline-diagnostics--flycheck-counts buffer))))
+            bufferline-diagnostics-sources))
 
 (defun bufferline-diagnostics-level (counts)
   "Return the most severe level with a non-zero count in COUNTS, or nil."

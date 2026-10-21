@@ -164,22 +164,30 @@ See `bufferline-show-tab-close-icon'."
   :group 'bufferline)
 
 (defcustom bufferline-show-diagnostics nil
-  "Whether to display Flymake/LSP error count badges in tabs."
+  "Whether to display Flymake/Flycheck error count badges in tabs."
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-diagnostics-sources '(flymake flycheck)
+  "Diagnostic sources consulted for the counts of a buffer, in order.
+The first source enabled in a buffer supplies its counts, so a buffer
+checked by both Flymake and Flycheck is not counted twice."
+  :type '(repeat (choice (const :tag "Flymake" flymake)
+                         (const :tag "Flycheck" flycheck)))
+  :group 'bufferline)
+
 (defcustom bufferline-diagnostics-error-icon ""
-  "Icon displayed for Flymake/LSP error diagnostics."
+  "Icon displayed for error diagnostics."
   :type 'string
   :group 'bufferline)
 
 (defcustom bufferline-diagnostics-warning-icon ""
-  "Icon displayed for Flymake/LSP warning diagnostics."
+  "Icon displayed for warning diagnostics."
   :type 'string
   :group 'bufferline)
 
 (defcustom bufferline-diagnostics-info-icon ""
-  "Icon displayed for Flymake/LSP note/info diagnostics."
+  "Icon displayed for note/info diagnostics."
   :type 'string
   :group 'bufferline)
 
