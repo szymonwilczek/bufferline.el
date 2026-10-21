@@ -54,6 +54,9 @@
 
         (add-hook 'after-make-frame-functions #'bufferline-highlights-apply)
         (add-hook 'buffer-list-update-hook #'bufferline-ui-follow-active)
+        (add-hook 'buffer-list-update-hook #'bufferline-ui-update-visibility)
+        (add-hook 'window-configuration-change-hook #'bufferline-ui-update-visibility)
+        (bufferline-ui-update-visibility)
         (advice-add 'load-theme :after
                     (lambda (&rest _)
                       (run-at-time 0 nil #'bufferline-highlights-apply)))
@@ -65,6 +68,9 @@
     (global-tab-line-mode -1)
     (remove-hook 'after-make-frame-functions #'bufferline-highlights-apply)
     (remove-hook 'buffer-list-update-hook #'bufferline-ui-follow-active)
+    (remove-hook 'buffer-list-update-hook #'bufferline-ui-update-visibility)
+    (remove-hook 'window-configuration-change-hook #'bufferline-ui-update-visibility)
+    (bufferline-ui-restore-visibility)
     (advice-remove 'tab-line-switch-to-next-tab #'bufferline-next-tab)
     (advice-remove 'tab-line-switch-to-prev-tab #'bufferline-prev-tab)))
 

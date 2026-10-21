@@ -190,6 +190,53 @@
       (set-window-parameter win 'tab-line-cache nil)
       (force-mode-line-update t))))
 
+(defun bufferline-ui--excluded-p (buffer)
+  "Return non-nil if `bufferline-hide-in-excluded-buffers' covers BUFFER."
+  (let ((modes bufferline-hide-in-excluded-buffers))
+    (cond ((null modes) nil)
+          ((listp modes)
+           (let ((mode (buffer-local-value 'major-mode buffer)))
+             (seq-some (lambda (m) (provided-mode-derived-p mode m)) modes)))
+          (t (not (bufferline-buffers-candidate-p buffer))))))
+
+(defun bufferline-ui--hide-tab-line-p (window)
+  "Return non-nil if the hiding options call for hiding WINDOW's tab line."
+  (and (or (bufferline-ui--excluded-p (window-buffer window))
+           (and bufferline-hide-single-tab
+                (<= (length (with-selected-window window
+                              (bufferline-buffers-all)))
+                    1)))
+       t))
+
+(defun bufferline-ui-update-visibility (&rest _)
+  "Hide or show the tab line of every window as the hiding options say.
+A tab line is hidden through the `tab-line-format' window parameter, and
+only one hidden here is shown again, so a window whose tab line was set
+up by something else is left alone.  See `bufferline-hide-single-tab'
+and `bufferline-hide-in-excluded-buffers'."
+  (walk-windows
+   (lambda (win)
+     (let* ((format (window-parameter win 'tab-line-format))
+            (ours (and (window-parameter win 'bufferline-hidden)
+                       (eq format 'none))))
+       (if (not (or ours (null format)))
+           (set-window-parameter win 'bufferline-hidden nil)
+         (let ((hide (bufferline-ui--hide-tab-line-p win)))
+           (unless (eq hide ours)
+             (set-window-parameter win 'tab-line-format (and hide 'none))
+             (set-window-parameter win 'bufferline-hidden hide))))))
+   nil t))
+
+(defun bufferline-ui-restore-visibility ()
+  "Show again every tab line `bufferline-ui-update-visibility' hid."
+  (walk-windows
+   (lambda (win)
+     (when (window-parameter win 'bufferline-hidden)
+       (when (eq (window-parameter win 'tab-line-format) 'none)
+         (set-window-parameter win 'tab-line-format nil))
+       (set-window-parameter win 'bufferline-hidden nil)))
+   nil t))
+
 (defun bufferline-ui-refresh ()
   "Invalidate tab-line cache across windows and force immediate redisplay."
   (walk-windows

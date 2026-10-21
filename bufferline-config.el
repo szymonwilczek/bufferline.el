@@ -213,6 +213,29 @@ bufferline.  For example, to show only buffers visiting a file:
                  (function :tag "Predicate"))
   :group 'bufferline)
 
+(defcustom bufferline-hide-single-tab nil
+  "Whether to hide the tab line of a window with at most one tab.
+The tab line comes back as soon as the window has a second tab."
+  :type 'boolean
+  :group 'bufferline)
+
+(defcustom bufferline-hide-in-excluded-buffers nil
+  "Whether to hide the tab line of a window showing an excluded buffer.
+When t, the tab line is hidden over every buffer that gets no tab: one
+whose major mode is in `bufferline-exclude-modes', one rejected by
+`bufferline-custom-filter', and a special buffer while
+`bufferline-show-special-buffers' is nil.  When a list of major modes,
+the tab line is hidden over buffers whose mode is one of them or derives
+from one, whether or not they get a tab, for example:
+
+  (setq bufferline-hide-in-excluded-buffers \='(dired-mode magit-mode))
+
+When nil, the tab line is never hidden for the buffer it is over."
+  :type '(choice (const :tag "Never" nil)
+                 (const :tag "Over buffers that get no tab" t)
+                 (repeat :tag "Over these major modes" symbol))
+  :group 'bufferline)
+
 (defcustom bufferline-tab-fixed-width 23
   "Average tab width estimation used for viewport scrolling."
   :type 'integer

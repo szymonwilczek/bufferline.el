@@ -45,6 +45,8 @@ each switch, as redisplay does, so they get their order in opening order."
   (declare (indent 0) (debug t))
   `(let ((bufferline-state--tab-order-counter 0)
          (bufferline-sort-by 'fifo)
+         (bufferline-hide-single-tab nil)
+         (bufferline-hide-in-excluded-buffers nil)
          (bufferline-pick-face 'bufferline-test-pick)
          (bufferline-test--buffers nil))
      (save-window-excursion
@@ -52,6 +54,8 @@ each switch, as redisplay does, so they get their order in opening order."
        (switch-to-buffer (get-buffer-create " *bufferline-test-blank*"))
        (set-window-prev-buffers nil nil)
        (set-window-next-buffers nil nil)
+       (set-window-parameter nil 'tab-line-format nil)
+       (set-window-parameter nil 'bufferline-hidden nil)
        (unwind-protect
            (progn ,@body)
          (mapc #'kill-buffer bufferline-test--buffers)))))
@@ -660,6 +664,228 @@ The letter is the only character drawn in the color of `bufferline-pick-face'."
               ?q))
       (bufferline-pick))
      (should-not letter))))
+
+;;; Hiding the tab line
+
+(define-derived-mode bufferline-test-tool-mode special-mode "Tool"
+  "Major mode standing in for a helper buffer such as Dired or Magit.")
+
+(define-derived-mode bufferline-test-tool-child-mode bufferline-test-tool-mode "Tool Child"
+  "Major mode deriving from `bufferline-test-tool-mode'.")
+
+(defun bufferline-test--tool-buffer (name &optional mode)
+  "Return a fresh buffer called NAME in MODE or `bufferline-test-tool-mode'."
+  (let ((buf (bufferline-test--buffer name)))
+    (with-current-buffer buf
+      (funcall (or mode #'bufferline-test-tool-mode)))
+    buf))
+
+(defun bufferline-test--hidden-p (window)
+  "Return non-nil if bufferline has hidden the tab line of WINDOW."
+  (and (eq (window-parameter window 'tab-line-format) 'none)
+       (window-parameter window 'bufferline-hidden)))
+
+(ert-deftest bufferline-test-hide-off-by-default ()
+  (should-not (default-value 'bufferline-hide-single-tab))
+  (should-not (default-value 'bufferline-hide-in-excluded-buffers))
+  (bufferline-test-with-frame
+   (let ((tool (bufferline-test--tool-buffer "tool"))
+         (bufferline-exclude-modes '(bufferline-test-tool-mode)))
+     (bufferline-test--show (selected-window) tool)
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format))
+     (should-not (window-parameter nil 'bufferline-hidden)))))
+
+(ert-deftest bufferline-test-hide-single-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-hide-single-tab t))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window)))
+     ;; a second tab brings the tab line back
+     (bufferline-test--show (selected-window) b)
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format))
+     (should-not (window-parameter nil 'bufferline-hidden))
+     ;; and losing it hides the tab line again
+     (bufferline-close-tab b)
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window))))))
+
+(ert-deftest bufferline-test-hide-single-tab-without-tabs ()
+  (bufferline-test-with-frame
+   (let ((bufferline-hide-single-tab t))
+     ;; the blank internal buffer gets no tab, leaving the window none
+     (should-not (bufferline-test--tabs (selected-window)))
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window))))))
+
+(ert-deftest bufferline-test-hide-single-tab-per-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-hide-single-tab t))
+     (bufferline-test--show right c)
+     (bufferline-test--show left a b)
+     (bufferline-ui-update-visibility)
+     (should-not (bufferline-test--hidden-p left))
+     (should (bufferline-test--hidden-p right)))))
+
+(ert-deftest bufferline-test-hide-single-tab-turned-off ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (let ((bufferline-hide-single-tab t))
+       (bufferline-ui-update-visibility))
+     (should (bufferline-test--hidden-p (selected-window)))
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format))
+     (should-not (window-parameter nil 'bufferline-hidden)))))
+
+(ert-deftest bufferline-test-hide-in-excluded-mode ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (tool (bufferline-test--tool-buffer "tool"))
+         (bufferline-exclude-modes '(bufferline-test-tool-mode))
+         (bufferline-hide-in-excluded-buffers t))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-ui-update-visibility)
+     (should-not (bufferline-test--hidden-p (selected-window)))
+     ;; hidden over the excluded buffer although the window has tabs
+     (bufferline-test--show (selected-window) tool)
+     (should (equal (bufferline-test--tabs (selected-window)) (list a b)))
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window)))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format)))))
+
+(ert-deftest bufferline-test-hide-in-excluded-follows-every-filter ()
+  (bufferline-test-with-frame
+   (let ((star (bufferline-test--buffer "*star*"))
+         (rejected (bufferline-test--buffer "rejected"))
+         (kept (bufferline-test--buffer "kept"))
+         (bufferline-show-special-buffers nil)
+         (bufferline-custom-filter
+          (lambda (buf) (not (equal (buffer-name buf) "rejected"))))
+         (bufferline-hide-in-excluded-buffers t))
+     (dolist (spec `((,star . t) (,rejected . t) (,kept . nil)))
+       (bufferline-test--show (selected-window) (car spec))
+       (bufferline-ui-update-visibility)
+       (should (eq (and (bufferline-test--hidden-p (selected-window)) t)
+                   (cdr spec)))))))
+
+(ert-deftest bufferline-test-hide-in-listed-modes ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (tool (bufferline-test--tool-buffer "tool"))
+         (child (bufferline-test--tool-buffer "child" #'bufferline-test-tool-child-mode))
+         (bufferline-hide-in-excluded-buffers '(bufferline-test-tool-mode)))
+     ;; listed modes hide the tab line even over buffers that get a tab
+     (bufferline-test--show (selected-window) a tool)
+     (should (memq tool (bufferline-test--tabs (selected-window))))
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window)))
+     ;; and so do modes deriving from them
+     (bufferline-test--show (selected-window) child)
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window)))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format)))))
+
+(ert-deftest bufferline-test-hide-in-listed-modes-only ()
+  (bufferline-test-with-frame
+   (let ((tool (bufferline-test--tool-buffer "tool"))
+         (bufferline-exclude-modes '(bufferline-test-tool-mode))
+         (bufferline-hide-in-excluded-buffers '(dired-mode)))
+     ;; an excluded mode that is not listed keeps the tab line
+     (bufferline-test--show (selected-window) tool)
+     (bufferline-ui-update-visibility)
+     (should-not (window-parameter nil 'tab-line-format)))))
+
+(ert-deftest bufferline-test-hide-in-excluded-per-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (tool (bufferline-test--tool-buffer "tool"))
+          (bufferline-exclude-modes '(bufferline-test-tool-mode))
+          (bufferline-hide-in-excluded-buffers t))
+     (bufferline-test--show right tool)
+     (bufferline-test--show left a)
+     (bufferline-ui-update-visibility)
+     (should-not (bufferline-test--hidden-p left))
+     (should (bufferline-test--hidden-p right)))))
+
+(ert-deftest bufferline-test-hide-leaves-foreign-tab-line-format ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-hide-single-tab t))
+     (bufferline-test--show (selected-window) a)
+     ;; a format set by someone else is neither replaced nor cleared
+     (set-window-parameter nil 'tab-line-format "custom")
+     (bufferline-ui-update-visibility)
+     (should (equal (window-parameter nil 'tab-line-format) "custom"))
+     (set-window-parameter nil 'tab-line-format 'none)
+     (let ((bufferline-hide-single-tab nil))
+       (bufferline-ui-update-visibility))
+     (should (eq (window-parameter nil 'tab-line-format) 'none))
+     (should-not (window-parameter nil 'bufferline-hidden))
+     (bufferline-ui-restore-visibility)
+     (should (eq (window-parameter nil 'tab-line-format) 'none)))))
+
+(ert-deftest bufferline-test-hide-stops-owning-replaced-format ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-hide-single-tab t))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-ui-update-visibility)
+     (should (bufferline-test--hidden-p (selected-window)))
+     ;; someone else takes over the parameter while it is hidden
+     (set-window-parameter nil 'tab-line-format "custom")
+     (bufferline-test--show (selected-window) b)
+     (bufferline-ui-update-visibility)
+     (should (equal (window-parameter nil 'tab-line-format) "custom"))
+     (should-not (window-parameter nil 'bufferline-hidden)))))
+
+(ert-deftest bufferline-test-hide-restore ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-hide-single-tab t))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (bufferline-ui-update-visibility (selected-frame))
+     (should (bufferline-test--hidden-p left))
+     (should (bufferline-test--hidden-p right))
+     (bufferline-ui-restore-visibility)
+     (dolist (win (list left right))
+       (should-not (window-parameter win 'tab-line-format))
+       (should-not (window-parameter win 'bufferline-hidden))))))
+
+(ert-deftest bufferline-test-hide-keeps-selection ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-hide-single-tab t))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (with-current-buffer b
+       (bufferline-ui-update-visibility)
+       (should (eq (current-buffer) b)))
+     (should (eq (selected-window) left)))))
 
 ;;; Moving tabs between windows
 
