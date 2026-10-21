@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,11 +6,13 @@
     <title>bufferline.el - Documentation &amp; Reference</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-
     <header class="header">
       <div class="header-inner">
         <div class="title-block">
@@ -19,7 +21,13 @@
         </div>
         <div class="header-links">
           <a href="index.html" class="raw-link">[ Configurator ]</a>
-          <a href="https://github.com/szymonwilczek/bufferline.el" target="_blank" rel="noopener noreferrer" class="raw-link">[ GitHub ]</a>
+          <a
+            href="https://github.com/szymonwilczek/bufferline.el"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="raw-link"
+            >[ GitHub ]</a
+          >
         </div>
       </div>
     </header>
@@ -85,13 +93,19 @@
                 <td><code>bufferline-separator-style</code></td>
                 <td class="type-col">symbol</td>
                 <td class="default-col">'vertical</td>
-                <td>Tab indicator style: 'vertical, 'bar, 'thick_bar, 'thin, 'thick, 'slant, 'slope, 'padded_slant, 'none.</td>
+                <td>
+                  Tab indicator style: 'vertical, 'bar, 'thick_bar, 'thin,
+                  'thick, 'slant, 'slope, 'padded_slant, 'none.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-indicator-width</code></td>
                 <td class="type-col">integer / nil</td>
                 <td class="default-col">nil</td>
-                <td>Explicit pixel thickness for vertical indicator bars. nil uses default preset width.</td>
+                <td>
+                  Explicit pixel thickness for vertical indicator bars. nil uses
+                  default preset width.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-indicator-face</code></td>
@@ -103,13 +117,18 @@
                 <td><code>bufferline-left-margin</code></td>
                 <td class="type-col">integer / string</td>
                 <td class="default-col">8</td>
-                <td>Margin before first tab. Integer sets pixel width, string sets literal text.</td>
+                <td>
+                  Margin before first tab. Integer sets pixel width, string sets
+                  literal text.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-top-padding</code></td>
                 <td class="type-col">integer</td>
                 <td class="default-col">0</td>
-                <td>Top and bottom pixel padding for the entire tabline bar.</td>
+                <td>
+                  Top and bottom pixel padding for the entire tabline bar.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-tab-padding-vertical</code></td>
@@ -121,7 +140,10 @@
                 <td><code>bufferline-tab-padding-horizontal</code></td>
                 <td class="type-col">integer / string</td>
                 <td class="default-col">2</td>
-                <td>Horizontal trailing padding for individual tabs (space count or string).</td>
+                <td>
+                  Horizontal trailing padding for individual tabs (space count
+                  or string).
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-icon-spacing</code></td>
@@ -133,13 +155,18 @@
                 <td><code>bufferline-sort-by</code></td>
                 <td class="type-col">symbol</td>
                 <td class="default-col">'fifo</td>
-                <td>Buffer sorting strategy: 'fifo (visit history), 'name (alphabetical), 'extension, 'directory.</td>
+                <td>
+                  Buffer sorting strategy: 'fifo (visit history), 'name
+                  (alphabetical), 'extension, 'directory.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-max-name-length</code></td>
                 <td class="type-col">integer</td>
                 <td class="default-col">18</td>
-                <td>Maximum buffer name length before truncating with ellipsis.</td>
+                <td>
+                  Maximum buffer name length before truncating with ellipsis.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-show-buffer-icons</code></td>
@@ -193,7 +220,10 @@
                 <td><code>bufferline-show-trunc-markers</code></td>
                 <td class="type-col">boolean</td>
                 <td class="default-col">t</td>
-                <td>Display overflow count badges and arrow markers when tabs exceed window width.</td>
+                <td>
+                  Display overflow count badges and arrow markers when tabs
+                  exceed window width.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-left-trunc-marker</code></td>
@@ -211,7 +241,9 @@
                 <td><code>bufferline-show-duplicate-prefix</code></td>
                 <td class="type-col">boolean</td>
                 <td class="default-col">t</td>
-                <td>Prepend parent directory to disambiguate identical file names.</td>
+                <td>
+                  Prepend parent directory to disambiguate identical file names.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-duplicate-prefix-depth</code></td>
@@ -253,25 +285,46 @@
                 <td><code>bufferline-numbers</code></td>
                 <td class="type-col">symbol / function</td>
                 <td class="default-col">nil</td>
-                <td>Buffer numbering mode: 'ordinal, 'buffer-id, 'both, or custom function.</td>
+                <td>
+                  Buffer numbering mode: 'ordinal, 'buffer-id, 'both, or custom
+                  function.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-numbers-formatter</code></td>
                 <td class="type-col">string / function</td>
                 <td class="default-col">"%d. "</td>
-                <td>Template string or custom formatter function (lambda (index buffer)).</td>
+                <td>
+                  Template string or custom formatter function (lambda (index
+                  buffer)).
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-show-special-buffers</code></td>
                 <td class="type-col">boolean</td>
                 <td class="default-col">t</td>
-                <td>Whether to display special buffers (starting with '*') such as *scratch* or *Messages*. When nil, starred buffers are filtered out.</td>
+                <td>
+                  Whether to display special buffers (starting with '*') such as
+                  *scratch* or *Messages*. When nil, starred buffers are
+                  filtered out.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-exclude-modes</code></td>
                 <td class="type-col">list</td>
                 <td class="default-col">'(treemacs-mode ...)</td>
                 <td>Major modes where bufferline tab display is disabled.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-custom-filter</code></td>
+                <td class="type-col">function / nil</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Predicate (lambda (buffer)) called for each buffer that passed
+                  the built-in filters; the buffer gets a tab only when it
+                  returns non-nil. A predicate that signals an error keeps the
+                  buffer.
+                </td>
               </tr>
             </tbody>
           </table>
@@ -285,21 +338,86 @@
 
         <div class="doc-card">
           <ul class="doc-list">
-            <li><code>bufferline-next-tab</code>: Switch cyclically to the next tab in active sort order.</li>
-            <li><code>bufferline-prev-tab</code>: Switch cyclically to the previous tab in active sort order.</li>
-            <li><code>bufferline-close-tab</code>: Close current or specified buffer without altering window split layout.</li>
-            <li><code>bufferline-move-tab-left</code>: Move the current tab one position to the left (FIFO sort order only).</li>
-            <li><code>bufferline-move-tab-right</code>: Move the current tab one position to the right (FIFO sort order only).</li>
-            <li><code>bufferline-swap-tab</code>: Swap the current tab with another one picked by its letter (FIFO sort order only).</li>
-            <li><code>bufferline-move-tab-to-window-left</code>: Move the current tab to the window on the left and follow it there.</li>
-            <li><code>bufferline-move-tab-to-window-right</code>: Move the current tab to the window on the right and follow it there.</li>
-            <li><code>bufferline-move-tab-to-window-up</code>: Move the current tab to the window above and follow it there.</li>
-            <li><code>bufferline-move-tab-to-window-down</code>: Move the current tab to the window below and follow it there.</li>
-            <li>A tab moved to another window joins the end of its tabs. Moving the last tab of a split closes that split once the tab has moved.</li>
-            <li><code>bufferline-toggle-pin</code>: Toggle pinned state of current or specified buffer.</li>
-            <li><code>bufferline-pick</code>: Interactively jump to a visible buffer using single-letter tags.</li>
-            <li><code>bufferline-pick-close</code>: Interactively close a visible buffer using single-letter tags.</li>
+            <li>
+              <code>bufferline-next-tab</code>: Switch cyclically to the next
+              tab in active sort order.
+            </li>
+            <li>
+              <code>bufferline-prev-tab</code>: Switch cyclically to the
+              previous tab in active sort order.
+            </li>
+            <li>
+              <code>bufferline-close-tab</code>: Close current or specified
+              buffer without altering window split layout.
+            </li>
+            <li>
+              <code>bufferline-move-tab-left</code>: Move the current tab one
+              position to the left (FIFO sort order only).
+            </li>
+            <li>
+              <code>bufferline-move-tab-right</code>: Move the current tab one
+              position to the right (FIFO sort order only).
+            </li>
+            <li>
+              <code>bufferline-swap-tab</code>: Swap the current tab with
+              another one picked by its letter (FIFO sort order only).
+            </li>
+            <li>
+              <code>bufferline-move-tab-to-window-left</code>: Move the current
+              tab to the window on the left and follow it there.
+            </li>
+            <li>
+              <code>bufferline-move-tab-to-window-right</code>: Move the current
+              tab to the window on the right and follow it there.
+            </li>
+            <li>
+              <code>bufferline-move-tab-to-window-up</code>: Move the current
+              tab to the window above and follow it there.
+            </li>
+            <li>
+              <code>bufferline-move-tab-to-window-down</code>: Move the current
+              tab to the window below and follow it there.
+            </li>
+            <li>
+              A tab moved to another window joins the end of its tabs. Moving
+              the last tab of a split closes that split once the tab has moved.
+            </li>
+            <li>
+              <code>bufferline-toggle-pin</code>: Toggle pinned state of current
+              or specified buffer.
+            </li>
+            <li>
+              <code>bufferline-pick</code>: Interactively jump to a visible
+              buffer using single-letter tags.
+            </li>
+            <li>
+              <code>bufferline-pick-close</code>: Interactively close a visible
+              buffer using single-letter tags.
+            </li>
           </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">CUSTOM FILTER</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Only File-Visiting Buffers</h3>
+            <pre class="doc-code"><code>(setq bufferline-custom-filter
+      (lambda (buffer)
+        (buffer-file-name buffer)))</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Hide Buffers Matching a Regexp</h3>
+            <pre class="doc-code"><code>(setq bufferline-custom-filter
+      (lambda (buffer)
+        (not (string-match-p "\\`\\*Async"
+                             (buffer-name buffer)))))</code></pre>
+          </div>
         </div>
       </section>
 
@@ -337,16 +455,27 @@
 
         <div class="doc-card">
           <ul class="doc-list">
-            <li><a href="https://github.com/akinsho/bufferline.nvim" target="_blank" rel="noopener noreferrer" class="raw-link">bufferline.nvim</a> by akinsho &dash; visual layout inspiration and indicator design concepts.</li>
+            <li>
+              <a
+                href="https://github.com/akinsho/bufferline.nvim"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="raw-link"
+                >bufferline.nvim</a
+              >
+              by akinsho &dash; visual layout inspiration and indicator design
+              concepts.
+            </li>
           </ul>
         </div>
       </section>
-
     </main>
 
     <footer class="footer">
-      <p>bufferline.el (C) 2026 Szymon Wilczek. Licensed under GNU General Public License v3.0.</p>
+      <p>
+        bufferline.el (C) 2026 Szymon Wilczek. Licensed under GNU General Public
+        License v3.0.
+      </p>
     </footer>
-
   </body>
 </html>
