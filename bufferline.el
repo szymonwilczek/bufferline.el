@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026 Szymon Wilczek
 ;; Author: Szymon Wilczek <swilczek.lx@gmail.com>
-;; Version: 0.7.0
+;; Version: 0.7.1
 ;; Package-Requires: ((emacs "28.1") (nerd-icons "0.1.0"))
 ;; URL: https://github.com/szymonwilczek/bufferline.el
 ;; Licensed under GPL-3.0.

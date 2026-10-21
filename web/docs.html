@@ -384,11 +384,11 @@
               <tr>
                 <td><code>bufferline-pick-in-place</code></td>
                 <td class="type-col">boolean</td>
-                <td class="default-col">nil</td>
+                <td class="default-col">t</td>
                 <td>
                   Draw pick letters on the tabs themselves, in place of their
-                  icons, instead of listing them in the minibuffer prompt.
-                  Applies to <code>bufferline-pick</code>,
+                  icons. Set to nil to list them in the minibuffer prompt
+                  instead. Applies to <code>bufferline-pick</code>,
                   <code>bufferline-pick-close</code> and
                   <code>bufferline-swap-tab</code>.
                 </td>
@@ -524,10 +524,10 @@
               buffer using single-letter tags.
             </li>
             <li>
-              The pick commands list each letter with its tab name in the
-              minibuffer. With <code>bufferline-pick-in-place</code> the letters
-              appear on the tabs for as long as the key is awaited, and any key
-              without a letter cancels the pick.
+              The pick commands draw each letter on its tab for as long as the
+              key is awaited, and any key without a letter cancels the pick.
+              With <code>bufferline-pick-in-place</code> set to nil the letters
+              are listed with their tab names in the minibuffer instead.
             </li>
           </ul>
         </div>

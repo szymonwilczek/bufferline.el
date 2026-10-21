@@ -482,7 +482,7 @@
         showTruncMarkers: true,
         showSpecialBuffers: true,
         closeKeepPinned: true,
-        pickInPlace: false,
+        pickInPlace: true,
         closeIcon: 'none',
         hideSingleTab: false,
         hideInExcluded: 'none',
@@ -1232,7 +1232,7 @@
         if (!state.showTruncMarkers) customLines.push('  (bufferline-show-trunc-markers nil)');
         if (!state.showSpecialBuffers) customLines.push('  (bufferline-show-special-buffers nil)');
         if (!state.closeKeepPinned) customLines.push('  (bufferline-close-keep-pinned nil)');
-        if (state.pickInPlace) customLines.push('  (bufferline-pick-in-place t)');
+        if (!state.pickInPlace) customLines.push('  (bufferline-pick-in-place nil)');
         if (state.closeIcon === 't') customLines.push('  (bufferline-show-tab-close-icon t)');
         if (state.closeIcon === 'active') customLines.push("  (bufferline-show-tab-close-icon 'active)");
         if (state.diagHighlight !== 'none') customLines.push(`  (bufferline-diagnostics-highlight '${state.diagHighlight})`);

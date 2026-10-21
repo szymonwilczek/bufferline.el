@@ -423,7 +423,8 @@ prompt, and its value is the key."
    (let ((a (bufferline-test--buffer "a"))
          (b (bufferline-test--buffer "b"))
          (c (bufferline-test--buffer "c"))
-         (bufferline-pick-alphabet "asd"))
+         (bufferline-pick-alphabet "asd")
+         (bufferline-pick-in-place nil))
      (bufferline-test--show (selected-window) a b c)
      (bufferline-test-with-keys '(?s)
                                 (bufferline-pick)
@@ -451,7 +452,8 @@ prompt, and its value is the key."
   (bufferline-test-with-frame
    (let ((a (bufferline-test--buffer "a"))
          (b (bufferline-test--buffer "b"))
-         (bufferline-pick-alphabet "as"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place nil))
      (bufferline-test--show (selected-window) a b)
      (bufferline-test-with-keys '(?a)
                                 (should (equal (bufferline-pick-close) "Closed buffer: a"))
@@ -483,7 +485,8 @@ prompt, and its value is the key."
    (let ((a (bufferline-test--buffer "a"))
          (b (bufferline-test--buffer "b"))
          (c (bufferline-test--buffer "c"))
-         (bufferline-pick-alphabet "asd"))
+         (bufferline-pick-alphabet "asd")
+         (bufferline-pick-in-place nil))
      (bufferline-test--show (selected-window) a b c a)
      (bufferline-test-with-keys '(?d)
                                 (bufferline-swap-tab)
@@ -512,8 +515,8 @@ The letter is the only character drawn in the color of `bufferline-pick-face'."
           (setq found (aref string i)))))
     found))
 
-(ert-deftest bufferline-test-pick-in-place-off-by-default ()
-  (should-not (default-value 'bufferline-pick-in-place)))
+(ert-deftest bufferline-test-pick-in-place-on-by-default ()
+  (should (eq (default-value 'bufferline-pick-in-place) t)))
 
 (ert-deftest bufferline-test-pick-in-place-draws-letters-on-tabs ()
   (bufferline-test-with-frame
