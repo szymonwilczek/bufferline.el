@@ -38,7 +38,13 @@
                                               (bufferline-colors-safe (face-foreground 'shadow nil t) def-fg))))
          (keyword-color (bufferline-colors-safe (face-foreground 'font-lock-keyword-face nil t)
                                                 (bufferline-colors-safe (face-foreground 'font-lock-builtin-face nil t) fg-main)))
-         (indicator-color (bufferline-colors-safe (face-foreground bufferline-indicator-face nil t) fg-main))
+         ;; diagnostics may color the name and separator
+         (diag-color (bufferline-diagnostics-highlight-color buffer))
+         (diag-name (and diag-color (memq bufferline-diagnostics-highlight '(name both))))
+         (diag-sep (and diag-color (memq bufferline-diagnostics-highlight '(separator both))))
+         (indicator-color (if diag-sep
+                              diag-color
+                            (bufferline-colors-safe (face-foreground bufferline-indicator-face nil t) fg-main)))
 
          ;; disambiguate and format duplicate directory prefix
          (name-pair (bufferline-duplicates-resolve buffer tabs))
@@ -93,8 +99,8 @@
 
          ;; text label
          (text-face (if active
-                        `(:foreground ,fg-main :weight demi-bold :slant italic :background ,bg-color)
-                      `(:foreground ,fg-comment :weight normal :slant normal :background ,bg-color)))
+                        `(:foreground ,(if diag-name diag-color fg-main) :weight demi-bold :slant italic :background ,bg-color)
+                      `(:foreground ,(if diag-name diag-color fg-comment) :weight normal :slant normal :background ,bg-color)))
          (name (concat (propertize num-prefix 'face text-face)
                        dir-str
                        (propertize (concat display-base diag-badge) 'face text-face)))
@@ -134,7 +140,7 @@
                                  (propertize bufferline-close-icon 'face `(:foreground ,fg-comment :background ,bg-color)))
                        ""))
 
-         (tab-head (concat (if active sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon))
+         (tab-head (concat (if (or active diag-sep) sep empty-sep) pre-pad pin-icon icon mid-pad name ro-icon mod-icon))
          (tab-str (concat tab-head close-icon post-pad))
          (tab-map (let ((km (make-sparse-keymap)))
                     (define-key km [tab-line mouse-1] #'tab-line-select-tab)

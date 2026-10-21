@@ -176,6 +176,33 @@ checked by both Flymake and Flycheck is not counted twice."
                          (const :tag "Flycheck" flycheck)))
   :group 'bufferline)
 
+(defcustom bufferline-diagnostics-highlight nil
+  "Which part of a tab takes the color of its most severe diagnostic.
+When `name', the tab name is drawn in the color of
+`bufferline-diagnostics-error-face' while the buffer has errors, or of
+`bufferline-diagnostics-warning-face' while it has warnings.  When
+`separator', the tab separator takes that color instead, also on tabs
+that are not current.  When `both', both do.  Notes leave the tab as it
+is.  This works whether or not `bufferline-show-diagnostics' draws the
+count badge."
+  :type '(choice (const :tag "None" nil)
+                 (const :tag "Tab name" name)
+                 (const :tag "Separator" separator)
+                 (const :tag "Name and separator" both))
+  :group 'bufferline)
+
+(defcustom bufferline-diagnostics-error-face 'error
+  "Face used to resolve the color of tabs with errors.
+See `bufferline-diagnostics-highlight'."
+  :type 'face
+  :group 'bufferline)
+
+(defcustom bufferline-diagnostics-warning-face 'warning
+  "Face used to resolve the color of tabs with warnings.
+See `bufferline-diagnostics-highlight'."
+  :type 'face
+  :group 'bufferline)
+
 (defcustom bufferline-diagnostics-error-icon ""
   "Icon displayed for error diagnostics."
   :type 'string

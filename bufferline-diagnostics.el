@@ -9,6 +9,7 @@
 ;;; Code:
 
 (require 'bufferline-config)
+(require 'bufferline-colors)
 
 (declare-function flymake-diagnostics "flymake")
 (declare-function flymake-diagnostic-type "flymake")
@@ -60,6 +61,16 @@ from the first of `bufferline-diagnostics-sources' enabled in BUFFER."
   "Return the most severe level with a non-zero count in COUNTS, or nil."
   (seq-find (lambda (level) (> (or (cdr (assq level counts)) 0) 0))
             '(error warning note)))
+
+(defun bufferline-diagnostics-highlight-color (buffer)
+  "Return the color BUFFER's tab takes from its diagnostics, or nil.
+See `bufferline-diagnostics-highlight'."
+  (when bufferline-diagnostics-highlight
+    (let ((face (pcase (bufferline-diagnostics-level (bufferline-diagnostics-counts buffer))
+                  ('error bufferline-diagnostics-error-face)
+                  ('warning bufferline-diagnostics-warning-face))))
+      (when face
+        (bufferline-colors-safe (face-foreground face nil t) nil)))))
 
 (defun bufferline-diagnostics-badge (buffer)
   "Return diagnostic badge string for BUFFER, or empty string."

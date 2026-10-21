@@ -1226,6 +1226,155 @@ stood in for by their level, counted by a stubbed `flycheck-count-errors'."
                                                                   (let ((bufferline-diagnostics-sources nil))
                                                                     (should-not (bufferline-diagnostics-counts a))))))))
 
+(defface bufferline-test-warning '((t :foreground "#ffaa00"))
+  "Face with a color batch Emacs can resolve, for warning highlights.")
+
+(defmacro bufferline-test-with-highlight (mode &rest body)
+  "Run BODY with `bufferline-diagnostics-highlight' set to MODE.
+Errors and warnings are colored by faces batch Emacs can resolve."
+  (declare (indent 1) (debug t))
+  `(let ((bufferline-diagnostics-highlight ,mode)
+         (bufferline-diagnostics-error-face 'bufferline-test-pick)
+         (bufferline-diagnostics-warning-face 'bufferline-test-warning)
+         (bufferline-separator-style 'vertical))
+     ,@body))
+
+(defun bufferline-test--name-color (string name)
+  "Return the foreground NAME is drawn in within the tab STRING."
+  (plist-get (get-text-property (string-search name (substring-no-properties string))
+                                'face string)
+             :foreground))
+
+(defun bufferline-test--separator-color (string)
+  "Return the foreground of the separator glyph opening STRING, or nil."
+  (let ((sep (car (cdr (assq 'vertical bufferline-constants-separators)))))
+    (and (string-prefix-p sep (substring-no-properties string))
+         (plist-get (get-text-property 0 'face string) :foreground))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-off-by-default ()
+  (should-not (default-value 'bufferline-diagnostics-highlight))
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs")))
+     (bufferline-test-with-flymake `((,errs :error))
+                                   (should-not (bufferline-diagnostics-highlight-color errs))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-color ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs"))
+         (warns (bufferline-test--buffer "warns"))
+         (notes (bufferline-test--buffer "notes"))
+         (clean (bufferline-test--buffer "clean"))
+         (plain (bufferline-test--buffer "plain")))
+     (bufferline-test-with-highlight 'name
+                                     (bufferline-test-with-flymake `((,errs :warning :error)
+                                                                     (,warns :warning :note)
+                                                                     (,notes :note)
+                                                                     (,clean))
+                                                                   (should (equal (bufferline-diagnostics-highlight-color errs) "#ff0000"))
+                                                                   (should (equal (bufferline-diagnostics-highlight-color warns) "#ffaa00"))
+                                                                   ;; notes and clean or unchecked buffers keep their color
+                                                                   (should-not (bufferline-diagnostics-highlight-color notes))
+                                                                   (should-not (bufferline-diagnostics-highlight-color clean))
+                                                                   (should-not (bufferline-diagnostics-highlight-color plain)))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-name ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs"))
+         (warns (bufferline-test--buffer "warns"))
+         (clean (bufferline-test--buffer "clean")))
+     (bufferline-test--show (selected-window) errs warns clean)
+     (bufferline-test-with-highlight 'name
+                                     (bufferline-test-with-flymake `((,errs :error) (,warns :warning) (,clean))
+                                                                   (let ((plain-color (bufferline-test--name-color
+                                                                                       (let ((bufferline-diagnostics-highlight nil))
+                                                                                         (bufferline-test--render (selected-window) errs))
+                                                                                       "errs")))
+                                                                     (should (equal (bufferline-test--name-color
+                                                                                     (bufferline-test--render (selected-window) errs) "errs")
+                                                                                    "#ff0000"))
+                                                                     (should (equal (bufferline-test--name-color
+                                                                                     (bufferline-test--render (selected-window) warns) "warns")
+                                                                                    "#ffaa00"))
+                                                                     (should (equal (bufferline-test--name-color
+                                                                                     (bufferline-test--render (selected-window) clean) "clean")
+                                                                                    plain-color))
+                                                                     ;; the separator is left alone
+                                                                     (should-not (bufferline-test--separator-color
+                                                                                  (bufferline-test--render (selected-window) errs)))))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-name-on-current-tab ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs")))
+     (bufferline-test--show (selected-window) errs)
+     (bufferline-test-with-highlight 'name
+                                     (bufferline-test-with-flymake `((,errs :error))
+                                                                   (let ((string (bufferline-test--render (selected-window) errs)))
+                                                                     (should (equal (bufferline-test--name-color string "errs") "#ff0000"))
+                                                                     (should-not (equal (bufferline-test--separator-color string) "#ff0000"))))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-separator ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs"))
+         (warns (bufferline-test--buffer "warns"))
+         (clean (bufferline-test--buffer "clean")))
+     (bufferline-test--show (selected-window) errs warns clean)
+     (bufferline-test-with-highlight 'separator
+                                     (bufferline-test-with-flymake `((,errs :error) (,warns :warning) (,clean :note))
+                                                                   ;; tabs that are not current get a separator in the color too
+                                                                   (should (equal (bufferline-test--separator-color
+                                                                                   (bufferline-test--render (selected-window) errs))
+                                                                                  "#ff0000"))
+                                                                   (should (equal (bufferline-test--separator-color
+                                                                                   (bufferline-test--render (selected-window) warns))
+                                                                                  "#ffaa00"))
+                                                                   (should-not (equal (bufferline-test--name-color
+                                                                                       (bufferline-test--render (selected-window) errs) "errs")
+                                                                                      "#ff0000"))
+                                                                   ;; the current tab keeps its usual indicator without diagnostics
+                                                                   (let ((current (bufferline-test--separator-color
+                                                                                   (bufferline-test--render (selected-window) clean))))
+                                                                     (should current)
+                                                                     (should-not (member current '("#ff0000" "#ffaa00"))))
+                                                                   (bufferline-test--show (selected-window) errs)
+                                                                   (should (equal (bufferline-test--separator-color
+                                                                                   (bufferline-test--render (selected-window) errs))
+                                                                                  "#ff0000"))
+                                                                   (should-not (bufferline-test--separator-color
+                                                                                (bufferline-test--render (selected-window) clean))))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-both ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs"))
+         (other (bufferline-test--buffer "other")))
+     (bufferline-test--show (selected-window) errs other)
+     (bufferline-test-with-highlight 'both
+                                     (bufferline-test-with-flymake `((,errs :error))
+                                                                   (let ((string (bufferline-test--render (selected-window) errs)))
+                                                                     (should (equal (bufferline-test--name-color string "errs") "#ff0000"))
+                                                                     (should (equal (bufferline-test--separator-color string) "#ff0000"))))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-without-badge ()
+  (bufferline-test-with-frame
+   (let ((errs (bufferline-test--buffer "errs"))
+         (bufferline-diagnostics-error-icon "E")
+         (bufferline-show-diagnostics nil))
+     (bufferline-test--show (selected-window) errs)
+     (bufferline-test-with-highlight 'name
+                                     (bufferline-test-with-flymake `((,errs :error))
+                                                                   (let ((string (bufferline-test--render (selected-window) errs)))
+                                                                     (should (equal (bufferline-test--name-color string "errs") "#ff0000"))
+                                                                     (should-not (string-search "E 1" string))))))))
+
+(ert-deftest bufferline-test-diagnostics-highlight-flycheck ()
+  (bufferline-test-with-frame
+   (let ((warns (bufferline-test--buffer "warns")))
+     (bufferline-test--show (selected-window) warns)
+     (bufferline-test-with-highlight 'name
+                                     (bufferline-test-with-flycheck `((,warns warning))
+                                                                    (should (equal (bufferline-test--name-color
+                                                                                    (bufferline-test--render (selected-window) warns) "warns")
+                                                                                   "#ffaa00")))))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()
