@@ -91,6 +91,20 @@
           <button
             type="button"
             class="raw-btn command-btn"
+            data-command="dired"
+          >
+            dired
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="describe-function"
+          >
+            describe-function
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
             data-command="restore"
           >
             (restore buffers)
@@ -342,6 +356,42 @@
                 ><input type="checkbox" id="pickInPlace" /> pick-in-place</label
               >
             </div>
+          </fieldset>
+
+          <fieldset class="config-group full-col">
+            <legend>Tab Line Visibility</legend>
+
+            <div class="checkbox-grid">
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="hideSingleTab" />
+                hide-single-tab</label
+              >
+            </div>
+
+            <div class="field-row">
+              <label for="hideInExcluded">hide-in-excluded-buffers</label>
+              <select id="hideInExcluded" class="raw-select">
+                <option value="none" selected>nil (never)</option>
+                <option value="t">t (over buffers that get no tab)</option>
+                <option value="modes">over these major modes...</option>
+              </select>
+            </div>
+
+            <div class="field-row hidden" id="hideModesRow">
+              <label for="hideModes">modes</label>
+              <input
+                type="text"
+                id="hideModes"
+                class="raw-input"
+                value="dired-mode magit-mode"
+                spellcheck="false"
+              />
+            </div>
+
+            <span class="field-note"
+              >Try it with M-x dired (a tab of its own) or M-x describe-function
+              (*Help* is excluded by default, so it gets no tab).</span
+            >
           </fieldset>
 
           <fieldset class="config-group full-col">

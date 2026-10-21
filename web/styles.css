@@ -552,6 +552,10 @@ html, body {
     text-overflow: ellipsis;
 }
 
+.bufferline-container.hidden {
+    display: none;
+}
+
 .field-row.hidden {
     display: none;
 }

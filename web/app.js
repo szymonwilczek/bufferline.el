@@ -274,8 +274,50 @@
             mode: "lisp-interaction",
             size: "180B",
             code: `;; This buffer is for text that is not saved, and for Lisp evaluation.
-            ;; To create a file, visit it with C-x C-f and enter text in its buffer.`,
+            ;; To create a file, visit it with C-x C-f and enter text in its buffer.`
         },
+        // helper buffers, opened from the M-x strip
+        {
+            id: 16,
+            name: 'web',
+            dir: '~/Documents/GitHub/bufferline.el/',
+            pinned: false,
+            modified: false,
+            readOnly: true,
+            icon: '',
+            iconColor: '#6a9fff',
+            mode: 'dired',
+            size: '4.0KiB',
+            helper: true,
+            code: `  ~/Documents/GitHub/bufferline.el/web:
+            drwxr-xr-x 2 user user  4096 Oct 21 14:00 .
+            drwxr-xr-x 6 user user  4096 Oct 21 14:00 ..
+            -rw-r--r-- 1 user user 42318 Oct 21 14:00 app.js
+            -rw-r--r-- 1 user user 21907 Oct 21 14:00 docs.html
+            -rw-r--r-- 1 user user 13026 Oct 21 14:00 index.html
+            -rw-r--r-- 1 user user 15112 Oct 21 14:00 styles.css`
+        },
+        {
+            id: 17,
+            name: '*Help*',
+            dir: '~/',
+            pinned: false,
+            modified: false,
+            readOnly: true,
+            icon: '󰋖',
+            iconColor: '#7fcfdf',
+            mode: 'help',
+            size: '1.1KiB',
+            helper: true,
+            // help-mode is in the default `bufferline-exclude-modes'
+            excluded: true,
+            code: `bufferline-close-other-tabs is an autoloaded interactive Lisp
+            function in bufferline-commands.el.
+
+            (bufferline-close-other-tabs)
+
+            Close every tab of the selected window except the current one.`
+        }
     ];
 
     const PALETTES = {
@@ -439,6 +481,10 @@
         showSpecialBuffers: true,
         closeKeepPinned: true,
         pickInPlace: false,
+        hideSingleTab: false,
+        hideInExcluded: 'none',
+        hideModes: 'dired-mode magit-mode',
+        openedIds: new Set(),
         closedIds: new Set(),
         echo: '',
         pick: null,
@@ -503,6 +549,12 @@
         showSpecialBuffers: document.getElementById('showSpecialBuffers'),
         closeKeepPinned: document.getElementById('closeKeepPinned'),
         pickInPlace: document.getElementById('pickInPlace'),
+
+        // tab line visibility
+        hideSingleTab: document.getElementById('hideSingleTab'),
+        hideInExcluded: document.getElementById('hideInExcluded'),
+        hideModesRow: document.getElementById('hideModesRow'),
+        hideModes: document.getElementById('hideModes'),
 
         // custom filter
         customFilterPreset: document.getElementById("customFilterPreset"),
@@ -634,7 +686,9 @@
     }
 
     function getPreparedBuffers() {
-        let list = [...MOCK_BUFFERS];
+        let list = MOCK_BUFFERS.filter(b => !state.closedIds.has(b.id)
+            && (!b.helper || state.openedIds.has(b.id))
+            && !b.excluded);
         if (!state.showSpecialBuffers) {
             list = list.filter((b) => !b.name.startsWith("*"));
         }
@@ -753,11 +807,26 @@
         };
     }
 
+    function hideModeList() {
+        return state.hideModes.split(/\s+/).filter(Boolean);
+    }
+
+    // mirror of `bufferline-ui--hide-tab-line-p'
+    function tabLineHidden(tabs) {
+        const current = MOCK_BUFFERS.find(b => b.id === state.activeBufferId);
+        if (state.hideInExcluded === 't' && !tabs.some(b => b.id === state.activeBufferId)) return true;
+        if (state.hideInExcluded === 'modes' && current && hideModeList().includes(`${current.mode}-mode`)) return true;
+        return state.hideSingleTab && tabs.length <= 1;
+    }
+
     function renderTabline() {
         const allBuffers = getPreparedBuffers();
-        const { visible, leftCount, rightCount } = computeVisibleTabs(allBuffers);
 
-        DOM.bufferlineBar.innerHTML = "";
+        DOM.bufferlineBar.innerHTML = '';
+        DOM.bufferlineContainer.classList.toggle('hidden', tabLineHidden(allBuffers));
+        if (tabLineHidden(allBuffers)) return;
+
+        const { visible, leftCount, rightCount } = computeVisibleTabs(allBuffers);
 
         // container top/bottom padding
         DOM.bufferlineContainer.style.paddingTop = `${state.topPadding}px`;
@@ -1043,8 +1112,16 @@
             if (targets) closeBuffers(targets);
         } else if (command === 'pick' || command === 'pick-close') {
             startPick(command);
+        } else if (command === 'dired' || command === 'describe-function') {
+            const helper = MOCK_BUFFERS.find(b => b.helper && b.mode === (command === 'dired' ? 'dired' : 'help'));
+            state.openedIds.add(helper.id);
+            state.closedIds.delete(helper.id);
+            state.activeBufferId = helper.id;
+            state.echo = '';
         } else if (command === 'restore') {
+            if (MOCK_BUFFERS.some(b => b.helper && b.id === state.activeBufferId)) state.activeBufferId = 2;
             state.closedIds.clear();
+            state.openedIds.clear();
             state.echo = '';
         }
         if (command !== 'pick' && command !== 'pick-close') state.pick = null;
@@ -1119,6 +1196,11 @@
         if (!state.showSpecialBuffers) customLines.push('  (bufferline-show-special-buffers nil)');
         if (!state.closeKeepPinned) customLines.push('  (bufferline-close-keep-pinned nil)');
         if (state.pickInPlace) customLines.push('  (bufferline-pick-in-place t)');
+        if (state.hideSingleTab) customLines.push('  (bufferline-hide-single-tab t)');
+        if (state.hideInExcluded === 't') customLines.push('  (bufferline-hide-in-excluded-buffers t)');
+        if (state.hideInExcluded === 'modes' && hideModeList().length > 0) {
+            customLines.push(`  (bufferline-hide-in-excluded-buffers '(${hideModeList().join(' ')}))`);
+        }
 
         const filterExpr = customFilterExpr();
         if (filterExpr) {
@@ -1293,7 +1375,8 @@
             { el: DOM.showTruncMarkers, prop: 'showTruncMarkers' },
             { el: DOM.showSpecialBuffers, prop: 'showSpecialBuffers' },
             { el: DOM.closeKeepPinned, prop: 'closeKeepPinned' },
-            { el: DOM.pickInPlace, prop: 'pickInPlace' }
+            { el: DOM.pickInPlace, prop: 'pickInPlace' },
+            { el: DOM.hideSingleTab, prop: 'hideSingleTab' }
         ];
 
         toggleMap.forEach(({ el, prop }) => {
@@ -1301,6 +1384,18 @@
                 state[prop] = e.target.checked;
                 renderAll();
             });
+        });
+
+        // tab line visibility
+        DOM.hideInExcluded.addEventListener('change', (e) => {
+            state.hideInExcluded = e.target.value;
+            DOM.hideModesRow.classList.toggle('hidden', state.hideInExcluded !== 'modes');
+            renderAll();
+        });
+
+        DOM.hideModes.addEventListener('input', (e) => {
+            state.hideModes = e.target.value;
+            renderAll();
         });
 
         // custom filter
