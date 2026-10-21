@@ -72,6 +72,28 @@ each switch, as redisplay does, so they get their order in opening order."
      (bufferline-state-move-to-end a)
      (should (equal (bufferline-test--tabs (selected-window)) (list b a))))))
 
+;;; Window tab lists
+
+(ert-deftest bufferline-test-tabs-isolated-per-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c")))
+     (bufferline-test--show left a b)
+     (bufferline-test--show right c a)
+     (should (equal (bufferline-test--tabs left) (list b)))
+     (should (equal (bufferline-test--tabs right) (list a c))))))
+
+(ert-deftest bufferline-test-forget-drops-tab-from-window ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-buffers-forget a (selected-window))
+     (should (equal (bufferline-test--tabs (selected-window)) (list b))))))
+
 ;;; Reordering within a window
 
 (ert-deftest bufferline-test-move-tab-right ()

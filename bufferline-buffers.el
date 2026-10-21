@@ -47,6 +47,10 @@
 
     (bufferline-sorters-apply tabs)))
 
+(defun bufferline-buffers-forget (buffer window)
+  "Drop BUFFER from the tabs of WINDOW by erasing it from its history."
+  (unrecord-window-buffer window buffer))
+
 (defun bufferline-buffers-tab-width (buffer live-tabs)
   "Calculate estimated rendered character width for BUFFER tab."
   (let* ((name (if bufferline-show-duplicate-prefix
