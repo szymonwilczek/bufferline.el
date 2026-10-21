@@ -279,7 +279,9 @@
                 <td><code>bufferline-show-diagnostics</code></td>
                 <td class="type-col">boolean</td>
                 <td class="default-col">nil</td>
-                <td>Display Flymake diagnostic count badges.</td>
+                <td>
+                  Display diagnostic count badges from Flymake or Flycheck.
+                </td>
               </tr>
               <tr>
                 <td><code>bufferline-diagnostics-error-icon</code></td>
@@ -304,6 +306,37 @@
                 <td class="type-col">function / nil</td>
                 <td class="default-col">nil</td>
                 <td>Custom badge formatter function (lambda (buffer)).</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-sources</code></td>
+                <td class="type-col">list</td>
+                <td class="default-col">'(flymake flycheck)</td>
+                <td>
+                  Diagnostic sources to read, in order. The first one enabled in
+                  a buffer is used.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-highlight</code></td>
+                <td class="type-col">symbol</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Color tabs with errors or warnings: <code>name</code>,
+                  <code>separator</code>, <code>both</code>, or nil. Works
+                  without the badge.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-error-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'error</td>
+                <td>Face whose foreground highlights tabs with errors.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-diagnostics-warning-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'warning</td>
+                <td>Face whose foreground highlights tabs with warnings.</td>
               </tr>
               <tr>
                 <td><code>bufferline-numbers</code></td>
@@ -530,6 +563,48 @@
               bufferline only ever clears a value it set itself, and disabling
               <code>global-bufferline-mode</code> shows every hidden tab line
               again.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">DIAGNOSTICS</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Tint Names With Problems</h3>
+            <pre
+              class="doc-code"
+            ><code>(setq bufferline-diagnostics-highlight 'name)</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Prefer Flycheck</h3>
+            <pre class="doc-code"><code>(setq bufferline-diagnostics-sources
+      '(flycheck flymake))</code></pre>
+          </div>
+        </div>
+
+        <div class="doc-card">
+          <ul class="doc-list">
+            <li>
+              Counts come from the first source in
+              <code>bufferline-diagnostics-sources</code> that is enabled in the
+              buffer. Flymake types defined by backends such as Eglot count by
+              the category they inherit; Flycheck <code>info</code> counts as a
+              note.
+            </li>
+            <li>
+              With <code>bufferline-diagnostics-highlight</code> a tab with
+              errors takes the foreground of
+              <code>bufferline-diagnostics-error-face</code>, and one with only
+              warnings that of <code>bufferline-diagnostics-warning-face</code>.
+              <code>separator</code> draws the indicator on inactive tabs too.
+              Highlighting works whether or not
+              <code>bufferline-show-diagnostics</code> is on.
             </li>
           </ul>
         </div>
