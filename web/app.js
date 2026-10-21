@@ -1547,10 +1547,212 @@ function initListeners() {
                 document.activeElement.matches('input[type="text"], textarea')
         )
             return;
+    }
+                                       state.echo = '';
+    state.pick = { kind, items };
+}
+
+// mirror of `bufferline-close-tab': the window falls back to its first tab
+function closeTab(id) {
+    state.closedIds.add(id);
+    if (id === state.activeBufferId) {
+        const next = getPreparedBuffers()[0];
+        if (next) state.activeBufferId = next.id;
+    }
+}
+
+function finishPick(key) {
+    const { kind, items } = state.pick;
+    const item = items.find(it => it.key === key);
+    state.pick = null;
+    if (!item) {
+        state.echo = kind === 'pick' ? 'Pick cancelled' : 'Pick close cancelled';
+    } else if (kind === 'pick') {
+        state.activeBufferId = item.buf.id;
+        state.echo = '';
+    } else {
+        closeTab(item.buf.id);
+        state.echo = `Closed buffer: ${item.buf.name}`;
+    }
+    renderAll();
+}
+
+// mirror of `bufferline-commands--close-buffers'
+function closeBuffers(targets) {
+    let closed = 0;
+    targets.forEach((buf) => {
+        if (state.closeKeepPinned && buf.pinned) return;
+        state.closedIds.add(buf.id);
+        closed++;
+    });
+    state.echo = closed === 0 ? 'No tabs to close' : `Closed ${closed} tab${closed === 1 ? '' : 's'}`;
+}
+
+function tabsBeside(side) {
+    const tabs = getPreparedBuffers();
+    const pos = tabs.findIndex(b => b.id === state.activeBufferId);
+    if (pos < 0) {
+        state.echo = 'Current buffer is not a tab';
+        return null;
+    }
+    return side === 'left' ? tabs.slice(0, pos) : tabs.slice(pos + 1);
+}
+
+function runCommand(command) {
+    if (command === 'close-other-tabs') {
+        closeBuffers(getPreparedBuffers().filter(b => b.id !== state.activeBufferId));
+    } else if (command === 'close-tabs-to-right' || command === 'close-tabs-to-left') {
+        const targets = tabsBeside(command === 'close-tabs-to-left' ? 'left' : 'right');
+        if (targets) closeBuffers(targets);
+    } else if (command === 'pick' || command === 'pick-close') {
+        startPick(command);
+    } else if (command === 'dired' || command === 'describe-function') {
+        const helper = MOCK_BUFFERS.find(b => b.helper && b.mode === (command === 'dired' ? 'dired' : 'help'));
+        state.openedIds.add(helper.id);
+        state.closedIds.delete(helper.id);
+        state.activeBufferId = helper.id;
+        state.echo = '';
+    } else if (command === 'restore') {
+        if (MOCK_BUFFERS.some(b => b.helper && b.id === state.activeBufferId)) state.activeBufferId = 2;
+        state.closedIds.clear();
+        state.openedIds.clear();
+        state.echo = '';
+    }
+    if (command !== 'pick' && command !== 'pick-close') state.pick = null;
+    renderAll();
+}
+
+function renderMinibuffer() {
+    DOM.commandStrip.querySelectorAll('.command-btn').forEach((btn) => {
+        btn.classList.toggle('active', !!state.pick && btn.dataset.command === state.pick.kind);
+    });
+
+    if (!state.pick) {
+        DOM.emacsMinibuffer.textContent = state.echo;
+        return;
+    }
+
+    // mirror of `bufferline-pick--read-key'
+    DOM.emacsMinibuffer.textContent = '';
+    const prompt = document.createElement('span');
+    prompt.className = 'mb-prompt';
+    prompt.textContent = state.pick.kind === 'pick' ? 'Pick buffer: ' : 'Close buffer: ';
+    DOM.emacsMinibuffer.appendChild(prompt);
+    if (state.pickInPlace) return;
+
+    state.pick.items.forEach((item, i) => {
+        const key = document.createElement('span');
+        key.className = 'mb-key';
+        key.textContent = `[${item.key}]`;
+        DOM.emacsMinibuffer.appendChild(document.createTextNode(i === 0 ? '' : '  '));
+        DOM.emacsMinibuffer.appendChild(key);
+        DOM.emacsMinibuffer.appendChild(document.createTextNode(` ${item.buf.name}`));
+    });
+    DOM.emacsMinibuffer.appendChild(document.createTextNode(' '));
+}
+
+function renderEditor() {
+    const activeBuf = MOCK_BUFFERS.find(b => b.id === state.activeBufferId) || MOCK_BUFFERS[0];
+    const lines = activeBuf.code.split('\n');
+    DOM.editorGutter.innerHTML = lines.map((_, i) => `<div>${i + 1}</div>`).join('');
+
+    // one pass, so later rules never match inside markup an earlier rule
+    // inserted; in Lisp a single quote quotes a form instead of a string
+    const string = activeBuf.mode === 'emacs-lisp' ? '"[^"]*"' : `"[^"]*"|'[^']*'`;
+    const token = new RegExp(`(${string})|\\b(use-package|require|define-minor-mode|provide|int|void|return|pub|struct|use|fn|const|let)\\b|\\b([a-zA-Z0-9_-]+)(?=\\()`, 'g');
+    const highlighted = lines.map(line => {
+        const l = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        if (l.trim().startsWith(';')) return `<span class="syn-comment">${l}</span>`;
+        return l.replace(token, (_, str, keyword, fn) => {
+            if (str) return `<span class="syn-string">${str}</span>`;
+            if (keyword) return `<span class="syn-keyword">${keyword}</span>`;
+            return `<span class="syn-fn">${fn}</span>`;
+        });
+    }).join('\n');
+
+    DOM.editorContent.innerHTML = `<pre><code>${highlighted}</code></pre>`;
+}
+
+function generateElispCode() {
+    const customLines = [];
+    if (state.separatorStyle !== 'vertical') customLines.push(`  (bufferline-separator-style '${state.separatorStyle})`);
+    if (state.indicatorWidth !== 3) customLines.push(`  (bufferline-indicator-width ${state.indicatorWidth})`);
+    if (state.leftMargin !== 8) customLines.push(`  (bufferline-left-margin ${state.leftMargin})`);
+    if (state.topPadding !== 0) customLines.push(`  (bufferline-top-padding ${state.topPadding})`);
+    if (state.tabPaddingVertical !== 4) customLines.push(`  (bufferline-tab-padding-vertical ${state.tabPaddingVertical})`);
+    if (state.tabPaddingHorizontal !== 2) customLines.push(`  (bufferline-tab-padding-horizontal ${state.tabPaddingHorizontal})`);
+    if (state.iconSpacing !== 1) customLines.push(`  (bufferline-icon-spacing ${state.iconSpacing})`);
+    if (state.sortBy !== 'fifo') customLines.push(`  (bufferline-sort-by '${state.sortBy})`);
+    if (state.numbersMode !== 'none') customLines.push(`  (bufferline-numbers '${state.numbersMode})`);
+    if (state.duplicateDepth !== 1) customLines.push(`  (bufferline-duplicate-prefix-depth ${state.duplicateDepth})`);
+    if (!state.showIcons) customLines.push('  (bufferline-show-buffer-icons nil)');
+    if (!state.showModified) customLines.push('  (bufferline-show-modified nil)');
+    if (!state.showReadOnly) customLines.push('  (bufferline-show-read-only nil)');
+    if (!state.showPinned) customLines.push('  (bufferline-show-pinned nil)');
+    if (!state.showDuplicates) customLines.push('  (bufferline-show-duplicate-prefix nil)');
+    if (state.showDiagnostics) customLines.push('  (bufferline-show-diagnostics t)');
+    if (!state.showTruncMarkers) customLines.push('  (bufferline-show-trunc-markers nil)');
+    if (!state.showSpecialBuffers) customLines.push('  (bufferline-show-special-buffers nil)');
+    if (!state.closeKeepPinned) customLines.push('  (bufferline-close-keep-pinned nil)');
+    if (!state.pickInPlace) customLines.push('  (bufferline-pick-in-place nil)');
+    if (state.closeIcon === 't') customLines.push('  (bufferline-show-tab-close-icon t)');
+    if (state.closeIcon === 'active') customLines.push("  (bufferline-show-tab-close-icon 'active)");
+    if (state.diagHighlight !== 'none') customLines.push(`  (bufferline-diagnostics-highlight '${state.diagHighlight})`);
+    if (state.hideSingleTab) customLines.push('  (bufferline-hide-single-tab t)');
+    if (state.hideInExcluded === 't') customLines.push('  (bufferline-hide-in-excluded-buffers t)');
+    if (state.hideInExcluded === 'modes' && hideModeList().length > 0) {
+        customLines.push(`  (bufferline-hide-in-excluded-buffers '(${hideModeList().join(' ')}))`);
+    }
+
+    const filterExpr = customFilterExpr();
+    if (filterExpr) {
+        customLines.push('  (bufferline-custom-filter');
+        const exprLines = filterExpr.split('\n');
+        exprLines.forEach((line, i) => {
+            customLines.push(`   ${line}${i === exprLines.length - 1 ? ')' : ''}`);
+        });
+    }
+
+    const lines = [];
+    lines.push('(use-package bufferline');
+    if (state.activePkgManager === 'use-package') {
+        lines.push('  :ensure t');
+    } else if (state.activePkgManager === 'package-vc') {
+        lines.push('  :vc (:url "https://github.com/szymonwilczek/bufferline.el")');
+    } else if (state.activePkgManager === 'elpaca') {
+        lines.push('  :ensure (:host github :repo "szymonwilczek/bufferline.el")');
+    } else if (state.activePkgManager === 'straight') {
+        lines.push('  :straight (:host github :repo "szymonwilczek/bufferline.el")');
+    }
+
+    if (customLines.length > 0) {
+        lines.push('  :custom');
+        lines.push(...customLines);
+    }
+
+    lines.push('  :config');
+    lines.push('  (global-bufferline-mode 1))');
+
+    DOM.codeSnippetOutput.textContent = lines.join('\n');
+}
+
+function renderAll() {
+    renderTabline();
+    renderEditor();
+    renderMinibuffer();
+    generateElispCode();
+}
+
+function initListeners() {
+    // keyboard navigation
+    window.addEventListener('keydown', (e) => {
+        if (document.activeElement && document.activeElement.matches('input[type="text"], textarea')) return;
         if (state.pick) {
             // like `read-key', the next key answers the pick
-            if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key))
-                return;
+            if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
+            e.preventDefault();
+            finishPick(e.key);
+            return;
             e.preventDefault();
             finishPick(e.key);
             return;
