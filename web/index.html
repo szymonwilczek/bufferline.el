@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,12 +6,14 @@
     <title>bufferline.el</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;600;700&family=Fira+Code:wght@400;600;700&family=Hack:wght@400;700&family=Iosevka:wght@400;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Source+Code+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;600;700&family=Fira+Code:wght@400;600;700&family=Hack:wght@400;700&family=Iosevka:wght@400;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Source+Code+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-
     <header class="header">
       <div class="header-inner">
         <div class="title-block">
@@ -20,7 +22,13 @@
         </div>
         <div class="header-links">
           <a href="docs.html" class="raw-link">[ Documentation ]</a>
-          <a href="https://github.com/szymonwilczek/bufferline.el" target="_blank" rel="noopener noreferrer" class="raw-link">[ GitHub Repository ]</a>
+          <a
+            href="https://github.com/szymonwilczek/bufferline.el"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="raw-link"
+            >[ GitHub Repository ]</a
+          >
         </div>
       </div>
     </header>
@@ -29,19 +37,54 @@
       <section class="section">
         <div class="section-header">
           <span class="section-title"></span>
-          <span class="section-hint">TAB / S-TAB to cycle buffers &bull; Click to select</span>
+          <span class="section-hint"
+            >TAB / S-TAB to cycle buffers &bull; Click to select</span
+          >
         </div>
 
         <div class="emacs-window" id="emacsFrame" tabindex="0">
           <div class="bufferline-container" id="bufferlineContainer">
-            <div class="bufferline-bar" id="bufferlineBar">
-            </div>
+            <div class="bufferline-bar" id="bufferlineBar"></div>
           </div>
 
           <div class="emacs-body">
             <div class="gutter" id="editorGutter"></div>
             <div class="buffer-text" id="editorContent"></div>
           </div>
+
+          <div class="emacs-minibuffer" id="emacsMinibuffer"></div>
+        </div>
+
+        <div class="command-strip" id="commandStrip">
+          <span class="command-prefix">M-x</span>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="close-other-tabs"
+          >
+            close-other-tabs
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="close-tabs-to-right"
+          >
+            close-tabs-to-right
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="close-tabs-to-left"
+          >
+            close-tabs-to-left
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="restore"
+          >
+            (restore buffers)
+          </button>
         </div>
       </section>
 
@@ -51,7 +94,6 @@
         </div>
 
         <div class="config-grid">
-          
           <fieldset class="config-group">
             <legend>Indicator &amp; Geometry</legend>
 
@@ -73,7 +115,14 @@
             <div class="field-row">
               <label for="indicatorWidth">indicator-width</label>
               <div class="slider-wrap">
-                <input type="range" id="indicatorWidth" min="1" max="10" value="3" class="raw-slider" />
+                <input
+                  type="range"
+                  id="indicatorWidth"
+                  min="1"
+                  max="10"
+                  value="3"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valIndicatorWidth">3px</span>
               </div>
             </div>
@@ -81,7 +130,14 @@
             <div class="field-row">
               <label for="leftMargin">left-margin</label>
               <div class="slider-wrap">
-                <input type="range" id="leftMargin" min="0" max="32" value="8" class="raw-slider" />
+                <input
+                  type="range"
+                  id="leftMargin"
+                  min="0"
+                  max="32"
+                  value="8"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valLeftMargin">8px</span>
               </div>
             </div>
@@ -89,7 +145,14 @@
             <div class="field-row">
               <label for="topPadding">top-padding</label>
               <div class="slider-wrap">
-                <input type="range" id="topPadding" min="0" max="12" value="0" class="raw-slider" />
+                <input
+                  type="range"
+                  id="topPadding"
+                  min="0"
+                  max="12"
+                  value="0"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valTopPadding">0px</span>
               </div>
             </div>
@@ -97,7 +160,14 @@
             <div class="field-row">
               <label for="tabPaddingVertical">tab-padding-vertical</label>
               <div class="slider-wrap">
-                <input type="range" id="tabPaddingVertical" min="0" max="12" value="4" class="raw-slider" />
+                <input
+                  type="range"
+                  id="tabPaddingVertical"
+                  min="0"
+                  max="12"
+                  value="4"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valTabPaddingVertical">4px</span>
               </div>
             </div>
@@ -105,15 +175,31 @@
             <div class="field-row">
               <label for="tabPaddingHorizontal">tab-padding-horizontal</label>
               <div class="slider-wrap">
-                <input type="range" id="tabPaddingHorizontal" min="0" max="8" value="2" class="raw-slider" />
-                <span class="slider-val" id="valTabPaddingHorizontal">2 sp</span>
+                <input
+                  type="range"
+                  id="tabPaddingHorizontal"
+                  min="0"
+                  max="8"
+                  value="2"
+                  class="raw-slider"
+                />
+                <span class="slider-val" id="valTabPaddingHorizontal"
+                  >2 sp</span
+                >
               </div>
             </div>
 
             <div class="field-row">
               <label for="iconSpacing">icon-spacing</label>
               <div class="slider-wrap">
-                <input type="range" id="iconSpacing" min="0" max="6" value="1" class="raw-slider" />
+                <input
+                  type="range"
+                  id="iconSpacing"
+                  min="0"
+                  max="6"
+                  value="1"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valIconSpacing">1 sp</span>
               </div>
             </div>
@@ -145,7 +231,14 @@
             <div class="field-row">
               <label for="duplicateDepth">duplicate-prefix-depth</label>
               <div class="slider-wrap">
-                <input type="range" id="duplicateDepth" min="1" max="4" value="1" class="raw-slider" />
+                <input
+                  type="range"
+                  id="duplicateDepth"
+                  min="1"
+                  max="4"
+                  value="1"
+                  class="raw-slider"
+                />
                 <span class="slider-val" id="valDuplicateDepth">1</span>
               </div>
             </div>
@@ -168,7 +261,9 @@
             <div class="field-row">
               <label for="fontPreset">font-family</label>
               <select id="fontPreset" class="raw-select">
-                <option value="typus-mono-95" selected>Typus Mono 95 (default)</option>
+                <option value="typus-mono-95" selected>
+                  Typus Mono 95 (default)
+                </option>
                 <option value="jetbrains-mono">JetBrains Mono</option>
                 <option value="fira-code">Fira Code</option>
                 <option value="cascadia-code">Cascadia Code</option>
@@ -181,8 +276,15 @@
             <div class="field-row hidden" id="customThemeContainer">
               <label for="customThemeInput">custom-theme</label>
               <div class="custom-input-wrap">
-                <input type="text" id="customThemeInput" class="raw-input" placeholder="URL to theme.el or raw code" />
-                <button type="button" id="btnLoadTheme" class="raw-btn">Apply</button>
+                <input
+                  type="text"
+                  id="customThemeInput"
+                  class="raw-input"
+                  placeholder="URL to theme.el or raw code"
+                />
+                <button type="button" id="btnLoadTheme" class="raw-btn">
+                  Apply
+                </button>
               </div>
             </div>
           </fieldset>
@@ -190,14 +292,42 @@
           <fieldset class="config-group full-col">
             <legend>Feature Flags</legend>
             <div class="checkbox-grid">
-              <label class="raw-checkbox"><input type="checkbox" id="showIcons" checked /> show-buffer-icons</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showModified" checked /> show-modified (●)</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showReadOnly" checked /> show-read-only ()</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showPinned" checked /> show-pinned (󰐃)</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showDuplicates" checked /> show-duplicate-prefix</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showDiagnostics" checked /> show-diagnostics</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showTruncMarkers" checked /> show-trunc-markers</label>
-              <label class="raw-checkbox"><input type="checkbox" id="showSpecialBuffers" checked /> show-special-buffers (*)</label>
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showIcons" checked />
+                show-buffer-icons</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showModified" checked />
+                show-modified (●)</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showReadOnly" checked />
+                show-read-only ()</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showPinned" checked /> show-pinned
+                (󰐃)</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showDuplicates" checked />
+                show-duplicate-prefix</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showDiagnostics" checked />
+                show-diagnostics</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showTruncMarkers" checked />
+                show-trunc-markers</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="showSpecialBuffers" checked />
+                show-special-buffers (*)</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="closeKeepPinned" checked />
+                close-keep-pinned</label
+              >
             </div>
           </fieldset>
 
@@ -217,17 +347,32 @@
 
             <div class="field-row hidden" id="customFilterRegexpRow">
               <label for="customFilterRegexp">regexp</label>
-              <input type="text" id="customFilterRegexp" class="raw-input" value="\.rs\'" spellcheck="false" />
+              <input
+                type="text"
+                id="customFilterRegexp"
+                class="raw-input"
+                value="\.rs\'"
+                spellcheck="false"
+              />
             </div>
 
             <div class="field-row hidden" id="customFilterLambdaRow">
               <label for="customFilterLambda">lambda</label>
-              <textarea id="customFilterLambda" class="raw-input raw-textarea" rows="4" spellcheck="false">(lambda (buffer)
-  (not (string-prefix-p "*" (buffer-name buffer))))</textarea>
-              <span class="field-note">Emitted as-is into the generated config. The preview cannot evaluate Emacs Lisp, so it keeps every tab.</span>
+              <textarea
+                id="customFilterLambda"
+                class="raw-input raw-textarea"
+                rows="4"
+                spellcheck="false"
+              >
+(lambda (buffer)
+  (not (string-prefix-p "*" (buffer-name buffer))))</textarea
+              >
+              <span class="field-note"
+                >Emitted as-is into the generated config. The preview cannot
+                evaluate Emacs Lisp, so it keeps every tab.</span
+              >
             </div>
           </fieldset>
-
         </div>
       </section>
 
@@ -235,25 +380,37 @@
         <div class="section-header">
           <span class="section-title">GENERATED ELISP CONFIGURATION</span>
           <div class="pkg-switch" id="pkgSwitcher">
-            <button type="button" class="pkg-btn active" data-pkg="use-package">use-package</button>
-            <button type="button" class="pkg-btn" data-pkg="package-vc">package-vc</button>
-            <button type="button" class="pkg-btn" data-pkg="elpaca">elpaca</button>
-            <button type="button" class="pkg-btn" data-pkg="straight">straight.el</button>
+            <button type="button" class="pkg-btn active" data-pkg="use-package">
+              use-package
+            </button>
+            <button type="button" class="pkg-btn" data-pkg="package-vc">
+              package-vc
+            </button>
+            <button type="button" class="pkg-btn" data-pkg="elpaca">
+              elpaca
+            </button>
+            <button type="button" class="pkg-btn" data-pkg="straight">
+              straight.el
+            </button>
           </div>
         </div>
 
         <div class="code-box">
           <div class="code-actions">
-            <button type="button" id="btnCopyCode" class="raw-btn copy-btn">Copy Config</button>
+            <button type="button" id="btnCopyCode" class="raw-btn copy-btn">
+              Copy Config
+            </button>
           </div>
           <pre><code id="codeSnippetOutput">;; Generating config...</code></pre>
         </div>
       </section>
-
     </main>
 
     <footer class="footer">
-      <p>bufferline.el (C) 2026 Szymon Wilczek. Licensed under GNU General Public License v3.0.</p>
+      <p>
+        bufferline.el (C) 2026 Szymon Wilczek. Licensed under GNU General Public
+        License v3.0.
+      </p>
     </footer>
 
     <div class="toast" id="toastMessage">Copied to clipboard.</div>

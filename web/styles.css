@@ -424,6 +424,50 @@ html, body {
     overflow-x: auto;
 }
 
+.emacs-minibuffer {
+    min-height: 1.75em;
+    padding: 2px 12px;
+    background-color: var(--emacs-bg);
+    border-top: 1px solid var(--emacs-bg-alt);
+    color: var(--emacs-fg);
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.emacs-minibuffer .mb-prompt {
+    color: var(--emacs-keyword);
+}
+
+.emacs-minibuffer .mb-key {
+    color: var(--emacs-warning);
+    font-weight: bold;
+}
+
+.command-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.command-prefix {
+    color: var(--page-fg-dim);
+    font-size: 0.8rem;
+}
+
+.command-btn {
+    font-size: 0.78rem;
+    padding: 4px 8px;
+}
+
+.command-btn.active {
+    border-color: var(--page-border-focus);
+}
+
 .gutter {
     padding: 0 14px 0 12px;
     color: #4a483e;
