@@ -49,6 +49,34 @@
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
 
+(defun bufferline-commands--close-buffers (buffers)
+  "Kill BUFFERS, redraw the bufferline and return how many were closed.
+Pinned buffers are left open while `bufferline-close-keep-pinned' is
+non-nil.  A buffer whose killing is refused, for example by declining
+to discard its unsaved changes, stays open and is not counted."
+  (let ((closed 0))
+    (dolist (buf buffers)
+      (when (and (buffer-live-p buf)
+                 (not (and bufferline-close-keep-pinned
+                           (bufferline-state-pinned-p buf)))
+                 (kill-buffer buf))
+        (setq closed (1+ closed))))
+    (if (fboundp 'bufferline-ui-refresh)
+        (bufferline-ui-refresh)
+      (force-mode-line-update t))
+    (if (= closed 0)
+        (message "No tabs to close")
+      (message "Closed %d tab%s" closed (if (= closed 1) "" "s")))
+    closed))
+
+;;;###autoload
+(defun bufferline-close-other-tabs ()
+  "Close every tab of the selected window except the current one.
+Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
+  (interactive)
+  (bufferline-commands--close-buffers
+   (delq (current-buffer) (bufferline-buffers-all))))
+
 (defun bufferline-commands--swap-order (a b)
   "Swap the positions of tabs A and B, then redraw the bufferline."
   (unless (eq bufferline-sort-by 'fifo)

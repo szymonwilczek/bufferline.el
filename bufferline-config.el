@@ -235,6 +235,12 @@ or a function taking (num buffer) returning a string."
                  (function :tag "Custom Formatter Function"))
   :group 'bufferline)
 
+(defcustom bufferline-close-keep-pinned t
+  "Whether the bulk close commands leave pinned tabs open.
+This applies to `bufferline-close-other-tabs'."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-pick-alphabet "asdfghjklqwertyuiopzxcvbnm"
   "Alphabet string used for bufferline-pick quick jumping keys."
   :type 'string

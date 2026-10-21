@@ -206,6 +206,103 @@ each switch, as redisplay does, so they get their order in opening order."
      (bufferline-test--show (selected-window) a b a)
      (should-error (bufferline-move-tab-left) :type 'user-error))))
 
+;;; Bulk close
+
+(ert-deftest bufferline-test-close-other-tabs ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c b)
+     (should (= (bufferline-close-other-tabs) 2))
+     (should-not (buffer-live-p a))
+     (should-not (buffer-live-p c))
+     (should (eq (window-buffer) b))
+     (should (equal (bufferline-test--tabs (selected-window)) (list b))))))
+
+(ert-deftest bufferline-test-close-other-tabs-keeps-pinned ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-state-toggle-pin a)
+     (let ((bufferline-close-keep-pinned t))
+       (should (= (bufferline-close-other-tabs) 1)))
+     (should (buffer-live-p a))
+     (should-not (buffer-live-p b))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a c))))))
+
+(ert-deftest bufferline-test-close-other-tabs-closes-pinned-when-asked ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-state-toggle-pin a)
+     (let ((bufferline-close-keep-pinned nil))
+       (should (= (bufferline-close-other-tabs) 1)))
+     (should-not (buffer-live-p a))
+     (should (equal (bufferline-test--tabs (selected-window)) (list b))))))
+
+(ert-deftest bufferline-test-close-other-tabs-keeps-current-when-pinned ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-state-toggle-pin b)
+     (let ((bufferline-close-keep-pinned nil))
+       (bufferline-close-other-tabs))
+     (should (buffer-live-p b))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-close-other-tabs-spares-other-windows ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a b)
+     (bufferline-close-other-tabs)
+     (should-not (buffer-live-p a))
+     (should (buffer-live-p c))
+     (should (buffer-live-p d))
+     (should (equal (bufferline-test--tabs right) (list c d))))))
+
+(ert-deftest bufferline-test-close-other-tabs-with-single-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (should (= (bufferline-close-other-tabs) 0))
+     (should (buffer-live-p a)))))
+
+(ert-deftest bufferline-test-close-other-tabs-counts-refused-kills ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (kill-buffer-query-functions
+           (list (lambda () (not (eq (current-buffer) a))))))
+     (bufferline-test--show (selected-window) a b c)
+     (should (= (bufferline-close-other-tabs) 1))
+     (should (buffer-live-p a))
+     (should-not (buffer-live-p b))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a c))))))
+
+(ert-deftest bufferline-test-close-other-tabs-from-non-tab-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (other (bufferline-test--buffer "other"))
+         (bufferline-exclude-modes '(special-mode)))
+     (with-current-buffer other (special-mode))
+     (bufferline-test--show (selected-window) a b other)
+     (should (= (bufferline-close-other-tabs) 2))
+     (should (buffer-live-p other))
+     (should (eq (window-buffer) other)))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()
