@@ -37,11 +37,15 @@ each switch, as redisplay does, so they get their order in opening order."
   (with-selected-window window
     (bufferline-buffers-all)))
 
+(defface bufferline-test-pick '((t :foreground "#ff0000"))
+  "Face with a color batch Emacs can resolve, for in-place pick letters.")
+
 (defmacro bufferline-test-with-frame (&rest body)
   "Run BODY in a single-window frame with fresh tab state."
   (declare (indent 0) (debug t))
   `(let ((bufferline-state--tab-order-counter 0)
          (bufferline-sort-by 'fifo)
+         (bufferline-pick-face 'bufferline-test-pick)
          (bufferline-test--buffers nil))
      (save-window-excursion
        (delete-other-windows)
@@ -481,6 +485,181 @@ prompt, and its value is the key."
                                 (should (equal bufferline-test--prompts
                                                '("Swap a with: [a] a  [s] b  [d] c "))))
      (should (equal (bufferline-test--tabs (selected-window)) (list c b a))))))
+
+;;; Picking tabs in place
+
+(defun bufferline-test--render (window buffer)
+  "Return the tab of BUFFER as WINDOW's tab line draws it."
+  (with-selected-window window
+    (with-current-buffer (window-buffer window)
+      (bufferline-ui-tab-name-format buffer (bufferline-buffers-get)))))
+
+(defun bufferline-test--pick-letter (string)
+  "Return the in-place pick letter drawn in STRING, or nil.
+The letter is the only character drawn in the color of `bufferline-pick-face'."
+  (let ((fg (face-foreground bufferline-pick-face nil t))
+        found)
+    (dotimes (i (length string))
+      (let ((face (get-text-property i 'face string)))
+        (when (and (consp face)
+                   (eq (plist-get face :weight) 'bold)
+                   (equal (plist-get face :foreground) fg))
+          (setq found (aref string i)))))
+    found))
+
+(ert-deftest bufferline-test-pick-in-place-off-by-default ()
+  (should-not (default-value 'bufferline-pick-in-place)))
+
+(ert-deftest bufferline-test-pick-in-place-draws-letters-on-tabs ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t)
+         letters)
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq letters
+                    (list (bufferline-test--pick-letter
+                           (bufferline-test--render (selected-window) a))
+                          (bufferline-test--pick-letter
+                           (bufferline-test--render (selected-window) b))))
+              ?a))
+      (bufferline-pick)
+      ;; the letters live on the tabs, so the prompt only names the pick
+      (should (equal bufferline-test--prompts '("Pick buffer: "))))
+     (should (equal letters '(?a ?s)))
+     (should (eq (window-buffer) a)))))
+
+(ert-deftest bufferline-test-pick-in-place-letters-go-away ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys '(?s)
+                                (bufferline-pick))
+     (should-not bufferline-pick--labels)
+     (should-not bufferline-pick--window)
+     (should-not (bufferline-test--pick-letter
+                  (bufferline-test--render (selected-window) a))))))
+
+(ert-deftest bufferline-test-pick-in-place-letters-go-away-on-quit ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-in-place t))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys (list (lambda (_prompt) (signal 'quit nil)))
+                                ;; `should-error' only catches errors, and quit is not one
+                                (should (eq (condition-case nil
+                                                (progn (bufferline-pick) 'returned)
+                                              (quit 'quit))
+                                            'quit)))
+     (should-not bufferline-pick--labels)
+     (should-not (bufferline-pick-label a))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-pick-in-place-redraws-tab-lines ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t)
+         cache-during)
+     (bufferline-test--show (selected-window) a b)
+     (set-window-parameter nil 'tab-line-cache 'stale)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq cache-during (window-parameter nil 'tab-line-cache))
+              (set-window-parameter nil 'tab-line-cache 'stale)
+              ?q))
+      (bufferline-pick))
+     ;; the cached tab line is dropped when the letters appear
+     ;; and again when they go away
+     (should-not cache-during)
+     (should-not (window-parameter nil 'tab-line-cache)))))
+
+(ert-deftest bufferline-test-pick-in-place-only-in-picking-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-pick-in-place t)
+          labels-left labels-right)
+     (bufferline-test--show right c)
+     (bufferline-test--show left a b)
+     ;; a is in no window, so it is a tab of both windows
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq labels-left (with-selected-window left (bufferline-pick-label a))
+                    labels-right (with-selected-window right (bufferline-pick-label a)))
+              ?q))
+      (bufferline-pick))
+     (should labels-left)
+     (should-not labels-right))))
+
+(ert-deftest bufferline-test-pick-in-place-keeps-other-tabs-unlabelled ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t)
+         label-c)
+     (bufferline-test--show (selected-window) a b c)
+     ;; the alphabet covers only two tabs, so c gets no letter
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq label-c (bufferline-test--pick-letter
+                             (bufferline-test--render (selected-window) c)))
+              ?q))
+      (bufferline-pick))
+     (should-not label-c))))
+
+(ert-deftest bufferline-test-pick-close-in-place ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys '(?a)
+                                (bufferline-pick-close)
+                                (should (equal bufferline-test--prompts '("Close buffer: "))))
+     (should-not (buffer-live-p a)))))
+
+(ert-deftest bufferline-test-swap-tab-in-place ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place t))
+     (bufferline-test--show (selected-window) a b a)
+     (bufferline-test-with-keys '(?s)
+                                (bufferline-swap-tab)
+                                (should (equal bufferline-test--prompts '("Swap a with: "))))
+     (should (equal (bufferline-test--tabs (selected-window)) (list b a))))))
+
+(ert-deftest bufferline-test-pick-minibuffer-draws-no-letters ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as")
+         (bufferline-pick-in-place nil)
+         letter)
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq letter (bufferline-test--pick-letter
+                            (bufferline-test--render (selected-window) a)))
+              ?q))
+      (bufferline-pick))
+     (should-not letter))))
 
 ;;; Moving tabs between windows
 

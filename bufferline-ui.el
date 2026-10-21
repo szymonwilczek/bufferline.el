@@ -19,6 +19,7 @@
 (require 'bufferline-diagnostics)
 (require 'bufferline-numbers)
 (require 'bufferline-buffers)
+(require 'bufferline-pick)
 
 (defun bufferline-ui-tab-name-format (tab tabs)
   "Format single TAB buffer with icons, indicators, disambiguation, and edge truncation markers."
@@ -78,7 +79,12 @@
                        (nerd-icons-icon-for-file file-or-name :v-adjust -0.05 :height bufferline-icon-size))))
          (icon-hex (if icon-raw (bufferline-colors-get-icon-hex icon-raw (if active fg-main fg-comment)) fg-comment))
          (icon-str (if icon-raw (substring-no-properties icon-raw) " "))
-         (icon (propertize icon-str 'face `(:foreground ,icon-hex :background ,bg-color)))
+         (pick-char (bufferline-pick-label buffer))
+         (icon (if pick-char
+                   (let ((pick-fg (bufferline-colors-safe (face-foreground bufferline-pick-face nil t)
+                                                          keyword-color)))
+                     (propertize (string pick-char) 'face `(:foreground ,pick-fg :weight bold :background ,bg-color)))
+                 (propertize icon-str 'face `(:foreground ,icon-hex :background ,bg-color))))
 
          ;; number prefix and diagnostics
          (index (seq-position tabs buffer))

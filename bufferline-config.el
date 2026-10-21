@@ -247,5 +247,19 @@ This applies to `bufferline-close-other-tabs',
   :type 'string
   :group 'bufferline)
 
+(defcustom bufferline-pick-in-place nil
+  "Whether pick letters are drawn on the tabs instead of the minibuffer.
+When nil, the pick commands list every letter with its tab name in the
+minibuffer prompt.  When non-nil, each tab of the selected window shows
+its letter in place of its icon while the key is read, and the prompt
+only says what the pick is for."
+  :type 'boolean
+  :group 'bufferline)
+
+(defcustom bufferline-pick-face 'error
+  "Face used to resolve the foreground color of in-place pick letters."
+  :type 'face
+  :group 'bufferline)
+
 (provide 'bufferline-config)
 ;;; bufferline-config.el ends here
