@@ -316,6 +316,15 @@
                 <td>Major modes where bufferline tab display is disabled.</td>
               </tr>
               <tr>
+                <td><code>bufferline-close-keep-pinned</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>
+                  Leave pinned tabs open when running the bulk close commands
+                  (close other tabs, close tabs to the right or left).
+                </td>
+              </tr>
+              <tr>
                 <td><code>bufferline-custom-filter</code></td>
                 <td class="type-col">function / nil</td>
                 <td class="default-col">nil</td>
@@ -349,6 +358,24 @@
             <li>
               <code>bufferline-close-tab</code>: Close current or specified
               buffer without altering window split layout.
+            </li>
+            <li>
+              <code>bufferline-close-other-tabs</code>: Close every tab of the
+              selected window except the current one.
+            </li>
+            <li>
+              <code>bufferline-close-tabs-to-right</code>: Close every tab to
+              the right of the current one, in the order the bar shows them.
+            </li>
+            <li>
+              <code>bufferline-close-tabs-to-left</code>: Close every tab to the
+              left of the current one, in the order the bar shows them.
+            </li>
+            <li>
+              The bulk close commands leave pinned tabs open while
+              <code>bufferline-close-keep-pinned</code> is non-nil, never touch
+              the tabs of other windows, and keep any buffer whose unsaved
+              changes you decline to discard.
             </li>
             <li>
               <code>bufferline-move-tab-left</code>: Move the current tab one
@@ -443,6 +470,9 @@
                 (general-def :states 'normal :prefix "SPC"
                 "b p" '(bufferline-pick :which-key "Pick Buffer")
                 "b d" '(bufferline-pick-close :which-key "Pick Close Buffer")
+                "b o" '(bufferline-close-other-tabs :which-key "Close Other Tabs")
+                "b ]" '(bufferline-close-tabs-to-right :which-key "Close Tabs to Right")
+                "b [" '(bufferline-close-tabs-to-left :which-key "Close Tabs to Left")
                 "b P" '(bufferline-toggle-pin :which-key "Toggle Pin Buffer")))</code></pre>
           </div>
         </div>
