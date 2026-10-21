@@ -237,7 +237,8 @@ or a function taking (num buffer) returning a string."
 
 (defcustom bufferline-close-keep-pinned t
   "Whether the bulk close commands leave pinned tabs open.
-This applies to `bufferline-close-other-tabs'."
+This applies to `bufferline-close-other-tabs',
+`bufferline-close-tabs-to-right' and `bufferline-close-tabs-to-left'."
   :type 'boolean
   :group 'bufferline)
 

@@ -303,6 +303,75 @@ each switch, as redisplay does, so they get their order in opening order."
      (should (buffer-live-p other))
      (should (eq (window-buffer) other)))))
 
+(ert-deftest bufferline-test-close-tabs-to-right ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (d (bufferline-test--buffer "d")))
+     (bufferline-test--show (selected-window) a b c d b)
+     (should (= (bufferline-close-tabs-to-right) 2))
+     (should (eq (window-buffer) b))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a b))))))
+
+(ert-deftest bufferline-test-close-tabs-to-left ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (d (bufferline-test--buffer "d")))
+     (bufferline-test--show (selected-window) a b c d c)
+     (should (= (bufferline-close-tabs-to-left) 2))
+     (should (eq (window-buffer) c))
+     (should (equal (bufferline-test--tabs (selected-window)) (list c d))))))
+
+(ert-deftest bufferline-test-close-tabs-to-left-keeps-pinned ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-state-toggle-pin a)
+     (let ((bufferline-close-keep-pinned t))
+       (should (= (bufferline-close-tabs-to-left) 1)))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a c)))
+     (let ((bufferline-close-keep-pinned nil))
+       (should (= (bufferline-close-tabs-to-left) 1)))
+     (should (equal (bufferline-test--tabs (selected-window)) (list c))))))
+
+(ert-deftest bufferline-test-close-tabs-to-right-follows-sort-order ()
+  (bufferline-test-with-frame
+   (let ((c (bufferline-test--buffer "c"))
+         (a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-sort-by 'name))
+     (bufferline-test--show (selected-window) c a b a)
+     (should (= (bufferline-close-tabs-to-right) 2))
+     (should-not (buffer-live-p b))
+     (should-not (buffer-live-p c)))))
+
+(ert-deftest bufferline-test-close-tabs-at-edges ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (should (= (bufferline-close-tabs-to-right) 0))
+     (bufferline-test--show (selected-window) a)
+     (should (= (bufferline-close-tabs-to-left) 0))
+     (should (buffer-live-p a))
+     (should (buffer-live-p b)))))
+
+(ert-deftest bufferline-test-close-tabs-beside-non-tab-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (other (bufferline-test--buffer "other"))
+         (bufferline-exclude-modes '(special-mode)))
+     (with-current-buffer other (special-mode))
+     (bufferline-test--show (selected-window) a other)
+     (should-error (bufferline-close-tabs-to-right) :type 'user-error)
+     (should-error (bufferline-close-tabs-to-left) :type 'user-error)
+     (should (buffer-live-p a)))))
+
 ;;; Moving tabs between windows
 
 (ert-deftest bufferline-test-move-to-window-right ()

@@ -69,6 +69,15 @@ to discard its unsaved changes, stays open and is not counted."
       (message "Closed %d tab%s" closed (if (= closed 1) "" "s")))
     closed))
 
+(defun bufferline-commands--tabs-beside (side)
+  "Return the tabs on SIDE of the current one, `left' or `right'."
+  (let* ((tabs (bufferline-buffers-all))
+         (pos (or (seq-position tabs (current-buffer))
+                  (user-error "Current buffer is not a tab"))))
+    (if (eq side 'left)
+        (seq-take tabs pos)
+      (seq-drop tabs (1+ pos)))))
+
 ;;;###autoload
 (defun bufferline-close-other-tabs ()
   "Close every tab of the selected window except the current one.
@@ -76,6 +85,20 @@ Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
   (interactive)
   (bufferline-commands--close-buffers
    (delq (current-buffer) (bufferline-buffers-all))))
+
+;;;###autoload
+(defun bufferline-close-tabs-to-right ()
+  "Close every tab to the right of the current one.
+Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
+  (interactive)
+  (bufferline-commands--close-buffers (bufferline-commands--tabs-beside 'right)))
+
+;;;###autoload
+(defun bufferline-close-tabs-to-left ()
+  "Close every tab to the left of the current one.
+Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
+  (interactive)
+  (bufferline-commands--close-buffers (bufferline-commands--tabs-beside 'left)))
 
 (defun bufferline-commands--swap-order (a b)
   "Swap the positions of tabs A and B, then redraw the bufferline."
