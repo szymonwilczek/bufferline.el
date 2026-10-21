@@ -57,6 +57,16 @@
 
         <div class="command-strip" id="commandStrip">
           <span class="command-prefix">M-x</span>
+          <button type="button" class="raw-btn command-btn" data-command="pick">
+            pick
+          </button>
+          <button
+            type="button"
+            class="raw-btn command-btn"
+            data-command="pick-close"
+          >
+            pick-close
+          </button>
           <button
             type="button"
             class="raw-btn command-btn"
@@ -327,6 +337,9 @@
               <label class="raw-checkbox"
                 ><input type="checkbox" id="closeKeepPinned" checked />
                 close-keep-pinned</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="pickInPlace" /> pick-in-place</label
               >
             </div>
           </fieldset>

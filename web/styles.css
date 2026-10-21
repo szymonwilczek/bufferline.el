@@ -336,6 +336,15 @@ html, body {
     font-size: 1.02rem;
 }
 
+.tab-pick-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1ch;
+    color: var(--emacs-error);
+    font-weight: bold;
+}
+
 .tab-label {
     display: inline-block;
     white-space: pre;
