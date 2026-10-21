@@ -11,50 +11,43 @@
 (require 'bufferline-config)
 (require 'bufferline-buffers)
 
+(defun bufferline-pick--assign (buffers)
+  "Pair BUFFERS with the letters of `bufferline-pick-alphabet' in order.
+Return an alist of (CHAR . BUFFER).  Buffers beyond the length of the
+alphabet get no letter and are left out."
+  (let ((alphabet (string-to-list bufferline-pick-alphabet))
+        items)
+    (while (and buffers alphabet)
+      (push (cons (pop alphabet) (pop buffers)) items))
+    (nreverse items)))
+
+(defun bufferline-pick--read (prompt items)
+  "Read a key with PROMPT and return the buffer ITEMS assign to it.
+ITEMS is an alist of (CHAR . BUFFER).  Return nil when the key matches
+no letter or its buffer has been killed meanwhile."
+  (let* ((labels (mapconcat (lambda (pair)
+                              (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
+                            items
+                            "  "))
+         (chosen (cdr (assoc (read-key (concat prompt labels " ")) items))))
+    (and chosen (buffer-live-p chosen) chosen)))
+
 (defun bufferline-pick-read-buffer (prompt)
   "Ask for a visible tab by its assigned letter with PROMPT.
 Return the chosen live buffer, or nil when the key matches no tab."
-  (let ((alphabet (string-to-list bufferline-pick-alphabet))
-        (index 0)
-        items)
-    (dolist (buf (bufferline-buffers-get))
-      (when (< index (length alphabet))
-        (push (cons (nth index alphabet) buf) items)
-        (setq index (1+ index))))
-    (setq items (nreverse items))
+  (let ((items (bufferline-pick--assign (bufferline-buffers-get))))
     (when items
-      (let* ((labels (mapconcat (lambda (pair)
-                                  (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
-                                items
-                                "  "))
-             (chosen (cdr (assoc (read-key (concat prompt labels " ")) items))))
-        (and chosen (buffer-live-p chosen) chosen)))))
+      (bufferline-pick--read prompt items))))
 
 ;;;###autoload
 (defun bufferline-pick ()
   "Interactively jump to a visible buffer by selecting its assigned letter."
   (interactive)
-  (let* ((tabs (bufferline-buffers-get))
-         (alphabet (string-to-list bufferline-pick-alphabet))
-         (index 0)
-         (items nil))
-
-    (dolist (buf tabs)
-      (when (< index (length alphabet))
-        (let ((char (nth index alphabet)))
-          (push (cons char buf) items)
-          (setq index (1+ index)))))
-
-    (setq items (nreverse items))
+  (let ((items (bufferline-pick--assign (bufferline-buffers-get))))
     (if (null items)
         (message "No buffers to pick")
-      (let* ((prompt (mapconcat (lambda (pair)
-                                  (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
-                                items
-                                "  "))
-             (key (read-key (concat "Pick buffer: " prompt " ")))
-             (chosen (cdr (assoc key items))))
-        (if (and chosen (buffer-live-p chosen))
+      (let ((chosen (bufferline-pick--read "Pick buffer: " items)))
+        (if chosen
             (switch-to-buffer chosen)
           (message "Pick cancelled"))))))
 
@@ -62,27 +55,11 @@ Return the chosen live buffer, or nil when the key matches no tab."
 (defun bufferline-pick-close ()
   "Interactively close a buffer by selecting its assigned letter."
   (interactive)
-  (let* ((tabs (bufferline-buffers-get))
-         (alphabet (string-to-list bufferline-pick-alphabet))
-         (index 0)
-         (items nil))
-
-    (dolist (buf tabs)
-      (when (< index (length alphabet))
-        (let ((char (nth index alphabet)))
-          (push (cons char buf) items)
-          (setq index (1+ index)))))
-
-    (setq items (nreverse items))
+  (let ((items (bufferline-pick--assign (bufferline-buffers-get))))
     (if (null items)
         (message "No buffers to close")
-      (let* ((prompt (mapconcat (lambda (pair)
-                                  (format "[%c] %s" (car pair) (buffer-name (cdr pair))))
-                                items
-                                "  "))
-             (key (read-key (concat "Close buffer: " prompt " ")))
-             (chosen (cdr (assoc key items))))
-        (if (and chosen (buffer-live-p chosen))
+      (let ((chosen (bufferline-pick--read "Close buffer: " items)))
+        (if chosen
             (let ((name (buffer-name chosen)))
               (kill-buffer chosen)
               (if (fboundp 'bufferline-ui-refresh)

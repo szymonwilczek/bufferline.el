@@ -52,6 +52,24 @@ each switch, as redisplay does, so they get their order in opening order."
            (progn ,@body)
          (mapc #'kill-buffer bufferline-test--buffers)))))
 
+(defvar bufferline-test--prompts nil
+  "Prompts passed to `read-key' while `bufferline-test-with-keys' runs.")
+
+(defmacro bufferline-test-with-keys (keys &rest body)
+  "Run BODY with `read-key' answering KEYS one after another.
+Each prompt it is called with is recorded in `bufferline-test--prompts'.
+An element of KEYS that is a function is called instead, with the
+prompt, and its value is the key."
+  (declare (indent 1) (debug t))
+  `(let ((pending ,keys)
+         (bufferline-test--prompts nil))
+     (cl-letf (((symbol-function 'read-key)
+                (lambda (&optional prompt &rest _)
+                  (push prompt bufferline-test--prompts)
+                  (let ((key (pop pending)))
+                    (if (functionp key) (funcall key prompt) key)))))
+       ,@body)))
+
 ;;; Tab order state
 
 (ert-deftest bufferline-test-state-move-to-end ()
@@ -371,6 +389,98 @@ each switch, as redisplay does, so they get their order in opening order."
      (should-error (bufferline-close-tabs-to-right) :type 'user-error)
      (should-error (bufferline-close-tabs-to-left) :type 'user-error)
      (should (buffer-live-p a)))))
+
+;;; Picking tabs by letter
+
+(ert-deftest bufferline-test-pick-assigns-letters-in-order ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "xyz"))
+     (should (equal (bufferline-pick--assign (list a b))
+                    (list (cons ?x a) (cons ?y b)))))))
+
+(ert-deftest bufferline-test-pick-assign-stops-at-alphabet-end ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-pick-alphabet "xy"))
+     (should (equal (bufferline-pick--assign (list a b c))
+                    (list (cons ?x a) (cons ?y b)))))))
+
+(ert-deftest bufferline-test-pick-switches-to-chosen-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-pick-alphabet "asd"))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-test-with-keys '(?s)
+                                (bufferline-pick)
+                                (should (equal bufferline-test--prompts
+                                               '("Pick buffer: [a] a  [s] b  [d] c "))))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-pick-cancelled-by-unknown-key ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as"))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys '(?q)
+                                (should (equal (bufferline-pick) "Pick cancelled")))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-pick-without-tabs ()
+  (bufferline-test-with-frame
+   (bufferline-test-with-keys '(?a)
+                              (should (equal (bufferline-pick) "No buffers to pick"))
+                              (should-not bufferline-test--prompts))))
+
+(ert-deftest bufferline-test-pick-close-kills-chosen-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as"))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys '(?a)
+                                (should (equal (bufferline-pick-close) "Closed buffer: a"))
+                                (should (equal bufferline-test--prompts
+                                               '("Close buffer: [a] a  [s] b "))))
+     (should-not (buffer-live-p a))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-pick-close-cancelled ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-pick-alphabet "a"))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-test-with-keys '(?z)
+                                (should (equal (bufferline-pick-close) "Pick close cancelled")))
+     (should (buffer-live-p a)))))
+
+(ert-deftest bufferline-test-pick-read-buffer-ignores-killed-choice ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-pick-alphabet "as"))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-test-with-keys (list (lambda (_prompt) (kill-buffer a) ?a))
+                                (should-not (bufferline-pick-read-buffer "Pick: "))))))
+
+(ert-deftest bufferline-test-swap-tab-by-letter ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-pick-alphabet "asd"))
+     (bufferline-test--show (selected-window) a b c a)
+     (bufferline-test-with-keys '(?d)
+                                (bufferline-swap-tab)
+                                (should (equal bufferline-test--prompts
+                                               '("Swap a with: [a] a  [s] b  [d] c "))))
+     (should (equal (bufferline-test--tabs (selected-window)) (list c b a))))))
 
 ;;; Moving tabs between windows
 
