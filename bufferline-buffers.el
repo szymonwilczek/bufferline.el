@@ -20,22 +20,26 @@
 (defvar-local bufferline-buffers--right-count 0
   "Number of truncated buffers to the right in current window.")
 
+(defun bufferline-buffers-candidate-p (buffer)
+  "Return non-nil if BUFFER passes the filters that make it a tab.
+This covers every filter except the per-window isolation, so it tells
+whether BUFFER can be a tab at all, in whichever window it is shown."
+  (and (buffer-live-p buffer)
+       (let ((name (buffer-name buffer)))
+         (and (not (string-prefix-p " " name))
+              (or bufferline-show-special-buffers
+                  (not (string-prefix-p "*" name)))
+              (not (memq (buffer-local-value 'major-mode buffer)
+                         bufferline-exclude-modes))))))
+
 (defun bufferline-buffers-all ()
   "Filter and return sorted list of live user buffers for current window."
   (let* ((curr-win (selected-window))
          (curr-buf (window-buffer curr-win))
          (tabs (seq-filter
                 (lambda (buf)
-                  (let ((name (buffer-name buf))
-                        (mode (buffer-local-value 'major-mode buf))
-                        (other-win (get-buffer-window buf nil)))
-                    (and (buffer-live-p buf)
-                         (not (string-prefix-p " " name))
-                         (or bufferline-show-special-buffers
-                             (not (string-prefix-p "*" name)))
-                         (not (memq mode bufferline-exclude-modes))
-
-                         ;; Isolate tabs: exclude buffers already visible in other windows
+                  (and (bufferline-buffers-candidate-p buf)
+                       (let ((other-win (get-buffer-window buf nil)))
                          (or (eq buf curr-buf)
                              (null other-win)
                              (eq other-win curr-win)))))

@@ -94,6 +94,43 @@ each switch, as redisplay does, so they get their order in opening order."
      (bufferline-buffers-forget a (selected-window))
      (should (equal (bufferline-test--tabs (selected-window)) (list b))))))
 
+;;; Tab filters
+
+(ert-deftest bufferline-test-filter-hides-space-prefixed-buffers ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (hidden (bufferline-test--buffer " hidden")))
+     (bufferline-test--show (selected-window) hidden a)
+     (should-not (bufferline-buffers-candidate-p hidden))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a))))))
+
+(ert-deftest bufferline-test-filter-special-buffers ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (special (bufferline-test--buffer "*special*")))
+     (bufferline-test--show (selected-window) special a)
+     (let ((bufferline-show-special-buffers t))
+       (should (equal (bufferline-test--tabs (selected-window)) (list special a))))
+     (let ((bufferline-show-special-buffers nil))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a)))))))
+
+(ert-deftest bufferline-test-filter-excluded-modes ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (with-current-buffer b (special-mode))
+     (bufferline-test--show (selected-window) b a)
+     (let ((bufferline-exclude-modes '(special-mode)))
+       (should-not (bufferline-buffers-candidate-p b))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a))))
+     (let ((bufferline-exclude-modes nil))
+       (should (equal (bufferline-test--tabs (selected-window)) (list b a)))))))
+
+(ert-deftest bufferline-test-filter-dead-buffer ()
+  (let ((buf (generate-new-buffer "dead")))
+    (kill-buffer buf)
+    (should-not (bufferline-buffers-candidate-p buf))))
+
 ;;; Reordering within a window
 
 (ert-deftest bufferline-test-move-tab-right ()
