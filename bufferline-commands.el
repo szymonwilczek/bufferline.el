@@ -103,6 +103,58 @@
        ((eq other buf) (message "That is the current tab"))
        (t (bufferline-commands--swap-order buf other))))))
 
+(defun bufferline-commands--move-to-window (direction)
+  "Move the current tab to the window in DIRECTION and follow it there.
+DIRECTION is one of `left', `right', `above' or `below'.  The tab joins
+the end of the target window's tabs."
+  (let* ((buf (current-buffer))
+         (source (selected-window))
+         (tabs (bufferline-buffers-all))
+         (target (window-in-direction direction source)))
+    (unless (memq buf tabs)
+      (user-error "Current buffer is not a tab"))
+    (unless target
+      (user-error "No window %s" (if (memq direction '(left right))
+                                     (format "to the %s" direction)
+                                   direction)))
+    (when (window-dedicated-p target)
+      (user-error "Window %s is dedicated to its buffer" direction))
+    (let ((rest (delq buf tabs)))
+      (unless rest
+        (user-error "Cannot move the last tab out of its window"))
+      (switch-to-buffer (car rest) nil t))
+    (bufferline-buffers-forget buf source)
+    (bufferline-state-move-to-end buf)
+    (select-window target)
+    (switch-to-buffer buf nil t)
+    (if (fboundp 'bufferline-ui-refresh)
+        (bufferline-ui-refresh)
+      (force-mode-line-update t))))
+
+;;;###autoload
+(defun bufferline-move-tab-to-window-left ()
+  "Move the current tab to the window on the left."
+  (interactive)
+  (bufferline-commands--move-to-window 'left))
+
+;;;###autoload
+(defun bufferline-move-tab-to-window-right ()
+  "Move the current tab to the window on the right."
+  (interactive)
+  (bufferline-commands--move-to-window 'right))
+
+;;;###autoload
+(defun bufferline-move-tab-to-window-up ()
+  "Move the current tab to the window above."
+  (interactive)
+  (bufferline-commands--move-to-window 'above))
+
+;;;###autoload
+(defun bufferline-move-tab-to-window-down ()
+  "Move the current tab to the window below."
+  (interactive)
+  (bufferline-commands--move-to-window 'below))
+
 ;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)
   "Toggle pinned status of current or specified BUFFER."
