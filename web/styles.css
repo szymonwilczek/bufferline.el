@@ -518,6 +518,18 @@ html, body {
     border-color: var(--page-border-focus);
 }
 
+.raw-textarea {
+    resize: vertical;
+    min-height: 5.5em;
+    line-height: 1.45;
+    white-space: pre;
+}
+
+.field-note {
+    color: var(--page-fg-dim);
+    font-size: 0.75rem;
+}
+
 .slider-wrap {
     display: flex;
     align-items: center;

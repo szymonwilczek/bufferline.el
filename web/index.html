@@ -201,6 +201,33 @@
             </div>
           </fieldset>
 
+          <fieldset class="config-group full-col">
+            <legend>Custom Filter</legend>
+
+            <div class="field-row">
+              <label for="customFilterPreset">custom-filter</label>
+              <select id="customFilterPreset" class="raw-select">
+                <option value="none" selected>nil (keep every buffer)</option>
+                <option value="file">only file-visiting buffers</option>
+                <option value="writable">hide read-only buffers</option>
+                <option value="regexp">hide names matching a regexp...</option>
+                <option value="lambda">custom lambda...</option>
+              </select>
+            </div>
+
+            <div class="field-row hidden" id="customFilterRegexpRow">
+              <label for="customFilterRegexp">regexp</label>
+              <input type="text" id="customFilterRegexp" class="raw-input" value="\.rs\'" spellcheck="false" />
+            </div>
+
+            <div class="field-row hidden" id="customFilterLambdaRow">
+              <label for="customFilterLambda">lambda</label>
+              <textarea id="customFilterLambda" class="raw-input raw-textarea" rows="4" spellcheck="false">(lambda (buffer)
+  (not (string-prefix-p "*" (buffer-name buffer))))</textarea>
+              <span class="field-note">Emitted as-is into the generated config. The preview cannot evaluate Emacs Lisp, so it keeps every tab.</span>
+            </div>
+          </fieldset>
+
         </div>
       </section>
 
