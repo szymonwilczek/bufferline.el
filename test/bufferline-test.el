@@ -1981,7 +1981,134 @@ Errors and warnings are colored by faces batch Emacs can resolve."
          (should (< with without))
          (should (> with 0)))))))
 
-(provide 'bufferline-test)
+;;; Navigation buttons
 
+(defun bufferline-test--help-start (string help)
+  "Return the index of the first character of STRING whose help is HELP."
+  (seq-position (number-sequence 0 (1- (length string)))
+                nil
+                (lambda (i _) (equal (get-text-property i 'help-echo string) help))))
+
+(defun bufferline-test--click-nav (window buffer help)
+  "Click the navigation button with help text HELP after BUFFER's tab.
+The tab is drawn by WINDOW's tab line."
+  (let* ((string (bufferline-test--render window buffer))
+         (index (bufferline-test--help-start string help))
+         (command (lookup-key (get-text-property index 'keymap string)
+                              [tab-line mouse-1])))
+    (funcall command
+             (list 'mouse-1 (list window 'tab-line '(0 . 0) 0 (cons string index)
+                                  nil '(0 . 0) nil '(0 . 0) '(0 . 0))))))
+
+(ert-deftest bufferline-test-navigation-off-by-default ()
+  (should-not (default-value 'bufferline-show-navigation-buttons))
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (let ((string (bufferline-test--render (selected-window) a)))
+       (should-not (bufferline-test--help-start string "Previous tab"))
+       (should-not (bufferline-test--help-start string "Next tab"))))))
+
+(ert-deftest bufferline-test-navigation-after-last-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-navigation-buttons t)
+         (bufferline-prev-tab-icon "<")
+         (bufferline-next-tab-icon ">"))
+     (bufferline-test--show (selected-window) a b)
+     (should-not (bufferline-test--help-start
+                  (bufferline-test--render (selected-window) a) "Previous tab"))
+     (let ((string (bufferline-test--render (selected-window) b)))
+       (should (string-suffix-p " < > " (substring-no-properties string)))
+       (should (= (bufferline-test--help-start string "Previous tab")
+                  (- (length string) 4)))
+       (should (= (bufferline-test--help-start string "Next tab")
+                  (- (length string) 2)))))))
+
+(ert-deftest bufferline-test-navigation-properties ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (bufferline-show-navigation-buttons t)
+          (bufferline-navigation-hover-face 'bufferline-test-pick)
+          (_ (bufferline-test--show (selected-window) a))
+          (string (bufferline-test--render (selected-window) a)))
+     (pcase-dolist (`(,help . ,command)
+                    '(("Previous tab" . bufferline-prev-tab-at-click)
+                      ("Next tab" . bufferline-next-tab-at-click)))
+       (let ((start (bufferline-test--help-start string help)))
+         (should (eq (lookup-key (get-text-property start 'keymap string)
+                                 [tab-line mouse-1])
+                     command))
+         (should (equal (plist-get (get-text-property start 'mouse-face string)
+                                   :foreground)
+                        "#ff0000"))
+         (should-not (get-text-property start 'tab string))
+         ;; the spaces around the buttons do not react to the mouse
+         (should-not (get-text-property (1- start) 'mouse-face string))
+         (should-not (get-text-property (1+ start) 'keymap string)))))))
+
+(ert-deftest bufferline-test-navigation-order ()
+  (bufferline-test-with-frame
+   (let ((bufferline-show-navigation-buttons t)
+         (bufferline-show-tab-count t)
+         (bufferline-show-new-tab-button t)
+         (bufferline-show-trunc-markers t)
+         (bufferline-right-trunc-marker ">")
+         (bufferline-prev-tab-icon "{")
+         (bufferline-next-tab-icon "}")
+         (bufferline-new-tab-icon "+")
+         (bufs (mapcar (lambda (i) (bufferline-test--buffer (format "tab%02d" i)))
+                       (number-sequence 1 30))))
+     (apply #'bufferline-test--show (selected-window) bufs)
+     (bufferline-test--show (selected-window) (car bufs))
+     (with-selected-window (selected-window)
+       (let ((visible (bufferline-buffers-get)))
+         (should (> bufferline-buffers--right-count 0))
+         ;; right marker, navigation, counter, new tab button
+         (should (string-suffix-p
+                  (format "> %d  { }  1/30  + " bufferline-buffers--right-count)
+                  (substring-no-properties
+                   (bufferline-ui-tab-name-format (car (last visible)) visible)))))))))
+
+(ert-deftest bufferline-test-navigation-click-cycles ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-show-navigation-buttons t))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-test--click-nav (selected-window) c "Next tab")
+     (should (eq (window-buffer) a))
+     (bufferline-test--click-nav (selected-window) c "Previous tab")
+     (should (eq (window-buffer) c))
+     (bufferline-test--click-nav (selected-window) c "Previous tab")
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-navigation-click-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d"))
+          (bufferline-show-navigation-buttons t))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a)
+     (bufferline-test--click-nav right d "Previous tab")
+     ;; the clicked window switches, the selection stays where it was
+     (should (eq (window-buffer right) c))
+     (should (eq (window-buffer left) a))
+     (should (eq (selected-window) left)))))
+
+(ert-deftest bufferline-test-navigation-width ()
+  (let ((bufferline-prev-tab-icon "<<")
+        (bufferline-next-tab-icon ">"))
+    (let ((bufferline-show-navigation-buttons nil))
+      (should (= (bufferline-buffers-tail-width nil) 0)))
+    (let ((bufferline-show-navigation-buttons t))
+      (should (= (bufferline-buffers-tail-width nil) 6)))))
+
+(provide 'bufferline-test)
 
 ;;; bufferline-test.el ends here
