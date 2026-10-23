@@ -1,4 +1,4 @@
-name: CI / Byte-Compile and Test
+name: CI / Byte-Compile, Lint and Test
 
 on:
   push:
@@ -35,13 +35,11 @@ jobs:
             --eval "(package-refresh-contents)" \
             --eval "(package-install 'nerd-icons)"
 
-      - name: Byte-compile bufferline.el modules
-        run: |
-          emacs -Q --batch \
-            --eval "(require 'package)" \
-            --eval "(package-initialize)" \
-            -L . \
-            -f batch-byte-compile *.el
+      - name: Byte-compile bufferline.el modules without warnings
+        run: make compile
+
+      - name: Lint the package headers and definitions
+        run: make lint
 
       - name: Run ERT tests
         run: make test
