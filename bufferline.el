@@ -45,7 +45,6 @@
               tab-line-left-button nil
               tab-line-right-button nil
               tab-line-auto-hscroll t
-              tab-line-tabs-scroll-offset 1
               tab-line-tabs-function #'bufferline-buffers-get
               tab-line-tab-name-format-function #'bufferline-ui-tab-name-format)
 
