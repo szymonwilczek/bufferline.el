@@ -1,4 +1,4 @@
-;;; bufferline.el --- Snappy, configurable buffer line for GNU Emacs -*- lexical-binding: t; -*-
+;;; bufferline.el --- Snappy, configurable buffer tabs on the tab line -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Szymon Wilczek
 ;; Author: Szymon Wilczek <swilczek.lx@gmail.com>
