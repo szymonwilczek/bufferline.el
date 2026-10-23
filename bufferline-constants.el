@@ -31,6 +31,9 @@
 (defconst bufferline-constants-right-trunc-marker ""
   "Default right truncation marker glyph.")
 
+(defconst bufferline-constants-new-tab-icon "󰐕"
+  "Default new tab button glyph.")
+
 (defconst bufferline-constants-separators
   '((vertical     . ("▎" " "))
     (bar          . ("│" " "))

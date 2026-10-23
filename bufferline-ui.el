@@ -20,10 +20,27 @@
 (require 'bufferline-buffers)
 (require 'bufferline-pick)
 
+(defun bufferline-ui--new-tab-button (bar-bg fg-comment keyword-color)
+  "Return the new tab button drawn on BAR-BG in FG-COMMENT.
+Under the mouse it takes the color of `bufferline-new-tab-hover-face',
+falling back to KEYWORD-COLOR."
+  (let ((hover-fg (bufferline-colors-safe (face-foreground bufferline-new-tab-hover-face nil t)
+                                          keyword-color))
+        (km (make-sparse-keymap)))
+    (define-key km [tab-line mouse-1] #'bufferline-new-tab-at-click)
+    (concat (propertize " " 'face `(:background ,bar-bg))
+            (propertize bufferline-new-tab-icon
+                        'face `(:foreground ,fg-comment :background ,bar-bg)
+                        'help-echo "New tab"
+                        'mouse-face `(:foreground ,hover-fg :background ,bar-bg :weight bold)
+                        'keymap km)
+            (propertize " " 'face `(:background ,bar-bg)))))
+
 (defun bufferline-ui-tab-name-format (tab tabs)
   "Format the buffer of TAB, one of TABS, as its tab line string.
 The string holds icons, indicators, the disambiguating directory prefix
-and, on the first and last tab, the truncation markers."
+and, on the first and last tab, the truncation markers.  The last tab
+also carries the buttons enabled after it, such as the new tab button."
   (let* ((buffer (if (bufferp tab) tab (cdr (assq 'buffer tab))))
          (active (if (bufferp tab) (eq tab (current-buffer)) (cdr (assq 'selected tab))))
          (bg-face (if active 'tab-line-tab-current 'tab-line-tab-inactive))
@@ -187,7 +204,9 @@ and, on the first and last tab, the truncation markers."
                                        'mouse-face 'highlight
                                        'keymap (let ((km (make-sparse-keymap)))
                                                  (define-key km [tab-line mouse-1] #'bufferline-next-tab)
-                                                 km))))))
+                                                 km)))))
+         (new-tab-button (when (and is-last bufferline-show-new-tab-button)
+                           (bufferline-ui--new-tab-button bar-bg fg-comment keyword-color))))
 
     (setq tab-str (propertize tab-str
                               'tab tab
@@ -212,7 +231,8 @@ and, on the first and last tab, the truncation markers."
     (concat left-gap
             left-marker
             tab-str
-            right-marker)))
+            right-marker
+            new-tab-button)))
 
 (defun bufferline-ui--cache-key (key-function tabs)
   "Return the tab line cache key KEY-FUNCTION builds for TABS.

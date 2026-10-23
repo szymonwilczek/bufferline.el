@@ -166,6 +166,34 @@ See `bufferline-show-tab-close-icon'."
   :type 'face
   :group 'bufferline)
 
+(defcustom bufferline-show-new-tab-button nil
+  "Whether to draw a new tab button after the last tab.
+Clicking it selects the window whose tab line was clicked and calls
+`bufferline-new-tab-function' there."
+  :type 'boolean
+  :group 'bufferline)
+
+(defcustom bufferline-new-tab-icon bufferline-constants-new-tab-icon
+  "Icon drawn as the new tab button.
+See `bufferline-show-new-tab-button'."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-new-tab-hover-face 'font-lock-keyword-face
+  "Face whose foreground colors the new tab button under the mouse."
+  :type 'face
+  :group 'bufferline)
+
+(defcustom bufferline-new-tab-function 'bufferline-new-tab
+  "Function the new tab button calls.
+It runs in the window whose tab line was clicked, which it is expected
+to show a new buffer in, and is called interactively when it is a
+command.  The default, `bufferline-new-tab', opens an empty untitled
+buffer; `find-file' or `switch-to-buffer' ask what to open instead."
+  :type '(choice (const :tag "Empty untitled buffer" bufferline-new-tab)
+                 (function :tag "Custom function"))
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/Flycheck error count badges in tabs."
   :type 'boolean

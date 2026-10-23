@@ -69,6 +69,28 @@ as selected as it was."
       (with-selected-window window
         (bufferline-close-tab buffer)))))
 
+;;;###autoload
+(defun bufferline-new-tab ()
+  "Open a new empty buffer in the selected window, giving it a tab.
+The buffer is named untitled, numbered when that name is taken, and
+starts in the default `major-mode'."
+  (interactive)
+  (switch-to-buffer (generate-new-buffer-name "untitled"))
+  (if (fboundp 'bufferline-ui-refresh)
+      (bufferline-ui-refresh)
+    (force-mode-line-update t)))
+
+(defun bufferline-new-tab-at-click (event)
+  "Open a new tab in the window whose new tab button mouse EVENT clicked.
+That window is selected and `bufferline-new-tab-function' called there."
+  (interactive "e")
+  (let ((window (posn-window (event-start event))))
+    (when (window-live-p window)
+      (select-window window)
+      (if (commandp bufferline-new-tab-function)
+          (call-interactively bufferline-new-tab-function)
+        (funcall bufferline-new-tab-function)))))
+
 (defun bufferline-commands--close-buffers (buffers)
   "Kill BUFFERS, redraw the bufferline and return how many were closed.
 Pinned buffers are left open while `bufferline-close-keep-pinned' is
