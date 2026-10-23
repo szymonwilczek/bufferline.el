@@ -9,7 +9,7 @@
 ;;; Code:
 
 (require 'tab-line)
-(require 'nerd-icons nil t)
+(require 'nerd-icons)
 (require 'ef-themes nil t)
 (require 'bufferline-constants)
 (require 'bufferline-config)
@@ -82,7 +82,7 @@ and, on the first and last tab, the truncation markers."
 
          ;; file icon
          (file-or-name (or (buffer-file-name buffer) (buffer-name buffer)))
-         (icon-raw (when (and bufferline-show-buffer-icons (fboundp 'nerd-icons-icon-for-file))
+         (icon-raw (when bufferline-show-buffer-icons
                      (let ((nerd-icons-color-icons t))
                        (nerd-icons-icon-for-file file-or-name :v-adjust -0.05 :height bufferline-icon-size))))
          (icon-hex (if icon-raw (bufferline-colors-get-icon-hex icon-raw (if active fg-main fg-comment)) fg-comment))
