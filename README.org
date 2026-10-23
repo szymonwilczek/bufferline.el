@@ -14,12 +14,30 @@
 
 * Overview
 
-=bufferline.el= is an opinionated, minimalist buffer line for GNU Emacs built directly on top of the native =tab-line-mode= engine. It provides predictable FIFO tab indexing, dynamic theme color extraction, icon integration, buffer pinning, quick letter picking, and cyclic navigation.
+=bufferline.el= is an opinionated, minimalist buffer line for GNU Emacs built directly on top of the native =tab-line-mode= engine. Every window keeps its own tabs, colored from the active theme. Everything beyond the tabs themselves is opt-in, so the default bar stays bare.
+
+* Features
+
+- Per-window tabs in FIFO order, or sorted by name, extension or directory
+- Theme-derived colors, =nerd-icons= file icons and several separator styles
+- Modified, read-only and pinned indicators; pinned tabs stay first
+- Directory prefixes that tell apart buffers with the same name
+- Truncation to the window width, with markers counting the hidden tabs
+- Picking a tab by letter, drawn in place on the tabs, to switch to, close or swap it
+- Reordering tabs from the keyboard or by dragging them with the mouse
+- Moving tabs between windows
+- Closing other tabs, or every tab to the left or right, sparing pinned ones
+- Optional tab numbers, close buttons, Flymake/Flycheck diagnostics badges and highlights
+- Optional new tab button, tab counter and previous/next tab buttons
+- Hiding the tab line when it holds a single tab or over excluded buffers
+- A custom filter deciding which buffers get a tab
+- =bufferline-evil-mode=: Vim's =gt=, =gT= and =:tab= Ex commands acting on bufferline tabs
 
 * Requirements
 
 - GNU Emacs >= 28.1
 - =nerd-icons.el= (for filetype icon rendering)
+- Optionally =evil=, for =bufferline-evil-mode=
 
 * Installation
 
@@ -57,6 +75,18 @@
     :load-path "~/path/to/bufferline.el"
     :config
     (global-bufferline-mode 1))
+#+end_src
+
+* Evil
+
+=bufferline-evil-mode= points Evil's tab page keys and Ex commands at bufferline tabs instead of =tab-bar= tabs: =gt= and =gT= with Vim counts, =:tabnext=, =:tabprevious=, =:tabfirst=, =:tablast=, =:tabclose=, =:tabonly=, =:tabmove= and =:tabnew=. It is off by default and loads Evil only when turned on.
+
+#+begin_src emacs-lisp
+  (use-package bufferline
+    :after evil
+    :config
+    (global-bufferline-mode 1)
+    (bufferline-evil-mode 1))
 #+end_src
 
 * Documentation & Configurator
