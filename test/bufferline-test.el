@@ -1556,5 +1556,165 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      (should (eq (window-buffer right) c))
      (should (eq (window-buffer left) a)))))
 
+;;; Dragging tabs
+
+(defun bufferline-test--tab-posn (window buffer)
+  "Return a mouse position over the tab of BUFFER in WINDOW's tab line."
+  (let* ((string (bufferline-test--render window buffer))
+         (index (text-property-not-all 0 (length string) 'tab nil string)))
+    (list window 'tab-line '(0 . 0) 0 (cons string index)
+          nil '(0 . 0) nil '(0 . 0) '(0 . 0))))
+
+(defun bufferline-test--drag (from to)
+  "Drag with the mouse from position FROM and drop at position TO."
+  (bufferline-drag-tab (list 'drag-mouse-1 from to)))
+
+(ert-deftest bufferline-test-drag-binding ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (let* ((string (bufferline-test--render (selected-window) a))
+            (index (text-property-not-all 0 (length string) 'tab nil string)))
+       (should (eq (lookup-key (get-text-property index 'keymap string)
+                               [tab-line drag-mouse-1])
+                   #'bufferline-drag-tab))))))
+
+(ert-deftest bufferline-test-drag-right ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show win a b c d)
+     (bufferline-test--drag (bufferline-test--tab-posn win a)
+                            (bufferline-test--tab-posn win c))
+     (should (equal (bufferline-test--tabs win) (list b c a d)))
+     ;; dragging does not switch tabs
+     (should (eq (window-buffer win) d)))))
+
+(ert-deftest bufferline-test-drag-left ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show win a b c d)
+     (bufferline-test--drag (bufferline-test--tab-posn win d)
+                            (bufferline-test--tab-posn win b))
+     (should (equal (bufferline-test--tabs win) (list a d b c))))))
+
+(ert-deftest bufferline-test-drag-to-neighbour ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c")))
+     (bufferline-test--show win a b c)
+     (bufferline-test--drag (bufferline-test--tab-posn win b)
+                            (bufferline-test--tab-posn win c))
+     (should (equal (bufferline-test--tabs win) (list a c b)))
+     (bufferline-test--drag (bufferline-test--tab-posn win b)
+                            (bufferline-test--tab-posn win c))
+     (should (equal (bufferline-test--tabs win) (list a b c))))))
+
+(ert-deftest bufferline-test-drag-keeps-order-numbers ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (ids (lambda ()
+                 (sort (mapcar (lambda (buf)
+                                 (buffer-local-value 'bufferline-state--tab-order-id buf))
+                               (list a b c))
+                       #'<))))
+     (bufferline-test--show win a b c)
+     (let ((before (funcall ids)))
+       (bufferline-test--drag (bufferline-test--tab-posn win c)
+                              (bufferline-test--tab-posn win a))
+       (should (equal (funcall ids) before))
+       (should (= bufferline-state--tab-order-counter 3))))))
+
+(ert-deftest bufferline-test-drag-onto-itself ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b")))
+     (bufferline-test--show win a b)
+     (bufferline-test--drag (bufferline-test--tab-posn win a)
+                            (bufferline-test--tab-posn win a))
+     (should (equal (bufferline-test--tabs win) (list a b))))))
+
+(ert-deftest bufferline-test-drag-off-the-tabs ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b")))
+     (bufferline-test--show win a b)
+     ;; dropped on the tab line outside any tab, then in the text area
+     (bufferline-test--drag (bufferline-test--tab-posn win a)
+                            (list win 'tab-line '(0 . 0) 0 (cons "plain" 0)
+                                  nil '(0 . 0) nil '(0 . 0) '(0 . 0)))
+     (bufferline-test--drag (bufferline-test--tab-posn win a)
+                            (list win 1 '(0 . 0) 0 nil 1 '(0 . 0) nil '(0 . 0) '(0 . 0)))
+     (should (equal (bufferline-test--tabs win) (list a b))))))
+
+(ert-deftest bufferline-test-drag-to-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a b)
+     (bufferline-test--drag (bufferline-test--tab-posn left a)
+                            (bufferline-test--tab-posn right d))
+     (should (equal (bufferline-test--tabs left) (list a b)))
+     (should (equal (bufferline-test--tabs right) (list c d))))))
+
+(ert-deftest bufferline-test-drag-in-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a)
+     (bufferline-test--drag (bufferline-test--tab-posn right d)
+                            (bufferline-test--tab-posn right c))
+     (should (equal (bufferline-test--tabs right) (list d c)))
+     (should (eq (selected-window) left))
+     (should (eq (window-buffer right) d)))))
+
+(ert-deftest bufferline-test-drag-across-pinned ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c")))
+     (bufferline-test--show win a b c)
+     (bufferline-state-toggle-pin a)
+     (should-error (bufferline-test--drag (bufferline-test--tab-posn win c)
+                                          (bufferline-test--tab-posn win a))
+                   :type 'user-error)
+     (should (equal (bufferline-test--tabs win) (list a b c))))))
+
+(ert-deftest bufferline-test-drag-needs-fifo ()
+  (bufferline-test-with-frame
+   (let* ((win (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-sort-by 'name))
+     (bufferline-test--show win b a)
+     (should-error (bufferline-test--drag (bufferline-test--tab-posn win a)
+                                          (bufferline-test--tab-posn win b))
+                   :type 'user-error)
+     (should (equal (bufferline-test--tabs win) (list a b))))))
+
 (provide 'bufferline-test)
 ;;; bufferline-test.el ends here
