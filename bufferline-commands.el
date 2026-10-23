@@ -7,6 +7,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'bufferline-buffers)
 (require 'bufferline-state)
 (require 'bufferline-pick)
@@ -48,6 +49,14 @@
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
 
+(defun bufferline-commands--posn-tab (posn)
+  "Return the buffer of the tab at mouse position POSN.
+Return nil when POSN is not over a tab."
+  (let* ((clicked (posn-string posn))
+         (tab (and clicked
+                   (get-text-property (or (cdr clicked) 0) 'tab (car clicked)))))
+    (if (bufferp tab) tab (cdr (assq 'buffer tab)))))
+
 (defun bufferline-close-tab-at-click (event)
   "Close the tab whose close button was clicked with mouse EVENT.
 The tab is closed in the window whose tab line was clicked, which stays
@@ -55,10 +64,7 @@ as selected as it was."
   (interactive "e")
   (let* ((posn (event-start event))
          (window (posn-window posn))
-         (clicked (posn-string posn))
-         (tab (and clicked
-                   (get-text-property (or (cdr clicked) 0) 'tab (car clicked))))
-         (buffer (if (bufferp tab) tab (cdr (assq 'buffer tab)))))
+         (buffer (bufferline-commands--posn-tab posn)))
     (when (and (buffer-live-p buffer) (window-live-p window))
       (with-selected-window window
         (bufferline-close-tab buffer)))))
@@ -114,12 +120,16 @@ Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
   (interactive)
   (bufferline-commands--close-buffers (bufferline-commands--tabs-beside 'left)))
 
-(defun bufferline-commands--swap-order (a b)
-  "Swap the positions of tabs A and B, then redraw the bufferline."
+(defun bufferline-commands--check-reorder (a b)
+  "Signal a `user-error' unless tab A may take the place of tab B."
   (unless (eq bufferline-sort-by 'fifo)
     (user-error "Tabs can only be reordered when `bufferline-sort-by' is fifo"))
   (unless (eq (bufferline-state-pinned-p a) (bufferline-state-pinned-p b))
-    (user-error "Pinned tabs stay ahead of unpinned ones"))
+    (user-error "Pinned tabs stay ahead of unpinned ones")))
+
+(defun bufferline-commands--swap-order (a b)
+  "Swap the positions of tabs A and B, then redraw the bufferline."
+  (bufferline-commands--check-reorder a b)
   (let ((id (buffer-local-value 'bufferline-state--tab-order-id a)))
     (with-current-buffer a
       (setq bufferline-state--tab-order-id
@@ -152,6 +162,50 @@ Pinned tabs stay open while `bufferline-close-keep-pinned' is non-nil."
   "Move the current tab one position to the left."
   (interactive)
   (bufferline-commands--move-tab -1))
+
+(defun bufferline-commands--move-tab-to (buffer target)
+  "Move the tab of BUFFER into the place of the tab of TARGET.
+The tabs in between shift by one toward the place BUFFER left, so
+BUFFER lands right after TARGET when moved rightward and right before
+it when moved leftward.  Only the tabs of the selected window are
+renumbered, keeping the order numbers they already held."
+  (bufferline-commands--check-reorder buffer target)
+  (let* ((tabs (bufferline-buffers-all))
+         (pos (seq-position tabs target))
+         (rest (remq buffer tabs))
+         (order (append (seq-take rest pos) (list buffer) (seq-drop rest pos)))
+         (ids (sort (mapcar (lambda (buf)
+                              (buffer-local-value 'bufferline-state--tab-order-id buf))
+                            tabs)
+                    #'<)))
+    (cl-mapc (lambda (buf id)
+               (with-current-buffer buf
+                 (setq bufferline-state--tab-order-id id)))
+             order ids))
+  (if (fboundp 'bufferline-ui-refresh)
+      (bufferline-ui-refresh)
+    (force-mode-line-update t)))
+
+(defun bufferline-drag-tab (event)
+  "Move the tab dragged with mouse EVENT to where it was dropped.
+A tab dropped on another tab of the same tab line takes its place, as
+with `bufferline-commands--move-tab-to'.  A tab dropped anywhere else
+stays where it was."
+  (interactive "e")
+  (let* ((start (event-start event))
+         (end (event-end event))
+         (window (posn-window start))
+         (buffer (bufferline-commands--posn-tab start))
+         (target (bufferline-commands--posn-tab end)))
+    (when (and (buffer-live-p buffer)
+               (buffer-live-p target)
+               (not (eq buffer target))
+               (eq window (posn-window end))
+               (window-live-p window))
+      (with-selected-window window
+        (when (and (memq buffer (bufferline-buffers-all))
+                   (memq target (bufferline-buffers-all)))
+          (bufferline-commands--move-tab-to buffer target))))))
 
 ;;;###autoload
 (defun bufferline-swap-tab ()

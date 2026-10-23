@@ -146,6 +146,7 @@ and, on the first and last tab, the truncation markers."
          (tab-map (let ((km (make-sparse-keymap)))
                     (define-key km [tab-line mouse-1] #'tab-line-select-tab)
                     (define-key km [tab-line mouse-2] #'tab-line-close-tab)
+                    (define-key km [tab-line drag-mouse-1] #'bufferline-drag-tab)
                     (define-key km [tab-line down-mouse-3] #'tab-line-tab-context-menu)
                     (define-key km [tab-line touchscreen-begin] #'tab-line-select-tab)
                     (define-key km (kbd "RET") #'tab-line-select-tab)
