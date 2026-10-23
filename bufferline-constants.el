@@ -34,6 +34,12 @@
 (defconst bufferline-constants-new-tab-icon "󰐕"
   "Default new tab button glyph.")
 
+(defconst bufferline-constants-prev-tab-icon "󰅁"
+  "Default glyph of the previous tab navigation button.")
+
+(defconst bufferline-constants-next-tab-icon "󰅂"
+  "Default glyph of the next tab navigation button.")
+
 (defconst bufferline-constants-separators
   '((vertical     . ("▎" " "))
     (bar          . ("│" " "))

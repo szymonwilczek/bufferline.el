@@ -36,6 +36,27 @@ falling back to KEYWORD-COLOR."
                         'keymap km)
             (propertize " " 'face `(:background ,bar-bg)))))
 
+(defun bufferline-ui--navigation-buttons (bar-bg fg-comment keyword-color)
+  "Return the previous and next tab buttons drawn on BAR-BG in FG-COMMENT.
+Under the mouse they take the color of `bufferline-navigation-hover-face',
+falling back to KEYWORD-COLOR."
+  (let* ((hover-fg (bufferline-colors-safe (face-foreground bufferline-navigation-hover-face nil t)
+                                           keyword-color))
+         (space (propertize " " 'face `(:background ,bar-bg)))
+         (button (lambda (icon help command)
+                   (let ((km (make-sparse-keymap)))
+                     (define-key km [tab-line mouse-1] command)
+                     (propertize icon
+                                 'face `(:foreground ,fg-comment :background ,bar-bg)
+                                 'help-echo help
+                                 'mouse-face `(:foreground ,hover-fg :background ,bar-bg :weight bold)
+                                 'keymap km)))))
+    (concat space
+            (funcall button bufferline-prev-tab-icon "Previous tab" #'bufferline-prev-tab-at-click)
+            space
+            (funcall button bufferline-next-tab-icon "Next tab" #'bufferline-next-tab-at-click)
+            space)))
+
 (defun bufferline-ui--tab-count (bar-bg fg-comment)
   "Return the tab counter drawn on BAR-BG in FG-COMMENT."
   (propertize (format " %s " (bufferline-buffers-tab-count (bufferline-buffers-all)))
@@ -46,8 +67,8 @@ falling back to KEYWORD-COLOR."
   "Format the buffer of TAB, one of TABS, as its tab line string.
 The string holds icons, indicators, the disambiguating directory prefix
 and, on the first and last tab, the truncation markers.  The last tab
-also carries what is enabled after it: the tab counter and the new tab
-button."
+also carries what is enabled after it: the navigation buttons, the tab
+counter and the new tab button."
   (let* ((buffer (if (bufferp tab) tab (cdr (assq 'buffer tab))))
          (active (if (bufferp tab) (eq tab (current-buffer)) (cdr (assq 'selected tab))))
          (bg-face (if active 'tab-line-tab-current 'tab-line-tab-inactive))
@@ -212,6 +233,8 @@ button."
                                        'keymap (let ((km (make-sparse-keymap)))
                                                  (define-key km [tab-line mouse-1] #'bufferline-next-tab)
                                                  km)))))
+         (navigation (when (and is-last bufferline-show-navigation-buttons)
+                       (bufferline-ui--navigation-buttons bar-bg fg-comment keyword-color)))
          (tab-count (when (and is-last bufferline-show-tab-count)
                       (bufferline-ui--tab-count bar-bg fg-comment)))
          (new-tab-button (when (and is-last bufferline-show-new-tab-button)
@@ -241,6 +264,7 @@ button."
             left-marker
             tab-str
             right-marker
+            navigation
             tab-count
             new-tab-button)))
 

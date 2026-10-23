@@ -194,6 +194,30 @@ buffer; `find-file' or `switch-to-buffer' ask what to open instead."
                  (function :tag "Custom function"))
   :group 'bufferline)
 
+(defcustom bufferline-show-navigation-buttons nil
+  "Whether to draw previous and next tab buttons after the last tab.
+Clicking one switches the window whose tab line was clicked to the
+previous or next tab, cyclically, without selecting that window."
+  :type 'boolean
+  :group 'bufferline)
+
+(defcustom bufferline-prev-tab-icon bufferline-constants-prev-tab-icon
+  "Icon drawn as the previous tab button.
+See `bufferline-show-navigation-buttons'."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-next-tab-icon bufferline-constants-next-tab-icon
+  "Icon drawn as the next tab button.
+See `bufferline-show-navigation-buttons'."
+  :type 'string
+  :group 'bufferline)
+
+(defcustom bufferline-navigation-hover-face 'font-lock-keyword-face
+  "Face whose foreground colors a navigation button under the mouse."
+  :type 'face
+  :group 'bufferline)
+
 (defcustom bufferline-show-tab-count nil
   "Whether to draw a tab counter after the last tab.
 It shows the position of the current tab and how many tabs the window

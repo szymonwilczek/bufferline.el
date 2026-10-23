@@ -97,7 +97,11 @@ TABS are all the tabs of the window.  See `bufferline-tab-count-format'."
 (defun bufferline-buffers-tail-width (tabs)
   "Return the character width of what is drawn after the last of TABS.
 TABS are all the tabs of the window."
-  (+ (if bufferline-show-tab-count
+  (+ (if bufferline-show-navigation-buttons
+         (+ 3 (string-width bufferline-prev-tab-icon)
+            (string-width bufferline-next-tab-icon))
+       0)
+     (if bufferline-show-tab-count
          (+ 2 (string-width (bufferline-buffers-tab-count tabs)))
        0)
      (if bufferline-show-new-tab-button

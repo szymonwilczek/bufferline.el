@@ -57,6 +57,28 @@ Return nil when POSN is not over a tab."
                    (get-text-property (or (cdr clicked) 0) 'tab (car clicked)))))
     (if (bufferp tab) tab (cdr (assq 'buffer tab)))))
 
+(defun bufferline-commands--in-clicked-window (event command)
+  "Call COMMAND in the window whose tab line mouse EVENT clicked.
+That window is made selected only while COMMAND runs."
+  (let ((window (posn-window (event-start event))))
+    (when (window-live-p window)
+      (with-selected-window window
+        (funcall command)))))
+
+(defun bufferline-prev-tab-at-click (event)
+  "Switch to the previous tab in the window whose tab line EVENT clicked.
+Bound to mouse-1 on the button drawn by
+`bufferline-show-navigation-buttons'."
+  (interactive "e")
+  (bufferline-commands--in-clicked-window event #'bufferline-prev-tab))
+
+(defun bufferline-next-tab-at-click (event)
+  "Switch to the next tab in the window whose tab line EVENT clicked.
+Bound to mouse-1 on the button drawn by
+`bufferline-show-navigation-buttons'."
+  (interactive "e")
+  (bufferline-commands--in-clicked-window event #'bufferline-next-tab))
+
 (defun bufferline-close-tab-at-click (event)
   "Close the tab whose close button was clicked with mouse EVENT.
 The tab is closed in the window whose tab line was clicked, which stays
