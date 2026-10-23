@@ -87,11 +87,22 @@ See `bufferline-show-tab-close-icon'."
     ;; 1 indicator + 1 pre-pad + 2 icon + mid-len + name + close + post-len
     (+ len 4 mid-len close-len post-len)))
 
-(defun bufferline-buffers-tail-width ()
-  "Return the character width of the buttons drawn after the last tab."
-  (if bufferline-show-new-tab-button
-      (+ 2 (string-width bufferline-new-tab-icon))
-    0))
+(defun bufferline-buffers-tab-count (tabs)
+  "Return the tab counter text for the current buffer among TABS.
+TABS are all the tabs of the window.  See `bufferline-tab-count-format'."
+  (format bufferline-tab-count-format
+          (1+ (or (seq-position tabs (window-buffer (selected-window))) -1))
+          (length tabs)))
+
+(defun bufferline-buffers-tail-width (tabs)
+  "Return the character width of what is drawn after the last of TABS.
+TABS are all the tabs of the window."
+  (+ (if bufferline-show-tab-count
+         (+ 2 (string-width (bufferline-buffers-tab-count tabs)))
+       0)
+     (if bufferline-show-new-tab-button
+         (+ 2 (string-width bufferline-new-tab-icon))
+       0)))
 
 (defun bufferline-buffers-get ()
   "Calculate visible slice of buffers fitting within current window width,
@@ -114,7 +125,7 @@ returning only valid buffer objects and storing left/right truncation counts."
              (after-lens (mapcar (lambda (b) (bufferline-buffers-tab-width b all-tabs)) after))
              (left-count 0)
              (right-count 0)
-             (avail-width (- win-width 6 (bufferline-buffers-tail-width))))
+             (avail-width (- win-width 6 (bufferline-buffers-tail-width all-tabs))))
 
         ;; truncate tabs until everything fits in window width
         (while (and (or before after)

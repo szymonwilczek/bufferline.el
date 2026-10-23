@@ -194,6 +194,21 @@ buffer; `find-file' or `switch-to-buffer' ask what to open instead."
                  (function :tag "Custom function"))
   :group 'bufferline)
 
+(defcustom bufferline-show-tab-count nil
+  "Whether to draw a tab counter after the last tab.
+It shows the position of the current tab and how many tabs the window
+has, as `bufferline-tab-count-format' formats them."
+  :type 'boolean
+  :group 'bufferline)
+
+(defcustom bufferline-tab-count-format "%d/%d"
+  "Format string of the tab counter, given two integers.
+They are the position of the current tab, counting from 1, or 0 when
+the current buffer has no tab, and the number of tabs of the window,
+hidden ones included.  See `bufferline-show-tab-count'."
+  :type 'string
+  :group 'bufferline)
+
 (defcustom bufferline-show-diagnostics nil
   "Whether to display Flymake/Flycheck error count badges in tabs."
   :type 'boolean

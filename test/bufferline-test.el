@@ -1812,9 +1812,9 @@ Errors and warnings are colored by faces batch Emacs can resolve."
 (ert-deftest bufferline-test-new-tab-button-width ()
   (let ((bufferline-new-tab-icon "[+]"))
     (let ((bufferline-show-new-tab-button nil))
-      (should (= (bufferline-buffers-tail-width) 0)))
+      (should (= (bufferline-buffers-tail-width nil) 0)))
     (let ((bufferline-show-new-tab-button t))
-      (should (= (bufferline-buffers-tail-width) 5)))))
+      (should (= (bufferline-buffers-tail-width nil) 5)))))
 
 (ert-deftest bufferline-test-new-tab-button-makes-room ()
   (bufferline-test-with-frame
