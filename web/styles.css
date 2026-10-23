@@ -445,6 +445,27 @@ html, body {
     margin: 0 var(--sp);
 }
 
+.tab-nav-buttons {
+    font-family: var(--font-icons);
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
+    gap: var(--sp);
+    padding: 0 var(--sp);
+    background-color: var(--emacs-bg-alt);
+    color: var(--emacs-comment);
+    user-select: none;
+}
+
+.tab-nav-button {
+    cursor: pointer;
+}
+
+.tab-nav-button:hover {
+    color: var(--emacs-keyword);
+    font-weight: bold;
+}
+
 .tab-count {
     display: inline-flex;
     align-items: center;

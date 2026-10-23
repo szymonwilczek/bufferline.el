@@ -270,6 +270,37 @@
                 </td>
               </tr>
               <tr>
+                <td><code>bufferline-show-navigation-buttons</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Draw previous and next tab buttons after the last tab.
+                  Clicking one cycles the tabs of the clicked window without
+                  selecting it.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-prev-tab-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">"󰅁"</td>
+                <td>Glyph drawn as the previous tab button.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-next-tab-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">"󰅂"</td>
+                <td>Glyph drawn as the next tab button.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-navigation-hover-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'font-lock-keyword-face</td>
+                <td>
+                  Face whose foreground colors a navigation button under the
+                  mouse.
+                </td>
+              </tr>
+              <tr>
                 <td><code>bufferline-show-tab-count</code></td>
                 <td class="type-col">boolean</td>
                 <td class="default-col">nil</td>
@@ -505,6 +536,13 @@
             <li>
               <code>bufferline-prev-tab</code>: Switch cyclically to the
               previous tab in active sort order.
+            </li>
+            <li>
+              <code>bufferline-prev-tab-at-click</code>,
+              <code>bufferline-next-tab-at-click</code>: Cycle the tabs of the
+              window whose navigation button was clicked, leaving the selection
+              where it was; bound to mouse-1 on the buttons drawn by
+              <code>bufferline-show-navigation-buttons</code>.
             </li>
             <li>
               <code>bufferline-close-tab</code>: Close current or specified

@@ -486,6 +486,7 @@ Close every tab of the selected window except the current one.`,
     closeIcon: "none",
     showNewTabButton: false,
     showTabCount: false,
+    showNavigation: false,
     hideSingleTab: false,
     hideInExcluded: "none",
     hideModes: "dired-mode magit-mode",
@@ -561,6 +562,7 @@ Close every tab of the selected window except the current one.`,
     closeKeepPinned: document.getElementById("closeKeepPinned"),
     showNewTabButton: document.getElementById("showNewTabButton"),
     showTabCount: document.getElementById("showTabCount"),
+    showNavigation: document.getElementById("showNavigation"),
     pickInPlace: document.getElementById("pickInPlace"),
 
     // tab line visibility
@@ -817,6 +819,7 @@ Close every tab of the selected window except the current one.`,
   // mirror of `bufferline-buffers-tail-width'
   function tailWidth(allBuffers) {
     return (
+      (state.showNavigation ? 5 : 0) +
       (state.showTabCount ? tabCount(allBuffers).length + 2 : 0) +
       (state.showNewTabButton ? 3 : 0)
     );
@@ -1175,6 +1178,27 @@ Close every tab of the selected window except the current one.`,
       DOM.bufferlineBar.appendChild(rightMarker);
     }
 
+    // mirror of `bufferline-ui--navigation-buttons'
+    if (state.showNavigation && visible.length > 0) {
+      const nav = document.createElement("div");
+      nav.className = "tab-nav-buttons";
+      [
+        ["󰅁", "Previous tab", -1],
+        ["󰅂", "Next tab", 1],
+      ].forEach(([icon, title, direction]) => {
+        const button = document.createElement("span");
+        button.className = "tab-nav-button";
+        button.textContent = icon;
+        button.title = title;
+        button.addEventListener("click", () => {
+          state.pick = null;
+          cycleBuffer(direction);
+        });
+        nav.appendChild(button);
+      });
+      DOM.bufferlineBar.appendChild(nav);
+    }
+
     // mirror of `bufferline-ui--tab-count'
     if (state.showTabCount && visible.length > 0) {
       const counter = document.createElement("div");
@@ -1476,6 +1500,8 @@ Close every tab of the selected window except the current one.`,
     if (state.showNewTabButton)
       customLines.push("  (bufferline-show-new-tab-button t)");
     if (state.showTabCount) customLines.push("  (bufferline-show-tab-count t)");
+    if (state.showNavigation)
+      customLines.push("  (bufferline-show-navigation-buttons t)");
     if (state.diagHighlight !== "none")
       customLines.push(
         `  (bufferline-diagnostics-highlight '${state.diagHighlight})`,
@@ -1680,6 +1706,7 @@ Close every tab of the selected window except the current one.`,
       { el: DOM.pickInPlace, prop: "pickInPlace" },
       { el: DOM.showNewTabButton, prop: "showNewTabButton" },
       { el: DOM.showTabCount, prop: "showTabCount" },
+      { el: DOM.showNavigation, prop: "showNavigation" },
       { el: DOM.hideSingleTab, prop: "hideSingleTab" },
     ];
 
