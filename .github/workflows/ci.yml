@@ -33,7 +33,8 @@ jobs:
             --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\"))" \
             --eval "(package-initialize)" \
             --eval "(package-refresh-contents)" \
-            --eval "(package-install 'nerd-icons)"
+            --eval "(package-install 'nerd-icons)" \
+            --eval "(package-install 'evil)"
 
       - name: Byte-compile bufferline.el modules without warnings
         run: make compile

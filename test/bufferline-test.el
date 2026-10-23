@@ -2109,6 +2109,260 @@ The tab is drawn by WINDOW's tab line."
     (let ((bufferline-show-navigation-buttons t))
       (should (= (bufferline-buffers-tail-width nil) 6)))))
 
+;;; Evil integration
+
+(defvar evil-ex-argument)
+(defvar evil-ex-commands)
+(defvar evil-motion-state-map)
+
+(defmacro bufferline-test-with-evil (&rest body)
+  "Run BODY with Evil loaded, skipping the test when it is missing.
+`bufferline-evil-mode' is turned off again once BODY has run."
+  (declare (indent 0) (debug t))
+  `(progn
+     (skip-unless (require 'evil nil t))
+     (unwind-protect
+         (progn ,@body)
+       (bufferline-evil-mode -1))))
+
+(defun bufferline-test--ex (command &optional argument)
+  "Call Ex COMMAND as Evil does for :COMMAND ARGUMENT."
+  (let ((evil-ex-argument argument)
+        (current-prefix-arg nil))
+    (call-interactively (cdr (assoc command evil-ex-commands)))))
+
+(ert-deftest bufferline-test-evil-off-by-default ()
+  (should-not (default-value 'bufferline-evil-mode)))
+
+(ert-deftest bufferline-test-evil-keys ()
+  (bufferline-test-with-evil
+    (let ((gt (lookup-key evil-motion-state-map "gt"))
+          (gT (lookup-key evil-motion-state-map "gT")))
+      (bufferline-evil-mode 1)
+      (should (eq (lookup-key evil-motion-state-map "gt") #'bufferline-evil-tab-next))
+      (should (eq (lookup-key evil-motion-state-map "gT") #'bufferline-evil-tab-previous))
+      (bufferline-evil-mode -1)
+      (should (eq (lookup-key evil-motion-state-map "gt") gt))
+      (should (eq (lookup-key evil-motion-state-map "gT") gT)))))
+
+(ert-deftest bufferline-test-evil-ex-commands ()
+  (bufferline-test-with-evil
+    (let ((before (copy-tree evil-ex-commands)))
+      (bufferline-evil-mode 1)
+      (pcase-dolist (`(,name . ,command)
+                     '(("tabn" . bufferline-evil-tab-next)
+                       ("tabnext" . bufferline-evil-tab-next)
+                       ("tabp" . bufferline-evil-tab-previous)
+                       ("tabprevious" . bufferline-evil-tab-previous)
+                       ("tabN" . bufferline-evil-tab-previous)
+                       ("tabfir" . bufferline-evil-tab-first)
+                       ("tabr" . bufferline-evil-tab-first)
+                       ("tabl" . bufferline-evil-tab-last)
+                       ("tablast" . bufferline-evil-tab-last)
+                       ("tabc" . bufferline-evil-tab-close)
+                       ("tabo" . bufferline-evil-tab-only)
+                       ("tabm" . bufferline-evil-tab-move)
+                       ("tabmove" . bufferline-evil-tab-move)
+                       ("tabnew" . bufferline-evil-tab-new)
+                       ("tabe" . bufferline-evil-tab-new)
+                       ("tabedit" . bufferline-evil-tab-new)))
+        (should (eq (cdr (assoc name evil-ex-commands)) command)))
+      (bufferline-evil-mode -1)
+      ;; the commands Evil had come back, the ones it lacked go away
+      (should (equal (sort (copy-sequence evil-ex-commands)
+                           (lambda (a b) (string< (car a) (car b))))
+                     (sort before (lambda (a b) (string< (car a) (car b)))))))))
+
+(ert-deftest bufferline-test-evil-enable-twice ()
+  (bufferline-test-with-evil
+    (let ((gt (lookup-key evil-motion-state-map "gt"))
+          (tabn (assoc "tabn" evil-ex-commands)))
+      (bufferline-evil-mode 1)
+      (bufferline-evil-mode 1)
+      (bufferline-evil-mode -1)
+      (should (eq (lookup-key evil-motion-state-map "gt") gt))
+      (should (equal (assoc "tabn" evil-ex-commands) tabn)))))
+
+(ert-deftest bufferline-test-evil-disable-keeps-later-bindings ()
+  (bufferline-test-with-evil
+    (let ((gt (lookup-key evil-motion-state-map "gt"))
+          (tabc (cdr (assoc "tabc" evil-ex-commands))))
+      (unwind-protect
+          (progn
+            (bufferline-evil-mode 1)
+            (define-key evil-motion-state-map "gt" #'ignore)
+            (evil-ex-define-cmd "tabc" #'ignore)
+            (bufferline-evil-mode -1)
+            (should (eq (lookup-key evil-motion-state-map "gt") #'ignore))
+            (should (eq (cdr (assoc "tabc" evil-ex-commands)) #'ignore)))
+        (define-key evil-motion-state-map "gt" gt)
+        (if tabc
+            (evil-ex-define-cmd "tabc" tabc)
+          (setq evil-ex-commands (assoc-delete-all "tabc" evil-ex-commands)))))))
+
+(ert-deftest bufferline-test-evil-without-evil ()
+  (cl-letf* ((require-orig (symbol-function 'require))
+             ((symbol-function 'require)
+              (lambda (feature &rest args)
+                (unless (eq feature 'evil)
+                  (apply require-orig feature args)))))
+    (should-error (bufferline-evil-mode 1) :type 'user-error)
+    (should-not bufferline-evil-mode)))
+
+(ert-deftest bufferline-test-evil-tab-next ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c")))
+       (bufferline-test--show (selected-window) a b c a)
+       ;; gt goes to the next tab, with a count to that tab
+       (bufferline-evil-tab-next)
+       (should (eq (window-buffer) b))
+       (bufferline-evil-tab-next 3)
+       (should (eq (window-buffer) c))
+       (bufferline-evil-tab-next '(1))
+       (should (eq (window-buffer) a))
+       (bufferline-evil-tab-next)
+       (bufferline-evil-tab-next)
+       (bufferline-evil-tab-next)
+       (should (eq (window-buffer) a))
+       (should-error (bufferline-evil-tab-next 4) :type 'user-error)))))
+
+(ert-deftest bufferline-test-evil-tab-previous ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c")))
+       (bufferline-test--show (selected-window) a b c)
+       (bufferline-evil-tab-previous)
+       (should (eq (window-buffer) b))
+       ;; a count goes that many tabs back, wrapping around
+       (bufferline-evil-tab-previous 2)
+       (should (eq (window-buffer) c))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-next ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c")))
+       (bufferline-test--show (selected-window) a b c a)
+       (bufferline-evil-mode 1)
+       (bufferline-test--ex "tabnext" "3")
+       (should (eq (window-buffer) c))
+       (bufferline-test--ex "tabn")
+       (should (eq (window-buffer) a))
+       (bufferline-test--ex "tabp" "2")
+       (should (eq (window-buffer) b))
+       (bufferline-test--ex "tablast")
+       (should (eq (window-buffer) c))
+       (bufferline-test--ex "tabfirst")
+       (should (eq (window-buffer) a))
+       (bufferline-test--ex "tabr")
+       (should (eq (window-buffer) a))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-close ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c")))
+       (bufferline-test--show (selected-window) a b c)
+       (bufferline-evil-mode 1)
+       (bufferline-test--ex "tabclose")
+       (should-not (buffer-live-p c))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b)))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-only ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c"))
+           (bufferline-close-keep-pinned t))
+       (bufferline-test--show (selected-window) a b c)
+       (bufferline-state-toggle-pin a)
+       (bufferline-evil-mode 1)
+       (bufferline-test--ex "tabo")
+       (should-not (buffer-live-p b))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a c)))))))
+
+(ert-deftest bufferline-test-evil-move-index ()
+  ;; four tabs, the moved one at POS
+  (let ((tabs '(t1 t2 t3 t4)))
+    (pcase-dolist (`(,arg ,pos ,index)
+                   '((nil 0 3) ("$" 1 3) ("0" 2 0)
+                     ("2" 0 1) ("2" 3 2) ("2" 1 1) ("9" 0 3)
+                     ("+1" 1 2) ("+" 1 2) ("+5" 1 3)
+                     ("-1" 2 1) ("-" 2 1) ("-5" 2 0)))
+      (should (= (bufferline-evil--move-index arg pos tabs) index)))
+    (should-error (bufferline-evil--move-index "x" 0 tabs) :type 'user-error)))
+
+(ert-deftest bufferline-test-evil-ex-tab-move ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c"))
+           (d (bufferline-test--buffer "d")))
+       (bufferline-test--show (selected-window) a b c d a)
+       (bufferline-evil-mode 1)
+       (bufferline-test--ex "tabmove")
+       (should (equal (bufferline-test--tabs (selected-window)) (list b c d a)))
+       (bufferline-test--ex "tabm" "0")
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b c d)))
+       (bufferline-test--ex "tabm" "2")
+       (should (equal (bufferline-test--tabs (selected-window)) (list b a c d)))
+       (bufferline-test--ex "tabm" "+2")
+       (should (equal (bufferline-test--tabs (selected-window)) (list b c d a)))
+       (bufferline-test--ex "tabm" "-1")
+       (should (equal (bufferline-test--tabs (selected-window)) (list b c a d)))
+       ;; moving onto its own place changes nothing
+       (bufferline-test--ex "tabm" "3")
+       (should (equal (bufferline-test--tabs (selected-window)) (list b c a d)))
+       (should (eq (window-buffer) a))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-move-across-pinned ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b")))
+       (bufferline-test--show (selected-window) a b)
+       (bufferline-state-toggle-pin a)
+       (bufferline-evil-mode 1)
+       (should-error (bufferline-test--ex "tabm" "0") :type 'user-error)
+       (should (equal (bufferline-test--tabs (selected-window)) (list a b)))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-new ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a")))
+       (bufferline-test--show (selected-window) a)
+       (bufferline-evil-mode 1)
+       (let ((created (bufferline-test--new-buffers
+                       (lambda () (bufferline-test--ex "tabnew")))))
+         (should (= (length created) 1))
+         (should (string-prefix-p "untitled" (buffer-name (car created))))
+         (should (eq (window-buffer) (car created))))))))
+
+(ert-deftest bufferline-test-evil-ex-tab-edit-file ()
+  (bufferline-test-with-evil
+    (bufferline-test-with-frame
+     (let ((a (bufferline-test--buffer "a"))
+           (file (make-temp-file "bufferline-test-")))
+       (unwind-protect
+           (progn
+             (bufferline-test--show (selected-window) a)
+             (bufferline-evil-mode 1)
+             (let ((created (bufferline-test--new-buffers
+                             (lambda () (bufferline-test--ex "tabe" file)))))
+               (should (= (length created) 1))
+               (should (equal (buffer-file-name (car created)) file))
+               (should (eq (window-buffer) (car created)))))
+         (delete-file file))))))
+
 (provide 'bufferline-test)
 
 ;;; bufferline-test.el ends here
