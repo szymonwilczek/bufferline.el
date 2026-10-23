@@ -1880,6 +1880,108 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      (bufferline-test--click-new-tab (selected-window) a)
      (should (equal args '(asked))))))
 
+;;; Tab counter
+
+(defun bufferline-test--count-start (string)
+  "Return the index where the tab counter starts in STRING, or nil."
+  (seq-position (number-sequence 0 (1- (length string)))
+                nil
+                (lambda (i _) (equal (get-text-property i 'help-echo string)
+                                     "Current tab and tab count"))))
+
+(ert-deftest bufferline-test-tab-count-off-by-default ()
+  (should-not (default-value 'bufferline-show-tab-count))
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (should-not (bufferline-test--count-start
+                  (bufferline-test--render (selected-window) a))))))
+
+(ert-deftest bufferline-test-tab-count-after-last-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c"))
+         (bufferline-show-tab-count t))
+     (bufferline-test--show (selected-window) a b c b)
+     (should-not (bufferline-test--count-start
+                  (bufferline-test--render (selected-window) a)))
+     (let* ((string (bufferline-test--render (selected-window) c))
+            (start (bufferline-test--count-start string)))
+       (should (string-suffix-p " 2/3 " (substring-no-properties string)))
+       (should (= start (- (length string) 5)))
+       ;; the counter is not part of the tab
+       (should-not (get-text-property start 'tab string))))))
+
+(ert-deftest bufferline-test-tab-count-custom-format ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-tab-count t)
+         (bufferline-tab-count-format "[%d of %d]"))
+     (bufferline-test--show (selected-window) a b)
+     (should (string-suffix-p " [2 of 2] "
+                              (substring-no-properties
+                               (bufferline-test--render (selected-window) b)))))))
+
+(ert-deftest bufferline-test-tab-count-without-current-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (should (equal (bufferline-buffers-tab-count (list a b)) "0/2")))))
+
+(ert-deftest bufferline-test-tab-count-includes-hidden-tabs ()
+  (bufferline-test-with-frame
+   (let ((bufferline-show-tab-count t)
+         (bufferline-show-new-tab-button t)
+         (bufferline-show-trunc-markers t)
+         (bufferline-right-trunc-marker ">")
+         (bufferline-new-tab-icon "+")
+         (bufs (mapcar (lambda (i) (bufferline-test--buffer (format "tab%02d" i)))
+                       (number-sequence 1 30))))
+     (apply #'bufferline-test--show (selected-window) bufs)
+     (bufferline-test--show (selected-window) (nth 1 bufs))
+     (with-selected-window (selected-window)
+       (let ((visible (bufferline-buffers-get)))
+         (should (> bufferline-buffers--right-count 0))
+         ;; right marker, then the counter, then the new tab button
+         (should (string-suffix-p
+                  (format "> %d  2/30  + " bufferline-buffers--right-count)
+                  (substring-no-properties
+                   (bufferline-ui-tab-name-format (car (last visible)) visible)))))))))
+
+(ert-deftest bufferline-test-tab-count-width ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-tab-count-format "%d/%d"))
+     (bufferline-test--show (selected-window) a b)
+     (let ((tabs (bufferline-test--tabs (selected-window))))
+       (let ((bufferline-show-tab-count nil))
+         (should (= (bufferline-buffers-tail-width tabs) 0)))
+       (let ((bufferline-show-tab-count t))
+         (should (= (bufferline-buffers-tail-width tabs) 5)))
+       (let ((bufferline-show-tab-count t)
+             (bufferline-show-new-tab-button t)
+             (bufferline-new-tab-icon "+"))
+         (should (= (bufferline-buffers-tail-width tabs) 8)))))))
+
+(ert-deftest bufferline-test-tab-count-makes-room ()
+  (bufferline-test-with-frame
+   (let ((bufferline-show-trunc-markers t)
+         (bufferline-tab-count-format "tab %d out of %d")
+         (bufs (mapcar (lambda (i) (bufferline-test--buffer (format "%c" i)))
+                       (number-sequence ?a ?t))))
+     (apply #'bufferline-test--show (selected-window) bufs)
+     (cl-letf (((symbol-function 'window-width) (lambda (&rest _) 60)))
+       (let ((without (let ((bufferline-show-tab-count nil))
+                        (length (bufferline-buffers-get))))
+             (with (let ((bufferline-show-tab-count t))
+                     (length (bufferline-buffers-get)))))
+         (should (< with without))
+         (should (> with 0)))))))
+
 (provide 'bufferline-test)
+
 
 ;;; bufferline-test.el ends here
