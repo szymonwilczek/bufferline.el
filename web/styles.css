@@ -445,6 +445,18 @@ html, body {
     margin: 0 var(--sp);
 }
 
+.tab-count {
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
+    padding: 0 var(--sp);
+    background-color: var(--emacs-bg-alt);
+    color: var(--emacs-comment);
+    font-size: 0.85rem;
+    white-space: pre;
+    user-select: none;
+}
+
 .tab-new-button {
     font-family: var(--font-icons);
     display: inline-flex;

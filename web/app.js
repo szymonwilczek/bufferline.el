@@ -485,6 +485,7 @@ Close every tab of the selected window except the current one.`,
     pickInPlace: true,
     closeIcon: "none",
     showNewTabButton: false,
+    showTabCount: false,
     hideSingleTab: false,
     hideInExcluded: "none",
     hideModes: "dired-mode magit-mode",
@@ -559,6 +560,7 @@ Close every tab of the selected window except the current one.`,
     showSpecialBuffers: document.getElementById("showSpecialBuffers"),
     closeKeepPinned: document.getElementById("closeKeepPinned"),
     showNewTabButton: document.getElementById("showNewTabButton"),
+    showTabCount: document.getElementById("showTabCount"),
     pickInPlace: document.getElementById("pickInPlace"),
 
     // tab line visibility
@@ -806,9 +808,18 @@ Close every tab of the selected window except the current one.`,
     return Math.max(8, w);
   }
 
+  // mirror of `bufferline-buffers-tab-count'
+  function tabCount(allBuffers) {
+    const pos = allBuffers.findIndex((b) => b.id === state.activeBufferId);
+    return `${pos + 1}/${allBuffers.length}`;
+  }
+
   // mirror of `bufferline-buffers-tail-width'
-  function tailWidth() {
-    return state.showNewTabButton ? 3 : 0;
+  function tailWidth(allBuffers) {
+    return (
+      (state.showTabCount ? tabCount(allBuffers).length + 2 : 0) +
+      (state.showNewTabButton ? 3 : 0)
+    );
   }
 
   function computeVisibleTabs(allBuffers) {
@@ -817,7 +828,7 @@ Close every tab of the selected window except the current one.`,
     const availChars = Math.max(
       20,
       Math.floor((containerWidth - state.leftMargin - 20) / charPx) -
-        tailWidth(),
+        tailWidth(allBuffers),
     );
 
     if (!state.showTruncMarkers || allBuffers.length <= 1) {
@@ -1164,6 +1175,15 @@ Close every tab of the selected window except the current one.`,
       DOM.bufferlineBar.appendChild(rightMarker);
     }
 
+    // mirror of `bufferline-ui--tab-count'
+    if (state.showTabCount && visible.length > 0) {
+      const counter = document.createElement("div");
+      counter.className = "tab-count";
+      counter.title = "Current tab and tab count";
+      counter.textContent = tabCount(allBuffers);
+      DOM.bufferlineBar.appendChild(counter);
+    }
+
     // mirror of `bufferline-ui--new-tab-button'
     if (state.showNewTabButton && visible.length > 0) {
       const newTabButton = document.createElement("div");
@@ -1455,6 +1475,7 @@ Close every tab of the selected window except the current one.`,
       customLines.push("  (bufferline-show-tab-close-icon 'active)");
     if (state.showNewTabButton)
       customLines.push("  (bufferline-show-new-tab-button t)");
+    if (state.showTabCount) customLines.push("  (bufferline-show-tab-count t)");
     if (state.diagHighlight !== "none")
       customLines.push(
         `  (bufferline-diagnostics-highlight '${state.diagHighlight})`,
@@ -1658,6 +1679,7 @@ Close every tab of the selected window except the current one.`,
       { el: DOM.closeKeepPinned, prop: "closeKeepPinned" },
       { el: DOM.pickInPlace, prop: "pickInPlace" },
       { el: DOM.showNewTabButton, prop: "showNewTabButton" },
+      { el: DOM.showTabCount, prop: "showTabCount" },
       { el: DOM.hideSingleTab, prop: "hideSingleTab" },
     ];
 
