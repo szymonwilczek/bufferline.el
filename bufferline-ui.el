@@ -22,7 +22,9 @@
 (require 'bufferline-pick)
 
 (defun bufferline-ui-tab-name-format (tab tabs)
-  "Format single TAB buffer with icons, indicators, disambiguation, and edge truncation markers."
+  "Format the buffer of TAB, one of TABS, as its tab line string.
+The string holds icons, indicators, the disambiguating directory prefix
+and, on the first and last tab, the truncation markers."
   (let* ((buffer (if (bufferp tab) tab (cdr (assq 'buffer tab))))
          (active (if (bufferp tab) (eq tab (current-buffer)) (cdr (assq 'selected tab))))
          (bg-face (if active 'tab-line-tab-current 'tab-line-tab-inactive))

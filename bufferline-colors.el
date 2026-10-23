@@ -11,7 +11,7 @@
 (require 'color)
 
 (defun bufferline-colors-safe (color fallback)
-  "Return COLOR if it represents a valid non-empty string, otherwise return FALLBACK."
+  "Return COLOR if it is a valid non-empty color string, otherwise FALLBACK."
   (if (and (stringp color)
            (not (member color '("unspecified" "unspecified-bg" "unspecified-fg" ""))))
       color

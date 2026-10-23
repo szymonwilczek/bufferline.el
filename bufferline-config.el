@@ -17,7 +17,8 @@
 
 (defcustom bufferline-separator-style 'vertical
   "Separator style between buffer tabs.
-Allowed values: 'vertical ('▎'), 'bar ('│'), 'thick_bar ('┃'), 'thin ('▏'), 'thick ('▌'), 'slant, 'slope, 'padded_slant, 'none."
+Allowed values: `vertical' (▎), `bar' (│), `thick_bar' (┃), `thin' (▏),
+`thick' (▌), `slant', `slope', `padded_slant' and `none'."
   :type '(choice (const :tag "Vertical Block (▎)" vertical)
                  (const :tag "Thin Box Line (│)" bar)
                  (const :tag "Thick Box Line (┃)" thick_bar)
@@ -35,21 +36,23 @@ Allowed values: 'vertical ('▎'), 'bar ('│'), 'thick_bar ('┃'), 'thin ('▏
   :group 'bufferline)
 
 (defcustom bufferline-indicator-face 'default
-  "Face used to resolve the active indicator foreground color (matching TabLineSel)."
+  "Face used to resolve the foreground color of the active indicator.
+It plays the part of TabLineSel in bufferline.nvim."
   :type 'face
   :group 'bufferline)
 
 (defcustom bufferline-indicator-width nil
   "Explicit pixel width for the active tab indicator bar.
-When nil, width is derived from `bufferline-separator-style`
-(2px for 'thin, 3px for 'vertical, 5px for 'thick)."
+When nil, width is derived from `bufferline-separator-style'
+\(2px for `thin', 3px for `vertical', 5px for `thick')."
   :type '(choice (const :tag "Auto from style" nil)
                  (integer :tag "Pixels"))
   :group 'bufferline)
 
 (defcustom bufferline-left-margin 8
   "Margin before the first tab on the left edge.
-Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"), or nil for no margin."
+Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"),
+or nil for no margin."
   :type '(choice (integer :tag "Pixels" 8)
                  (string :tag "String" " ")
                  (const :tag "None" nil))
@@ -79,7 +82,8 @@ Can be an integer (width in pixels, e.g. 8), a string (e.g. \" \"), or nil for n
 
 (defcustom bufferline-sort-by 'fifo
   "Strategy used to sort tabs on the buffer line.
-Allowed values: 'fifo (visit order), 'name (alphabetical), 'extension, 'directory."
+Allowed values: `fifo' (visit order), `name' (alphabetical),
+`extension' and `directory'."
   :type '(choice (const :tag "FIFO (Visit Order)" fifo)
                  (const :tag "Alphabetical (Name)" name)
                  (const :tag "File Extension" extension)
@@ -241,8 +245,9 @@ When nil, standard icon and count badge is rendered."
   :group 'bufferline)
 
 (defcustom bufferline-show-special-buffers t
-  "Whether to display special buffers (names starting with '*') in the bufferline.
-When nil, buffers with names starting with '*' (e.g. *scratch*, *Messages*) are filtered out."
+  "Whether to display special buffers in the bufferline.
+When nil, buffers whose names start with \"*\" (e.g. *scratch* or
+*Messages*) are filtered out."
   :type 'boolean
   :group 'bufferline)
 
@@ -299,7 +304,8 @@ When nil, the tab line is never hidden for the buffer it is over."
   :group 'bufferline)
 
 (defcustom bufferline-numbers nil
-  "How to display buffer numbers in tabs: nil, 'ordinal, 'buffer-id, 'both, or a custom function."
+  "How to display buffer numbers in tabs.
+One of nil, `ordinal', `buffer-id', `both', or a custom function."
   :type '(choice (const :tag "None" nil)
                  (const :tag "Ordinal (1, 2, ...)" ordinal)
                  (const :tag "Buffer ID" buffer-id)
