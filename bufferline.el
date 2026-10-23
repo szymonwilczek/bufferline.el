@@ -28,6 +28,7 @@
 (require 'bufferline-pick)
 (require 'bufferline-commands)
 (require 'bufferline-ui)
+(require 'bufferline-evil)
 
 ;;;###autoload
 (defalias 'bufferline-apply-theme #'bufferline-highlights-apply)
