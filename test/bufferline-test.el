@@ -1716,5 +1716,170 @@ Errors and warnings are colored by faces batch Emacs can resolve."
                    :type 'user-error)
      (should (equal (bufferline-test--tabs win) (list a b))))))
 
+;;; New tab button
+
+(defun bufferline-test--new-tab-start (string)
+  "Return the index where the new tab button starts in STRING, or nil."
+  (seq-position (number-sequence 0 (1- (length string)))
+                nil
+                (lambda (i _) (equal (get-text-property i 'help-echo string) "New tab"))))
+
+(defun bufferline-test--click-new-tab (window buffer)
+  "Click the new tab button drawn after BUFFER's tab in WINDOW's tab line."
+  (let* ((string (bufferline-test--render window buffer))
+         (index (bufferline-test--new-tab-start string)))
+    (bufferline-new-tab-at-click
+     (list 'mouse-1 (list window 'tab-line '(0 . 0) 0 (cons string index)
+                          nil '(0 . 0) nil '(0 . 0) '(0 . 0))))))
+
+(defun bufferline-test--new-buffers (thunk)
+  "Call THUNK and return the buffers it created, killed when the test ends."
+  (let* ((before (buffer-list))
+         (_ (funcall thunk))
+         (created (seq-difference (buffer-list) before)))
+    (dolist (buf created)
+      (push buf bufferline-test--buffers))
+    created))
+
+(ert-deftest bufferline-test-new-tab-button-off-by-default ()
+  (should-not (default-value 'bufferline-show-new-tab-button))
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (let ((string (bufferline-test--render (selected-window) a)))
+       (should-not (bufferline-test--new-tab-start string))
+       (should-not (string-search bufferline-new-tab-icon string))))))
+
+(ert-deftest bufferline-test-new-tab-button-after-last-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (bufferline-show-new-tab-button t))
+     (bufferline-test--show (selected-window) a b a)
+     (should-not (bufferline-test--new-tab-start
+                  (bufferline-test--render (selected-window) a)))
+     (let ((string (bufferline-test--render (selected-window) b)))
+       (should (string-suffix-p (concat " " bufferline-new-tab-icon " ")
+                                (substring-no-properties string)))
+       (should (= (bufferline-test--new-tab-start string)
+                  (- (length string) 1 (length bufferline-new-tab-icon))))))))
+
+(ert-deftest bufferline-test-new-tab-button-properties ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (bufferline-show-new-tab-button t)
+          (bufferline-new-tab-hover-face 'bufferline-test-pick)
+          (_ (bufferline-test--show (selected-window) a))
+          (string (bufferline-test--render (selected-window) a))
+          (start (bufferline-test--new-tab-start string)))
+     (should (eq (lookup-key (get-text-property start 'keymap string) [tab-line mouse-1])
+                 #'bufferline-new-tab-at-click))
+     (should (equal (plist-get (get-text-property start 'mouse-face string) :foreground)
+                    "#ff0000"))
+     ;; the button is not part of the tab, so it is not dragged or closed
+     (should-not (get-text-property start 'tab string))
+     (should-not (get-text-property (1- start) 'tab string)))))
+
+(ert-deftest bufferline-test-new-tab-button-custom-icon ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-show-new-tab-button t)
+         (bufferline-new-tab-icon "[+]"))
+     (bufferline-test--show (selected-window) a)
+     (let* ((string (bufferline-test--render (selected-window) a))
+            (start (bufferline-test--new-tab-start string)))
+       (should (equal (substring-no-properties string start) "[+] "))
+       (should-not (get-text-property (+ start 3) 'help-echo string))))))
+
+(ert-deftest bufferline-test-new-tab-button-after-trunc-marker ()
+  (bufferline-test-with-frame
+   (let ((bufferline-show-new-tab-button t)
+         (bufferline-show-trunc-markers t)
+         (bufferline-right-trunc-marker ">")
+         (bufferline-new-tab-icon "+")
+         (bufs (mapcar (lambda (i) (bufferline-test--buffer (format "tab%02d" i)))
+                       (number-sequence 1 30))))
+     (apply #'bufferline-test--show (selected-window) bufs)
+     (bufferline-test--show (selected-window) (car bufs))
+     (with-selected-window (selected-window)
+       (let ((visible (bufferline-buffers-get)))
+         (should (> bufferline-buffers--right-count 0))
+         (should (string-suffix-p
+                  (format "> %d  + " bufferline-buffers--right-count)
+                  (substring-no-properties
+                   (bufferline-ui-tab-name-format (car (last visible)) visible)))))))))
+
+(ert-deftest bufferline-test-new-tab-button-width ()
+  (let ((bufferline-new-tab-icon "[+]"))
+    (let ((bufferline-show-new-tab-button nil))
+      (should (= (bufferline-buffers-tail-width) 0)))
+    (let ((bufferline-show-new-tab-button t))
+      (should (= (bufferline-buffers-tail-width) 5)))))
+
+(ert-deftest bufferline-test-new-tab-button-makes-room ()
+  (bufferline-test-with-frame
+   (let ((bufferline-show-trunc-markers t)
+         (bufferline-new-tab-icon "[new tab]")
+         (bufs (mapcar (lambda (i) (bufferline-test--buffer (format "%c" i)))
+                       (number-sequence ?a ?t))))
+     (apply #'bufferline-test--show (selected-window) bufs)
+     (cl-letf (((symbol-function 'window-width) (lambda (&rest _) 60)))
+       (let ((without (let ((bufferline-show-new-tab-button nil))
+                        (length (bufferline-buffers-get))))
+             (with (let ((bufferline-show-new-tab-button t))
+                     (length (bufferline-buffers-get)))))
+         (should (< with without))
+         (should (> with 0)))))))
+
+(ert-deftest bufferline-test-new-tab-command ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (let ((first (car (bufferline-test--new-buffers #'bufferline-new-tab)))
+           (second (car (bufferline-test--new-buffers #'bufferline-new-tab))))
+       (should (string-prefix-p "untitled" (buffer-name first)))
+       (should (string-prefix-p "untitled" (buffer-name second)))
+       (should-not (equal (buffer-name first) (buffer-name second)))
+       (should (eq (window-buffer) second))
+       (should (equal (bufferline-test--tabs (selected-window)) (list a first second)))))))
+
+(ert-deftest bufferline-test-new-tab-click-default ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (bufferline-show-new-tab-button t))
+     (bufferline-test--show (selected-window) a)
+     (let ((created (bufferline-test--new-buffers
+                     (lambda () (bufferline-test--click-new-tab (selected-window) a)))))
+       (should (= (length created) 1))
+       (should (eq (window-buffer) (car created)))))))
+
+(ert-deftest bufferline-test-new-tab-click-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-show-new-tab-button t)
+          (called-in nil)
+          (bufferline-new-tab-function (lambda () (setq called-in (selected-window)))))
+     (bufferline-test--show right c)
+     (bufferline-test--show left a)
+     (bufferline-test--click-new-tab right c)
+     (should (eq called-in right))
+     (should (eq (selected-window) right)))))
+
+(ert-deftest bufferline-test-new-tab-click-calls-command-interactively ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (bufferline-show-new-tab-button t)
+          (args nil)
+          (bufferline-new-tab-function (lambda (arg)
+                                         (interactive (list 'asked))
+                                         (setq args (list arg)))))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-test--click-new-tab (selected-window) a)
+     (should (equal args '(asked))))))
+
 (provide 'bufferline-test)
+
 ;;; bufferline-test.el ends here
