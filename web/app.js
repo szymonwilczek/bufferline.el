@@ -489,6 +489,8 @@ Close every tab of the selected window except the current one.`,
     hideModes: "dired-mode magit-mode",
     openedIds: new Set(),
     closedIds: new Set(),
+    tabOrder: {},
+    dragId: null,
     echo: "",
     pick: null,
     customFilterPreset: "none",
@@ -732,10 +734,43 @@ Close every tab of the selected window except the current one.`,
         return extA.localeCompare(extB);
       }
       if (state.sortBy === "directory") return a.dir.localeCompare(b.dir);
-      return a.id - b.id; // FIFO
+      return orderOf(a) - orderOf(b); // FIFO
     });
 
     return list;
+  }
+
+  // mirror of `bufferline-state--tab-order-id': the opening order until
+  // a drag hands out the numbers anew
+  function orderOf(buf) {
+    return state.tabOrder[buf.id] ?? buf.id;
+  }
+
+  // mirror of `bufferline-commands--check-reorder'
+  function reorderError(a, b) {
+    if (state.sortBy !== "fifo")
+      return "Tabs can only be reordered when `bufferline-sort-by' is fifo";
+    if (a.pinned !== b.pinned) return "Pinned tabs stay ahead of unpinned ones";
+    return null;
+  }
+
+  // mirror of `bufferline-commands--move-tab-to': the dragged tab takes
+  // the place of the target and the tabs keep the order numbers they held
+  function moveTabTo(id, targetId) {
+    const tabs = getPreparedBuffers();
+    const buf = tabs.find((b) => b.id === id);
+    const target = tabs.find((b) => b.id === targetId);
+    if (!buf || !target || buf === target) return;
+    const error = reorderError(buf, target);
+    if (error) {
+      state.echo = error;
+      return;
+    }
+    const ids = tabs.map(orderOf).sort((x, y) => x - y);
+    const order = tabs.filter((b) => b !== buf);
+    order.splice(tabs.indexOf(target), 0, buf);
+    order.forEach((b, i) => (state.tabOrder[b.id] = ids[i]));
+    state.echo = "";
   }
 
   // mirror of `bufferline-buffers-close-icon-p'
@@ -1070,6 +1105,36 @@ Close every tab of the selected window except the current one.`,
         tabEl.appendChild(rightSepEl);
       }
 
+      // mirror of `bufferline-drag-tab'
+      tabEl.draggable = true;
+      tabEl.addEventListener("dragstart", (e) => {
+        state.dragId = buf.id;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(buf.id));
+        tabEl.classList.add("dragging");
+      });
+      tabEl.addEventListener("dragend", () => {
+        state.dragId = null;
+        tabEl.classList.remove("dragging");
+      });
+      tabEl.addEventListener("dragover", (e) => {
+        if (state.dragId === null) return;
+        e.preventDefault();
+        tabEl.classList.toggle("drag-over", state.dragId !== buf.id);
+      });
+      tabEl.addEventListener("dragleave", () => {
+        tabEl.classList.remove("drag-over");
+      });
+      tabEl.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const id = state.dragId;
+        state.dragId = null;
+        if (id === null) return;
+        state.pick = null;
+        moveTabTo(id, buf.id);
+        renderAll();
+      });
+
       // tab selection click
       tabEl.addEventListener("click", () => {
         state.activeBufferId = buf.id;
@@ -1204,6 +1269,7 @@ Close every tab of the selected window except the current one.`,
         state.activeBufferId = 2;
       state.closedIds.clear();
       state.openedIds.clear();
+      state.tabOrder = {};
       state.echo = "";
     }
     if (command !== "pick" && command !== "pick-close") state.pick = null;
