@@ -487,6 +487,9 @@ Close every tab of the selected window except the current one.`,
     showNewTabButton: false,
     showTabCount: false,
     showNavigation: false,
+    evilMode: false,
+    evilKeys: "",
+    ex: null,
     hideSingleTab: false,
     hideInExcluded: "none",
     hideModes: "dired-mode magit-mode",
@@ -563,6 +566,7 @@ Close every tab of the selected window except the current one.`,
     showNewTabButton: document.getElementById("showNewTabButton"),
     showTabCount: document.getElementById("showTabCount"),
     showNavigation: document.getElementById("showNavigation"),
+    evilMode: document.getElementById("evilMode"),
     pickInPlace: document.getElementById("pickInPlace"),
 
     // tab line visibility
@@ -1225,10 +1229,12 @@ Close every tab of the selected window except the current one.`,
 
   // mirror of `bufferline-new-tab': an empty buffer named untitled,
   // numbered the way `generate-new-buffer-name' does when it is taken
-  function newTab() {
+  // given a file, as :tabedit is, that file is opened instead
+  function newTab(file) {
+    const base = file ? file.split("/").pop() || file : "untitled";
     const taken = new Set(MOCK_BUFFERS.map((b) => b.name));
-    let name = "untitled";
-    for (let n = 2; taken.has(name); n++) name = `untitled<${n}>`;
+    let name = base;
+    for (let n = 2; taken.has(name); n++) name = `${base}<${n}>`;
     const id = Math.max(...MOCK_BUFFERS.map((b) => b.id)) + 1;
     MOCK_BUFFERS.push({
       id,
@@ -1369,6 +1375,135 @@ Close every tab of the selected window except the current one.`,
     renderAll();
   }
 
+  // mirror of `bufferline-evil--go-to'
+  function evilGoTo(n) {
+    const tabs = getPreparedBuffers();
+    if (n < 1 || n > tabs.length) {
+      state.echo = `No tab ${n}`;
+      return;
+    }
+    state.activeBufferId = tabs[n - 1].id;
+    state.echo = "";
+  }
+
+  // mirror of `bufferline-evil-tab-next'
+  function evilTabNext(count) {
+    if (count) evilGoTo(count);
+    else cycleBuffer(1);
+  }
+
+  // mirror of `bufferline-evil-tab-previous'
+  function evilTabPrevious(count) {
+    for (let i = 0; i < Math.max(1, count || 1); i++) cycleBuffer(-1);
+  }
+
+  // mirror of `bufferline-evil--move-index'
+  function evilMoveIndex(arg, pos, count) {
+    const last = count - 1;
+    if (!arg || arg === "$") return last;
+    const relative = arg.match(/^([-+])(\d*)$/);
+    if (relative) {
+      const n = relative[2] === "" ? 1 : parseInt(relative[2], 10);
+      return Math.max(
+        0,
+        Math.min(last, relative[1] === "+" ? pos + n : pos - n),
+      );
+    }
+    if (/^\d+$/.test(arg)) {
+      const n = Math.min(parseInt(arg, 10), count);
+      return Math.max(0, pos < n ? n - 1 : n);
+    }
+    return null;
+  }
+
+  // mirror of `bufferline-evil-tab-move'
+  function evilTabMove(arg) {
+    const tabs = getPreparedBuffers();
+    const pos = tabs.findIndex((b) => b.id === state.activeBufferId);
+    const index = evilMoveIndex(arg, pos, tabs.length);
+    if (index === null) {
+      state.echo = `Invalid argument: ${arg}`;
+      return;
+    }
+    moveTabTo(state.activeBufferId, tabs[index].id);
+  }
+
+  // the Ex commands of `bufferline-evil--ex-commands': the mandatory part
+  // of each name, the optional rest, and what it runs given its argument
+  const EVIL_EX_COMMANDS = [
+    ["tabn", "ext", (arg) => evilTabNext(parseInt(arg, 10) || null)],
+    ["tabp", "revious", (arg) => evilTabPrevious(parseInt(arg, 10) || null)],
+    ["tabN", "ext", (arg) => evilTabPrevious(parseInt(arg, 10) || null)],
+    ["tabfir", "st", () => evilGoTo(1)],
+    ["tabr", "ewind", () => evilGoTo(1)],
+    ["tabl", "ast", () => evilGoTo(getPreparedBuffers().length)],
+    ["tabc", "lose", () => closeTab(state.activeBufferId)],
+    [
+      "tabo",
+      "nly",
+      () =>
+        closeBuffers(
+          getPreparedBuffers().filter((b) => b.id !== state.activeBufferId),
+        ),
+    ],
+    ["tabm", "ove", (arg) => evilTabMove(arg)],
+    ["tabnew", "", (arg) => newTab(arg)],
+    ["tabe", "dit", (arg) => newTab(arg)],
+  ];
+
+  function runEx(line) {
+    const [, name, arg] = line.trim().match(/^(\S*)\s*(.*)$/);
+    const command = EVIL_EX_COMMANDS.find(
+      ([mandatory, optional]) =>
+        name.startsWith(mandatory) && (mandatory + optional).startsWith(name),
+    );
+    state.echo = "";
+    if (command) command[2](arg || null);
+    else if (name) state.echo = `Unknown command: ${name}`;
+  }
+
+  // gt and gT with a count, and : for the Ex line, as Evil reads them
+  function evilKey(e) {
+    if (state.ex !== null) {
+      e.preventDefault();
+      if (e.key === "Escape") state.ex = null;
+      else if (e.key === "Enter") {
+        const line = state.ex;
+        state.ex = null;
+        runEx(line);
+      } else if (e.key === "Backspace")
+        state.ex = state.ex === "" ? null : state.ex.slice(0, -1);
+      else if (e.key.length === 1) state.ex += e.key;
+      renderAll();
+      return true;
+    }
+    if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return false;
+    if (e.key === ":" && state.evilKeys === "") {
+      e.preventDefault();
+      state.ex = "";
+      state.echo = "";
+      renderAll();
+      return true;
+    }
+    const keys = state.evilKeys + e.key;
+    const match = keys.match(/^(\d*)(g?)([tT]?)$/);
+    // as in Vim, a count does not start with 0
+    if (!match || keys.startsWith("0")) {
+      state.evilKeys = "";
+      return false;
+    }
+    e.preventDefault();
+    if (match[3]) {
+      state.evilKeys = "";
+      const count = match[1] ? parseInt(match[1], 10) : null;
+      if (match[3] === "t") evilTabNext(count);
+      else evilTabPrevious(count);
+      state.pick = null;
+      renderAll();
+    } else state.evilKeys = keys;
+    return true;
+  }
+
   function renderMinibuffer() {
     DOM.commandStrip.querySelectorAll(".command-btn").forEach((btn) => {
       btn.classList.toggle(
@@ -1376,6 +1511,15 @@ Close every tab of the selected window except the current one.`,
         !!state.pick && btn.dataset.command === state.pick.kind,
       );
     });
+
+    if (state.ex !== null) {
+      DOM.emacsMinibuffer.textContent = `:${state.ex}`;
+      const cursor = document.createElement("span");
+      cursor.className = "mb-cursor";
+      cursor.textContent = " ";
+      DOM.emacsMinibuffer.appendChild(cursor);
+      return;
+    }
 
     if (!state.pick) {
       DOM.emacsMinibuffer.textContent = state.echo;
@@ -1549,7 +1693,12 @@ Close every tab of the selected window except the current one.`,
     }
 
     lines.push("  :config");
-    lines.push("  (global-bufferline-mode 1))");
+    if (state.evilMode) {
+      lines.push("  (global-bufferline-mode 1)");
+      lines.push("  (bufferline-evil-mode 1))");
+    } else {
+      lines.push("  (global-bufferline-mode 1))");
+    }
 
     DOM.codeSnippetOutput.textContent = lines.join("\n");
   }
@@ -1577,6 +1726,7 @@ Close every tab of the selected window except the current one.`,
         finishPick(e.key);
         return;
       }
+      if (state.evilMode && evilKey(e)) return;
       if (e.key === "Tab") {
         e.preventDefault();
         cycleBuffer(e.shiftKey ? -1 : 1);
@@ -1707,6 +1857,7 @@ Close every tab of the selected window except the current one.`,
       { el: DOM.showNewTabButton, prop: "showNewTabButton" },
       { el: DOM.showTabCount, prop: "showTabCount" },
       { el: DOM.showNavigation, prop: "showNavigation" },
+      { el: DOM.evilMode, prop: "evilMode" },
       { el: DOM.hideSingleTab, prop: "hideSingleTab" },
     ];
 

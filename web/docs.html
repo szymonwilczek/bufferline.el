@@ -545,6 +545,11 @@
               <code>bufferline-show-navigation-buttons</code>.
             </li>
             <li>
+              <code>bufferline-evil-mode</code>: Point Evil's gt, gT and
+              <code>:tab</code> Ex commands at bufferline tabs; see KEYBINDINGS
+              INTEGRATION.
+            </li>
+            <li>
               <code>bufferline-close-tab</code>: Close current or specified
               buffer without altering window split layout.
             </li>
@@ -747,6 +752,61 @@
       <section class="section">
         <div class="section-header">
           <span class="section-title">KEYBINDINGS INTEGRATION</span>
+        </div>
+
+        <div class="doc-card">
+          <h3 class="doc-card-title">Vim Tab Keys and Ex Commands</h3>
+          <ul class="doc-list">
+            <li>
+              <code>bufferline-evil-mode</code> points Evil's Vim tab page keys
+              and Ex commands at bufferline tabs instead of
+              <code>tab-bar</code> tabs. It is off by default and loads Evil
+              when turned on, so bufferline itself never depends on it. Turning
+              it off brings back what those keys and commands did before, unless
+              they were rebound in the meantime.
+            </li>
+          </ul>
+          <pre class="doc-code"><code>(use-package bufferline
+  :after evil
+  :config
+  (global-bufferline-mode 1)
+  (bufferline-evil-mode 1))</code></pre>
+          <ul class="doc-list">
+            <li>
+              <code>gt</code>: Next tab, cyclically; <code>N gt</code> goes to
+              tab N.
+            </li>
+            <li>
+              <code>gT</code>: Previous tab, cyclically; <code>N gT</code> goes
+              N tabs back.
+            </li>
+            <li>
+              <code>:tabn[ext] [N]</code>: Next tab, or tab N.
+              <code>:tabp[revious] [N]</code> and <code>:tabN[ext] [N]</code> go
+              N tabs back.
+            </li>
+            <li>
+              <code>:tabfir[st]</code>, <code>:tabr[ewind]</code>: First tab.
+              <code>:tabl[ast]</code>: Last tab.
+            </li>
+            <li>
+              <code>:tabc[lose]</code>: Close the current tab.
+              <code>:tabo[nly]</code>: Close the other tabs, sparing pinned ones
+              while <code>bufferline-close-keep-pinned</code> is non-nil.
+            </li>
+            <li>
+              <code>:tabm[ove] [N]</code>: Move the current tab last without an
+              argument, first with <code>0</code>, after tab N with
+              <code>N</code>, and by N places with <code>+N</code> or
+              <code>-N</code> (FIFO sort order only, pinned tabs stay ahead of
+              unpinned ones).
+            </li>
+            <li>
+              <code>:tabnew [FILE]</code>, <code>:tabe[dit] [FILE]</code>: Open
+              FILE, or an empty untitled buffer through
+              <code>bufferline-new-tab</code>.
+            </li>
+          </ul>
         </div>
 
         <div class="docs-grid">

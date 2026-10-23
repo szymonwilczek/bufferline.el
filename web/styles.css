@@ -522,6 +522,10 @@ html, body {
     color: var(--emacs-keyword);
 }
 
+.emacs-minibuffer .mb-cursor {
+    background-color: var(--emacs-fg);
+}
+
 .emacs-minibuffer .mb-key {
     color: var(--emacs-warning);
     font-weight: bold;
