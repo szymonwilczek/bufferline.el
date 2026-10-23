@@ -235,6 +235,41 @@
                 </td>
               </tr>
               <tr>
+                <td><code>bufferline-show-new-tab-button</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">nil</td>
+                <td>
+                  Draw a new tab button after the last tab. Clicking it selects
+                  the clicked window and calls
+                  <code>bufferline-new-tab-function</code> there.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-new-tab-icon</code></td>
+                <td class="type-col">string</td>
+                <td class="default-col">"󰐕"</td>
+                <td>Glyph drawn as the new tab button.</td>
+              </tr>
+              <tr>
+                <td><code>bufferline-new-tab-hover-face</code></td>
+                <td class="type-col">face</td>
+                <td class="default-col">'font-lock-keyword-face</td>
+                <td>
+                  Face whose foreground colors the new tab button under the
+                  mouse.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-new-tab-function</code></td>
+                <td class="type-col">function</td>
+                <td class="default-col">'bufferline-new-tab</td>
+                <td>
+                  Function the new tab button calls, interactively when it is a
+                  command. Set it to <code>find-file</code> or
+                  <code>switch-to-buffer</code> to be asked what to open.
+                </td>
+              </tr>
+              <tr>
                 <td><code>bufferline-pinned-icon</code></td>
                 <td class="type-col">string</td>
                 <td class="default-col">""</td>
@@ -460,6 +495,18 @@
               <code>bufferline-close-tab-at-click</code>: Close the tab whose
               close button was clicked; bound to mouse-1 on the button drawn by
               <code>bufferline-show-tab-close-icon</code>.
+            </li>
+            <li>
+              <code>bufferline-new-tab</code>: Open a new empty buffer named
+              untitled (numbered when the name is taken) as a new tab in the
+              selected window.
+            </li>
+            <li>
+              <code>bufferline-new-tab-at-click</code>: Select the window whose
+              new tab button was clicked and call
+              <code>bufferline-new-tab-function</code> there; bound to mouse-1
+              on the button drawn by
+              <code>bufferline-show-new-tab-button</code>.
             </li>
             <li>
               <code>bufferline-close-other-tabs</code>: Close every tab of the

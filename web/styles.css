@@ -445,6 +445,23 @@ html, body {
     margin: 0 var(--sp);
 }
 
+.tab-new-button {
+    font-family: var(--font-icons);
+    display: inline-flex;
+    align-items: center;
+    align-self: stretch;
+    padding: 0 var(--sp);
+    background-color: var(--emacs-bg-alt);
+    color: var(--emacs-comment);
+    cursor: pointer;
+    user-select: none;
+}
+
+.tab-new-button:hover {
+    color: var(--emacs-keyword);
+    font-weight: bold;
+}
+
 .emacs-body {
     display: flex;
     min-height: 240px;

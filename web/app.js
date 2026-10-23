@@ -484,6 +484,7 @@ Close every tab of the selected window except the current one.`,
     closeKeepPinned: true,
     pickInPlace: true,
     closeIcon: "none",
+    showNewTabButton: false,
     hideSingleTab: false,
     hideInExcluded: "none",
     hideModes: "dired-mode magit-mode",
@@ -557,6 +558,7 @@ Close every tab of the selected window except the current one.`,
     showTruncMarkers: document.getElementById("showTruncMarkers"),
     showSpecialBuffers: document.getElementById("showSpecialBuffers"),
     closeKeepPinned: document.getElementById("closeKeepPinned"),
+    showNewTabButton: document.getElementById("showNewTabButton"),
     pickInPlace: document.getElementById("pickInPlace"),
 
     // tab line visibility
@@ -804,12 +806,18 @@ Close every tab of the selected window except the current one.`,
     return Math.max(8, w);
   }
 
+  // mirror of `bufferline-buffers-tail-width'
+  function tailWidth() {
+    return state.showNewTabButton ? 3 : 0;
+  }
+
   function computeVisibleTabs(allBuffers) {
     const containerWidth = DOM.bufferlineContainer.clientWidth || 800;
     const charPx = 9.2; // approx monospace char width at 15px
     const availChars = Math.max(
       20,
-      Math.floor((containerWidth - state.leftMargin - 20) / charPx),
+      Math.floor((containerWidth - state.leftMargin - 20) / charPx) -
+        tailWidth(),
     );
 
     if (!state.showTruncMarkers || allBuffers.length <= 1) {
@@ -1155,6 +1163,45 @@ Close every tab of the selected window except the current one.`,
       rightMarker.addEventListener("click", () => cycleBuffer(1));
       DOM.bufferlineBar.appendChild(rightMarker);
     }
+
+    // mirror of `bufferline-ui--new-tab-button'
+    if (state.showNewTabButton && visible.length > 0) {
+      const newTabButton = document.createElement("div");
+      newTabButton.className = "tab-new-button";
+      newTabButton.title = "New tab";
+      newTabButton.textContent = "󰐕";
+      newTabButton.addEventListener("click", () => {
+        state.pick = null;
+        newTab();
+        renderAll();
+      });
+      DOM.bufferlineBar.appendChild(newTabButton);
+    }
+  }
+
+  // mirror of `bufferline-new-tab': an empty buffer named untitled,
+  // numbered the way `generate-new-buffer-name' does when it is taken
+  function newTab() {
+    const taken = new Set(MOCK_BUFFERS.map((b) => b.name));
+    let name = "untitled";
+    for (let n = 2; taken.has(name); n++) name = `untitled<${n}>`;
+    const id = Math.max(...MOCK_BUFFERS.map((b) => b.id)) + 1;
+    MOCK_BUFFERS.push({
+      id,
+      name,
+      dir: "~/",
+      pinned: false,
+      modified: false,
+      readOnly: false,
+      untitled: true,
+      icon: "",
+      iconColor: "#b0bec5",
+      mode: "fundamental",
+      size: "0B",
+      code: "",
+    });
+    state.activeBufferId = id;
+    state.echo = "";
   }
 
   function cycleBuffer(direction) {
@@ -1270,6 +1317,8 @@ Close every tab of the selected window except the current one.`,
       state.closedIds.clear();
       state.openedIds.clear();
       state.tabOrder = {};
+      for (let i = MOCK_BUFFERS.length - 1; i >= 0; i--)
+        if (MOCK_BUFFERS[i].untitled) MOCK_BUFFERS.splice(i, 1);
       state.echo = "";
     }
     if (command !== "pick" && command !== "pick-close") state.pick = null;
@@ -1404,6 +1453,8 @@ Close every tab of the selected window except the current one.`,
       customLines.push("  (bufferline-show-tab-close-icon t)");
     if (state.closeIcon === "active")
       customLines.push("  (bufferline-show-tab-close-icon 'active)");
+    if (state.showNewTabButton)
+      customLines.push("  (bufferline-show-new-tab-button t)");
     if (state.diagHighlight !== "none")
       customLines.push(
         `  (bufferline-diagnostics-highlight '${state.diagHighlight})`,
@@ -1606,6 +1657,7 @@ Close every tab of the selected window except the current one.`,
       { el: DOM.showSpecialBuffers, prop: "showSpecialBuffers" },
       { el: DOM.closeKeepPinned, prop: "closeKeepPinned" },
       { el: DOM.pickInPlace, prop: "pickInPlace" },
+      { el: DOM.showNewTabButton, prop: "showNewTabButton" },
       { el: DOM.hideSingleTab, prop: "hideSingleTab" },
     ];
 
