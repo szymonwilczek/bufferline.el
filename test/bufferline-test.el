@@ -836,6 +836,156 @@ The badge is the only text drawn on the color of `bufferline-pick-face'."
      ;; the tab keeps its icon, the letter belongs to the window
      (should-not letter))))
 
+(defun bufferline-test--window-overlays (window)
+  "Return the window pick letters drawn in overlays in WINDOW's buffer."
+  (with-current-buffer (window-buffer window)
+    (delq nil
+          (mapcar (lambda (ov)
+                    (when (eq (overlay-get ov 'bufferline-pick-window) window)
+                      (should (eq (overlay-get ov 'window) window))
+                      (let ((string (overlay-get ov 'before-string)))
+                        (string-match "\\S-" (substring-no-properties string 1))
+                        (aref string (1+ (match-beginning 0))))))
+                  (overlays-in (point-min) (point-max))))))
+
+(defmacro bufferline-test-with-tab-lines (&rest body)
+  "Run BODY as if bufferline drew a tab line in every window."
+  (declare (indent 0) (debug t))
+  `(cl-letf (((symbol-function 'bufferline-pick--tab-line-drawn-p) #'always))
+     ,@body))
+
+(ert-deftest bufferline-test-pick-window-style-default ()
+  (should (eq (default-value 'bufferline-pick-window-style) 'both)))
+
+(ert-deftest bufferline-test-pick-window-style-both ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-pick-window-style 'both)
+          overlays badge)
+     (bufferline-test--show right b)
+     (select-window left)
+     (bufferline-test-with-tab-lines
+      (bufferline-test-with-keys
+       (list (lambda (_prompt)
+               (setq overlays (bufferline-test--window-overlays right)
+                     badge (bufferline-test--window-badge (bufferline-test--render right b)))
+               ?q))
+       (bufferline-pick-read-window "To window: ")))
+     (should (equal overlays '(?s)))
+     (should (eq badge ?s))
+     (should-not (bufferline-test--window-overlays right)))))
+
+(ert-deftest bufferline-test-pick-window-style-tab-line ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-pick-window-style 'tab-line)
+          overlays badge)
+     (bufferline-test--show right b)
+     (select-window left)
+     (bufferline-test-with-tab-lines
+      (bufferline-test-with-keys
+       (list (lambda (_prompt)
+               (setq overlays (bufferline-test--window-overlays right)
+                     badge (bufferline-test--window-badge (bufferline-test--render right b)))
+               ?q))
+       (bufferline-pick-read-window "To window: ")))
+     (should-not overlays)
+     (should (eq badge ?s)))))
+
+(ert-deftest bufferline-test-pick-window-style-overlay ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-pick-window-style 'overlay)
+          overlays badge)
+     (bufferline-test--show right b)
+     (select-window left)
+     (bufferline-test-with-tab-lines
+      (bufferline-test-with-keys
+       (list (lambda (_prompt)
+               (setq overlays (bufferline-test--window-overlays right)
+                     badge (bufferline-test--window-badge (bufferline-test--render right b)))
+               ?q))
+       (bufferline-pick-read-window "To window: ")))
+     (should (equal overlays '(?s)))
+     (should-not badge))))
+
+(ert-deftest bufferline-test-pick-window-overlay-without-tab-line ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-pick-window-style 'tab-line)
+          overlays)
+     (bufferline-test--show right b)
+     (set-window-parameter right 'tab-line-format 'none)
+     (select-window left)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq overlays (bufferline-test--window-overlays right))
+              ?q))
+      (bufferline-pick-read-window "To window: "))
+     ;; the tab line cannot show the letter, so the window does
+     (should (equal overlays '(?s))))))
+
+(ert-deftest bufferline-test-pick-window-overlay-only-in-its-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (middle (split-window-right))
+          (right (split-window middle nil 'right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "as")
+          (bufferline-pick-window-style 'overlay)
+          overlays)
+     ;; both windows show the same buffer, each with its own letter
+     (bufferline-test--show middle b)
+     (bufferline-test--show right b)
+     (select-window left)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq overlays (list (bufferline-test--window-overlays middle)
+                                   (bufferline-test--window-overlays right)))
+              ?q))
+      (bufferline-pick-read-window "To window: "))
+     (should (equal overlays '((?a) (?s)))))))
+
+(ert-deftest bufferline-test-pick-window-overlay-goes-away-on-quit ()
+  (bufferline-test-with-frame
+   (let* ((right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-window-style 'overlay))
+     (bufferline-test--show right b)
+     (select-window (frame-first-window))
+     (bufferline-test-with-keys (list (lambda (_prompt) (signal 'quit nil)))
+                                (condition-case nil
+                                    (bufferline-pick-read-window "To window: ")
+                                  (quit nil)))
+     (should-not (bufferline-test--window-overlays right)))))
+
+(ert-deftest bufferline-test-pick-window-no-overlay-in-minibuffer-pick ()
+  (bufferline-test-with-frame
+   (let* ((right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-in-place nil)
+          overlays)
+     (bufferline-test--show right b)
+     (select-window (frame-first-window))
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq overlays (bufferline-test--window-overlays right))
+              ?q))
+      (bufferline-pick-read-window "To window: "))
+     (should-not overlays))))
+
 ;;; Hiding the tab line
 
 (define-derived-mode bufferline-test-tool-mode special-mode "Tool"
