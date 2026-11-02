@@ -63,12 +63,26 @@ falling back to KEYWORD-COLOR."
               'face `(:foreground ,fg-comment :background ,bar-bg)
               'help-echo "Current tab and tab count"))
 
+(defun bufferline-ui--window-pick-badge (bar-bg keyword-color)
+  "Return the window pick letter badge of the selected window, or nil.
+The letter is drawn in BAR-BG on the color of `bufferline-pick-face',
+falling back to KEYWORD-COLOR, so it stands out from the tabs after it."
+  (let ((char (bufferline-pick-window-label (selected-window))))
+    (when char
+      (let ((pick-bg (bufferline-colors-safe (face-foreground bufferline-pick-face nil t)
+                                             keyword-color)))
+        (concat (propertize (format " %c " char)
+                            'face `(:foreground ,bar-bg :background ,pick-bg :weight bold)
+                            'help-echo "Window pick letter")
+                (propertize " " 'face `(:background ,bar-bg)))))))
+
 (defun bufferline-ui-tab-name-format (tab tabs)
   "Format the buffer of TAB, one of TABS, as its tab line string.
 The string holds icons, indicators, the disambiguating directory prefix
 and, on the first and last tab, the truncation markers.  The last tab
 also carries what is enabled after it: the navigation buttons, the tab
-counter and the new tab button."
+counter and the new tab button.  During a window pick, the first tab
+carries the letter of its window before everything else."
   (let* ((buffer (if (bufferp tab) tab (cdr (assq 'buffer tab))))
          (active (if (bufferp tab) (eq tab (current-buffer)) (cdr (assq 'selected tab))))
          (bg-face (if active 'tab-line-tab-current 'tab-line-tab-inactive))
@@ -200,6 +214,8 @@ counter and the new tab button."
          ;; truncation markers rendered on outer edges of first/last tab
          (is-first (eq buffer (car tabs)))
          (is-last (eq buffer (car (last tabs))))
+         (window-badge (when is-first
+                         (bufferline-ui--window-pick-badge bar-bg keyword-color)))
          (left-gap (when (and is-first (not (and (> (or bufferline-buffers--left-count 0) 0))) bufferline-left-margin)
                      (cond
                       ((and (integerp bufferline-left-margin) (> bufferline-left-margin 0))
@@ -260,7 +276,8 @@ counter and the new tab button."
                                    'mouse-face `(:foreground ,hover-fg :background ,bg-color :weight bold))
                              tab-str)))
 
-    (concat left-gap
+    (concat window-badge
+            left-gap
             left-marker
             tab-str
             right-marker
