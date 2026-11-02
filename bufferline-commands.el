@@ -233,25 +233,35 @@ renumbered, keeping the order numbers they already held."
 (defun bufferline-drag-tab (event)
   "Move the tab dragged with mouse EVENT to where it was dropped.
 A tab dropped on another tab of the same tab line takes its place, as
-with `bufferline-commands--move-tab-to'.  A tab dropped anywhere else
-stays where it was."
+with `bufferline-commands--move-tab-to'.  A tab dropped anywhere in another
+window of the same frame, on its tab line or its text, moves to that
+window as with `bufferline-move-tab-to-window', and focus follows it.
+A tab dropped anywhere else stays where it was."
   (interactive "e")
   (let* ((start (event-start event))
          (end (event-end event))
          (window (posn-window start))
+         (drop (posn-window end))
          (buffer (bufferline-commands--posn-tab start))
          (target (bufferline-commands--posn-tab end)))
     (when (and (buffer-live-p buffer)
-               (buffer-live-p target)
-               (not (eq buffer target))
-               (eq window (posn-window end))
                (window-live-p window))
-      (with-selected-window window
-        (when (and (memq buffer (bufferline-buffers-all))
-                   (memq target (bufferline-buffers-all)))
-          (bufferline-commands--move-tab-to buffer target))))))
+      (cond
+       ((eq window drop)
+        (when (and (buffer-live-p target)
+                   (not (eq buffer target)))
+          (with-selected-window window
+            (when (and (memq buffer (bufferline-buffers-all))
+                       (memq target (bufferline-buffers-all)))
+              (bufferline-commands--move-tab-to buffer target)))))
+       ((and (windowp drop)
+             (window-live-p drop)
+             (not (window-minibuffer-p drop))
+             (eq (window-frame drop) (window-frame window)))
+        (select-window window)
+        (when (memq buffer (bufferline-buffers-all))
+          (bufferline-commands--move-to-window drop buffer)))))))
 
-;;;###autoload
 (defun bufferline-swap-tab ()
   "Swap the current tab with another one picked by its letter."
   (interactive)
