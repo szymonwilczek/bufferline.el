@@ -2842,6 +2842,55 @@ The tab is drawn by WINDOW's tab line."
            (evil-ex-define-cmd "tabc" tabc)
          (setq evil-ex-commands (assoc-delete-all "tabc" evil-ex-commands)))))))
 
+(defvar evil-window-map)
+
+(ert-deftest bufferline-test-evil-window-move-key ()
+  (bufferline-test-with-evil
+   (let ((m (lookup-key evil-window-map "m")))
+     (bufferline-evil-mode 1)
+     (should (eq (lookup-key evil-window-map "m") #'bufferline-move-tab-to-window))
+     ;; reached as C-w m from the motion state
+     (should (eq (lookup-key evil-motion-state-map (kbd "C-w m"))
+                 #'bufferline-move-tab-to-window))
+     (bufferline-evil-mode -1)
+     (should (eq (lookup-key evil-window-map "m") m)))))
+
+(ert-deftest bufferline-test-evil-window-move-key-enable-twice ()
+  (bufferline-test-with-evil
+   (let ((m (lookup-key evil-window-map "m")))
+     (bufferline-evil-mode 1)
+     (bufferline-evil-mode 1)
+     (bufferline-evil-mode -1)
+     (should (eq (lookup-key evil-window-map "m") m)))))
+
+(ert-deftest bufferline-test-evil-window-move-key-keeps-later-binding ()
+  (bufferline-test-with-evil
+   (let ((m (lookup-key evil-window-map "m")))
+     (unwind-protect
+         (progn
+           (bufferline-evil-mode 1)
+           (define-key evil-window-map "m" #'ignore)
+           (bufferline-evil-mode -1)
+           (should (eq (lookup-key evil-window-map "m") #'ignore)))
+       (define-key evil-window-map "m" m)))))
+
+(ert-deftest bufferline-test-evil-window-move-key-moves-tab ()
+  (bufferline-test-with-evil
+   (bufferline-test-with-frame
+    (let* ((left (selected-window))
+           (right (split-window-right))
+           (a (bufferline-test--buffer "a"))
+           (b (bufferline-test--buffer "b"))
+           (c (bufferline-test--buffer "c"))
+           (bufferline-move-tab-split-keys nil))
+      (bufferline-test--show right c)
+      (bufferline-test--show left b a)
+      (bufferline-evil-mode 1)
+      (let ((current-prefix-arg nil))
+        (call-interactively (lookup-key evil-window-map "m")))
+      (should (eq (selected-window) right))
+      (should (equal (bufferline-test--tabs right) (list c a)))))))
+
 (ert-deftest bufferline-test-evil-without-evil ()
   (cl-letf* ((require-orig (symbol-function 'require))
              ((symbol-function 'require)
