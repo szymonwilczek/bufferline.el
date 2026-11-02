@@ -2413,6 +2413,73 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      (should (eq (selected-window) win))
      (should (equal (bufferline-test--tabs win) (list a b))))))
 
+(ert-deftest bufferline-test-drag-to-first-tab-of-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d"))
+          (e (bufferline-test--buffer "e")))
+     (bufferline-test--show right c d e)
+     (bufferline-test--show left a b)
+     (bufferline-test--drag (bufferline-test--tab-posn left a)
+                            (bufferline-test--tab-posn right c))
+     (should (equal (bufferline-test--tabs right) (list a c d e)))
+     (should (eq (window-buffer right) a)))))
+
+(ert-deftest bufferline-test-drag-to-other-window-place-sticks ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left a b)
+     (bufferline-test--drag (bufferline-test--tab-posn left a)
+                            (bufferline-test--tab-posn right d))
+     (should (equal (bufferline-test--tabs right) (list c a d)))
+     ;; the dropped tab keeps its place once the tab it took it from leaves
+     (bufferline-test--show left b c)
+     (should (equal (bufferline-test--tabs right) (list a d))))))
+
+(ert-deftest bufferline-test-drag-to-other-window-pinned-tab ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right c d)
+     (bufferline-state-toggle-pin c)
+     (bufferline-test--show left a b)
+     ;; an unpinned tab may not go ahead of a pinned one, so it stays last
+     (bufferline-test--drag (bufferline-test--tab-posn left a)
+                            (bufferline-test--tab-posn right c))
+     (should (eq (selected-window) right))
+     (should (equal (bufferline-test--tabs right) (list c d a))))))
+
+(ert-deftest bufferline-test-drag-to-other-window-not-fifo ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (z (bufferline-test--buffer "z"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d"))
+          (bufferline-sort-by 'name))
+     (bufferline-test--show right c d)
+     (bufferline-test--show left z b)
+     (bufferline-test--drag (bufferline-test--tab-posn left z)
+                            (bufferline-test--tab-posn right c))
+     ;; the tab still moves, sorted among the others
+     (should (eq (selected-window) right))
+     (should (equal (bufferline-test--tabs right) (list c d z))))))
+
 (ert-deftest bufferline-test-drag-in-other-window ()
   (bufferline-test-with-frame
    (let* ((left (selected-window))
