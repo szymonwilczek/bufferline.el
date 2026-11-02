@@ -80,8 +80,52 @@ Return the chosen live buffer, or nil when the key matches no tab."
   "Alist of (WINDOW . CHAR) drawn on the windows during a window pick.")
 
 (defun bufferline-pick-window-label (window)
-  "Return the letter to draw on WINDOW during a window pick, or nil."
-  (cdr (assq window bufferline-pick--window-labels)))
+  "Return the letter to draw on the tab line of WINDOW, or nil.
+A letter is returned only during an in-place window pick, and only when
+`bufferline-pick-window-style' draws letters on tab lines."
+  (and (memq bufferline-pick-window-style '(tab-line both))
+       (cdr (assq window bufferline-pick--window-labels))))
+
+(defun bufferline-pick--tab-line-drawn-p (window)
+  "Return non-nil if bufferline draws a tab line with tabs in WINDOW.
+That is not so when the tab line is hidden or replaced through the
+`tab-line-format' window parameter, when the buffer of WINDOW has no
+tab line, or when WINDOW has no tabs to draw."
+  (and (null (window-parameter window 'tab-line-format))
+       (buffer-local-value 'tab-line-format (window-buffer window))
+       (with-selected-window window
+         (bufferline-buffers-all))
+       t))
+
+(defun bufferline-pick--overlay-p (window)
+  "Return non-nil if the window pick letter of WINDOW goes in an overlay."
+  (or (memq bufferline-pick-window-style '(overlay both))
+      (not (bufferline-pick-window-label window))
+      (not (bufferline-pick--tab-line-drawn-p window))))
+
+(defun bufferline-pick--window-overlay (window char)
+  "Return an overlay drawing CHAR large at the top of WINDOW.
+The overlay shows only in WINDOW, even when its buffer is shown in other
+windows as well, and pushes the text down while it lasts."
+  (let* ((start (window-start window))
+         (ov (make-overlay start start (window-buffer window)))
+         (bar-bg (or (face-background 'tab-line nil t)
+                     (face-background 'default nil t)
+                     "black"))
+         (pick-bg (or (face-foreground bufferline-pick-face nil t)
+                      (face-foreground 'default nil t)
+                      "white")))
+    (overlay-put ov 'window window)
+    (overlay-put ov 'priority 1000)
+    (overlay-put ov 'bufferline-pick-window window)
+    (overlay-put ov 'before-string
+                 (concat "\n"
+                         (propertize " " 'display '(space :align-to (- center 3)))
+                         (propertize (format " %c " char)
+                                     'face `(:foreground ,bar-bg :background ,pick-bg
+                                                         :weight bold :height 3.0))
+                         "\n\n"))
+    ov))
 
 (defun bufferline-pick--windows ()
   "Return the windows of the selected frame a tab can be moved to.
@@ -96,7 +140,8 @@ selected window and every window dedicated to its buffer."
   "Read a key with PROMPT, showing the letters of ITEMS.
 ITEMS is an alist of (CHAR . WINDOW).  The letters go into the prompt,
 naming the buffer each window shows, or, when `bufferline-pick-in-place'
-is non-nil, onto the windows themselves."
+is non-nil, onto the windows themselves, where
+`bufferline-pick-window-style' says."
   (if (not bufferline-pick-in-place)
       (read-key (concat prompt
                         (mapconcat (lambda (pair)
@@ -105,12 +150,17 @@ is non-nil, onto the windows themselves."
                                    items
                                    "  ")
                         " "))
-    (unwind-protect
-        (let ((bufferline-pick--window-labels
-               (mapcar (lambda (pair) (cons (cdr pair) (car pair))) items)))
-          (bufferline-pick--redraw)
-          (read-key prompt))
-      (bufferline-pick--redraw))))
+    (let (overlays)
+      (unwind-protect
+          (let ((bufferline-pick--window-labels
+                 (mapcar (lambda (pair) (cons (cdr pair) (car pair))) items)))
+            (dolist (pair items)
+              (when (bufferline-pick--overlay-p (cdr pair))
+                (push (bufferline-pick--window-overlay (cdr pair) (car pair)) overlays)))
+            (bufferline-pick--redraw)
+            (read-key prompt))
+        (mapc #'delete-overlay overlays)
+        (bufferline-pick--redraw)))))
 
 (defun bufferline-pick-read-window (prompt &optional windows)
   "Ask for one of WINDOWS by its assigned letter with PROMPT.

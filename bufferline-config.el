@@ -408,6 +408,18 @@ tab name in the minibuffer prompt."
   :type 'boolean
   :group 'bufferline)
 
+(defcustom bufferline-pick-window-style 'both
+  "Where in-place window pick letters are drawn.
+`tab-line' draws the letter of a window as a badge at the start of its
+tab line, `overlay' draws it large at the top of the window's text, and
+`both' does both.  A window whose tab line bufferline does not draw,
+such as one where it is hidden, always gets the large letter.  Only
+used while `bufferline-pick-in-place' is non-nil."
+  :type '(choice (const :tag "Badge on the tab line" tab-line)
+                 (const :tag "Large letter in the window" overlay)
+                 (const :tag "Both" both))
+  :group 'bufferline)
+
 (defcustom bufferline-pick-face 'error
   "Face used to resolve the foreground color of in-place pick letters."
   :type 'face
