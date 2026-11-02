@@ -10,7 +10,9 @@
 ;; `bufferline-evil-mode' points the Vim tab page keys and Ex commands
 ;; of Evil at bufferline tabs instead of `tab-bar' tabs: gt and gT, and
 ;; :tabnext, :tabprevious, :tabfirst, :tablast, :tabclose, :tabonly,
-;; :tabmove, :tabnew and :tabedit with their abbreviations.
+;; :tabmove, :tabnew and :tabedit with their abbreviations.  It also
+;; binds C-w m, next to Evil's window keys, to move the current tab to
+;; another window picked by its letter.
 ;; Evil is loaded when the mode is turned on, so bufferline does not
 ;; depend on it.
 
@@ -22,6 +24,7 @@
 (require 'bufferline-commands)
 
 (defvar evil-motion-state-map)
+(defvar evil-window-map)
 (defvar evil-ex-commands)
 (defvar evil-ex-argument)
 
@@ -31,6 +34,10 @@
   '(("gt" . bufferline-evil-tab-next)
     ("gT" . bufferline-evil-tab-previous))
   "Motion state keys `bufferline-evil-mode' binds.")
+
+(defconst bufferline-evil--window-keys
+  '(("m" . bufferline-move-tab-to-window))
+  "Keys `bufferline-evil-mode' binds in `evil-window-map', after C-w.")
 
 (defconst bufferline-evil--ex-commands
   '(("tabn[ext]" . bufferline-evil-tab-next)
@@ -48,8 +55,9 @@
 
 (defvar bufferline-evil--saved nil
   "Bindings `bufferline-evil-mode' replaced, restored when it is turned off.
-Each element is (KIND NAME . PREVIOUS), where KIND is `key' or `ex',
-NAME the key or Ex command name and PREVIOUS the list of what it was
+Each element is (KIND NAME . PREVIOUS), where KIND is `key' for a motion
+state key, `window-key' for a key of `evil-window-map' or `ex', NAME the
+key or Ex command name and PREVIOUS the list of what it was
 bound to before, empty when it was unbound.")
 
 (defun bufferline-evil--argument ()
@@ -173,6 +181,11 @@ The empty buffer comes from `bufferline-new-tab'."
       (push (cons 'key (cons key (and previous (not (numberp previous)) (list previous))))
             bufferline-evil--saved))
     (define-key evil-motion-state-map key command))
+  (pcase-dolist (`(,key . ,command) bufferline-evil--window-keys)
+    (let ((previous (lookup-key evil-window-map key)))
+      (push (cons 'window-key (cons key (and previous (not (numberp previous)) (list previous))))
+            bufferline-evil--saved))
+    (define-key evil-window-map key command))
   (pcase-dolist (`(,spec . ,command) bufferline-evil--ex-commands)
     (dolist (name (bufferline-evil--ex-names spec))
       (let ((previous (assoc name evil-ex-commands)))
@@ -184,6 +197,7 @@ The empty buffer comes from `bufferline-new-tab'."
   "Return non-nil if DEFINITION is one `bufferline-evil-mode' binds."
   (and (symbolp definition)
        (or (rassq definition bufferline-evil--keys)
+           (rassq definition bufferline-evil--window-keys)
            (rassq definition bufferline-evil--ex-commands))))
 
 (defun bufferline-evil--disable ()
@@ -194,6 +208,9 @@ A key or command rebound since then is left as it is."
       ('key
        (when (bufferline-evil--ours-p (lookup-key evil-motion-state-map name))
          (define-key evil-motion-state-map name (car previous))))
+      ('window-key
+       (when (bufferline-evil--ours-p (lookup-key evil-window-map name))
+         (define-key evil-window-map name (car previous))))
       ('ex
        (when (bufferline-evil--ours-p (cdr (assoc name evil-ex-commands)))
          (if previous
@@ -216,6 +233,10 @@ window:
   :tabo[nly]          close the other tabs
   :tabm[ove] [N]      move the tab: last, first (0), after tab N, +N, -N
   :tabnew [FILE]      new tab, also :tabe[dit]
+
+C-w m moves the current tab to another window picked by its letter, as
+`bufferline-move-tab-to-window' does, and with a count picks the tab to
+move first.
 
 Turning it off brings back what those keys and commands did before.
 Evil is loaded when the mode is turned on."
