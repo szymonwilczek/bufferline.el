@@ -265,15 +265,16 @@ stays where it was."
        ((eq other buf) (message "That is the current tab"))
        (t (bufferline-commands--swap-order buf other))))))
 
-(defun bufferline-commands--move-to-window (target)
-  "Move the current tab to window TARGET and follow it there.
-The tab joins the end of TARGET's tabs.  When it was the last tab of its
-window, that window is closed once the tab has moved."
-  (let* ((buf (current-buffer))
+(defun bufferline-commands--move-to-window (target &optional buffer)
+  "Move the tab of BUFFER to window TARGET and follow it there.
+BUFFER defaults to the current buffer and must be a tab of the selected
+window.  The tab joins the end of TARGET's tabs.  When it was the last
+tab of its window, that window is closed once the tab has moved."
+  (let* ((buf (or buffer (current-buffer)))
          (source (selected-window))
          (tabs (bufferline-buffers-all)))
     (unless (memq buf tabs)
-      (user-error "Current buffer is not a tab"))
+      (user-error (if buffer "Buffer is not a tab here" "Current buffer is not a tab")))
     (when (eq target source)
       (user-error "The tab is already in that window"))
     (when (window-dedicated-p target)
@@ -282,7 +283,8 @@ window, that window is closed once the tab has moved."
       (when (and (null rest) (not (eq (window-deletable-p source) t)))
         (user-error "Cannot close this window after moving its last tab"))
       (when rest
-        (switch-to-buffer (car rest) nil t)
+        (when (eq (window-buffer source) buf)
+          (switch-to-buffer (car rest) nil t))
         (bufferline-buffers-forget buf source))
       (bufferline-state-move-to-end buf)
       (select-window target)
