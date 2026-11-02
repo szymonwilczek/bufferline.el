@@ -2144,6 +2144,60 @@ Errors and warnings are colored by faces batch Emacs can resolve."
                                 (should (eq (bufferline-pick-read-window "To window: " nil '((?x . "other")))
                                             ?x))))))
 
+(ert-deftest bufferline-test-move-picked-tab-to-picked-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d"))
+          (bufferline-pick-alphabet "asd")
+          (bufferline-pick-window-auto-select nil)
+          (bufferline-pick-in-place nil))
+     (bufferline-test--show right d)
+     (bufferline-test--show left a b c)
+     ;; first the tab, then the window
+     (bufferline-test-with-keys '(?s ?a)
+                                (bufferline-move-tab-to-window '(4))
+                                (should (equal (reverse bufferline-test--prompts)
+                                               '("Move tab: [a] a  [s] b  [d] c "
+                                                 "Move b to window: [a] d  [|] split right  [-] split below "))))
+     (should (eq (selected-window) right))
+     (should (equal (bufferline-test--tabs right) (list d b)))
+     (should (eq (window-buffer left) c))
+     (should (equal (bufferline-test--tabs left) (list a c))))))
+
+(ert-deftest bufferline-test-move-picked-tab-to-split ()
+  (bufferline-test-with-frame
+   (let* ((source (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "as"))
+     (bufferline-test--show source a b)
+     (bufferline-test-with-keys '(?a ?|)
+                                (bufferline-move-tab-to-window '(4)))
+     (should (eq (window-in-direction 'right source) (selected-window)))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a)))
+     (should (eq (window-buffer source) b))
+     (should (equal (bufferline-test--tabs source) (list b))))))
+
+(ert-deftest bufferline-test-move-picked-tab-cancelled ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "as"))
+     (ignore right)
+     (bufferline-test--show left a b)
+     (bufferline-test-with-keys '(?q)
+                                (should (equal (bufferline-move-tab-to-window '(4)) "Move cancelled"))
+                                ;; no window is asked for
+                                (should (equal (length bufferline-test--prompts) 1)))
+     (should (eq (selected-window) left))
+     (should (equal (bufferline-test--tabs left) (list a b))))))
+
 ;;; Dragging tabs
 
 (defun bufferline-test--tab-posn (window buffer)
