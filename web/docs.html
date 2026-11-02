@@ -472,10 +472,48 @@
                 <td class="default-col">t</td>
                 <td>
                   Draw pick letters on the tabs themselves, in place of their
-                  icons. Set to nil to list them in the minibuffer prompt
-                  instead. Applies to <code>bufferline-pick</code>,
-                  <code>bufferline-pick-close</code> and
-                  <code>bufferline-swap-tab</code>.
+                  icons, and window pick letters on the windows. Set to nil to
+                  list them in the minibuffer prompt instead. Applies to
+                  <code>bufferline-pick</code>,
+                  <code>bufferline-pick-close</code>,
+                  <code>bufferline-swap-tab</code> and
+                  <code>bufferline-move-tab-to-window</code>.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-pick-window-style</code></td>
+                <td class="type-col">symbol</td>
+                <td class="default-col">'both</td>
+                <td>
+                  Where in-place window pick letters go:
+                  <code>'tab-line</code> draws a badge at the start of the
+                  window's tab line, <code>'overlay</code> a large letter at the
+                  top of its text, and <code>'both</code> does both. A window
+                  without a tab line drawn by bufferline always gets the large
+                  letter.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-pick-window-auto-select</code></td>
+                <td class="type-col">boolean</td>
+                <td class="default-col">t</td>
+                <td>
+                  Move the tab without asking when
+                  <code>bufferline-move-tab-to-window</code> has a single
+                  choice, counting every split key it offers as one.
+                </td>
+              </tr>
+              <tr>
+                <td><code>bufferline-move-tab-split-keys</code></td>
+                <td class="type-col">alist</td>
+                <td class="default-col">'((?| . right) (?- . below))</td>
+                <td>
+                  Keys that, while a window is being picked, split the selected
+                  window on the given side (<code>right</code>,
+                  <code>below</code>, <code>left</code> or <code>above</code>)
+                  and move the tab to the new window. Not offered for the only
+                  tab of a window. Use characters outside of
+                  <code>bufferline-pick-alphabet</code>.
                 </td>
               </tr>
               <tr>
@@ -624,6 +662,13 @@
               tab to the window below and follow it there.
             </li>
             <li>
+              <code>bufferline-move-tab-to-window</code>: Move the current tab
+              to another window picked by its letter and follow it there, or
+              split off a new window for it with
+              <code>bufferline-move-tab-split-keys</code>. With a prefix
+              argument, pick the tab to move first.
+            </li>
+            <li>
               A tab moved to another window joins the end of its tabs. Moving
               the last tab of a split closes that split once the tab has moved.
             </li>
@@ -644,6 +689,58 @@
               key is awaited, and any key without a letter cancels the pick.
               With <code>bufferline-pick-in-place</code> set to nil the letters
               are listed with their tab names in the minibuffer instead.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <span class="section-title">MOVING TABS BETWEEN WINDOWS</span>
+        </div>
+
+        <div class="docs-grid">
+          <div class="doc-card">
+            <h3 class="doc-card-title">Pick the Window by Its Letter</h3>
+            <pre class="doc-code"><code>(keymap-global-set "C-c b m"
+                   #'bufferline-move-tab-to-window)</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Badges Only, Always Ask</h3>
+            <pre
+              class="doc-code"
+            ><code>(setq bufferline-pick-window-style 'tab-line
+      bufferline-pick-window-auto-select nil)</code></pre>
+          </div>
+
+          <div class="doc-card">
+            <h3 class="doc-card-title">Vim-Like Split Keys</h3>
+            <pre class="doc-code"><code>(setq bufferline-move-tab-split-keys
+      '((?v . right) (?S . below)))</code></pre>
+          </div>
+        </div>
+
+        <div class="doc-card">
+          <ul class="doc-list">
+            <li>
+              Every other window of the frame that is not dedicated to its
+              buffer gets a letter from <code>bufferline-pick-alphabet</code>,
+              in frame order from the top left. By default the letter shows both
+              as a badge leading the window's tab line and large at the top of
+              its text, and goes away as soon as a key is pressed.
+            </li>
+            <li>
+              <code>|</code> and <code>-</code> split the selected window to the
+              right or below and move the tab into the new window, so a lone
+              window can send a tab off as well. They are listed in the prompt
+              next to the letters.
+            </li>
+            <li>
+              The tab joins the end of the target's tabs and focus follows it.
+              When it was the last tab of its window, that window closes. With
+              <code>C-u</code>, the tab to move is picked first and the selected
+              window keeps showing its own buffer.
             </li>
           </ul>
         </div>
