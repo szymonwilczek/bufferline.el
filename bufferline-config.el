@@ -420,6 +420,13 @@ used while `bufferline-pick-in-place' is non-nil."
                  (const :tag "Both" both))
   :group 'bufferline)
 
+(defcustom bufferline-pick-window-auto-select t
+  "Whether a window pick with a single window to choose skips asking.
+When non-nil, `bufferline-move-tab-to-window' moves the tab straight to
+the only other window it can go to.  When nil, it asks even then."
+  :type 'boolean
+  :group 'bufferline)
+
 (defcustom bufferline-pick-face 'error
   "Face used to resolve the foreground color of in-place pick letters."
   :type 'face

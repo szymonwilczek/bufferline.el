@@ -331,6 +331,30 @@ DIRECTION is one of `left', `right', `above' or `below'.  See
   (bufferline-commands--move-in-direction 'below))
 
 ;;;###autoload
+(defun bufferline-move-tab-to-window ()
+  "Move the current tab to a window picked by its letter and follow it.
+Every other window of the frame that is not dedicated to its buffer gets
+a letter, as `bufferline-pick-window-style' draws it.  When only one
+window can be chosen and `bufferline-pick-window-auto-select' is
+non-nil, the tab moves there without asking."
+  (interactive)
+  (let ((buf (current-buffer))
+        (windows (bufferline-pick--windows)))
+    (unless (memq buf (bufferline-buffers-all))
+      (user-error "Current buffer is not a tab"))
+    (unless windows
+      (user-error "No other window to move the tab to"))
+    (let ((target (if (and bufferline-pick-window-auto-select
+                           (null (cdr windows)))
+                      (car windows)
+                    (bufferline-pick-read-window
+                     (format "Move %s to window: " (buffer-name buf))
+                     windows))))
+      (if target
+          (bufferline-commands--move-to-window target)
+        (message "Move cancelled")))))
+
+;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)
   "Toggle pinned status of current or specified BUFFER."
   (interactive)
