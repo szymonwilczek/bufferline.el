@@ -13,7 +13,8 @@
 (defun bufferline-pick--assign (buffers)
   "Pair BUFFERS with the letters of `bufferline-pick-alphabet' in order.
 Return an alist of (CHAR . BUFFER).  Buffers beyond the length of the
-alphabet get no letter and are left out."
+alphabet get no letter and are left out.  BUFFERS may as well be
+windows, giving an alist of (CHAR . WINDOW)."
   (let ((alphabet (string-to-list bufferline-pick-alphabet))
         items)
     (while (and buffers alphabet)
@@ -74,6 +75,52 @@ Return the chosen live buffer, or nil when the key matches no tab."
   (let ((items (bufferline-pick--assign (bufferline-buffers-get))))
     (when items
       (bufferline-pick--read prompt items))))
+
+(defvar bufferline-pick--window-labels nil
+  "Alist of (WINDOW . CHAR) drawn on the windows during a window pick.")
+
+(defun bufferline-pick-window-label (window)
+  "Return the letter to draw on WINDOW during a window pick, or nil."
+  (cdr (assq window bufferline-pick--window-labels)))
+
+(defun bufferline-pick--windows ()
+  "Return the windows of the selected frame a tab can be moved to.
+They come in frame order, from the top left one, and leave out the
+selected window and every window dedicated to its buffer."
+  (seq-remove (lambda (win)
+                (or (eq win (selected-window))
+                    (window-dedicated-p win)))
+              (window-list nil 'no-minibuf (frame-first-window))))
+
+(defun bufferline-pick--read-window-key (prompt items)
+  "Read a key with PROMPT, showing the letters of ITEMS.
+ITEMS is an alist of (CHAR . WINDOW).  The letters go into the prompt,
+naming the buffer each window shows, or, when `bufferline-pick-in-place'
+is non-nil, onto the windows themselves."
+  (if (not bufferline-pick-in-place)
+      (read-key (concat prompt
+                        (mapconcat (lambda (pair)
+                                     (format "[%c] %s" (car pair)
+                                             (buffer-name (window-buffer (cdr pair)))))
+                                   items
+                                   "  ")
+                        " "))
+    (unwind-protect
+        (let ((bufferline-pick--window-labels
+               (mapcar (lambda (pair) (cons (cdr pair) (car pair))) items)))
+          (bufferline-pick--redraw)
+          (read-key prompt))
+      (bufferline-pick--redraw))))
+
+(defun bufferline-pick-read-window (prompt &optional windows)
+  "Ask for one of WINDOWS by its assigned letter with PROMPT.
+WINDOWS defaults to `bufferline-pick--windows'.  Return the chosen live
+window, or nil when there is none to choose or the key matches no
+window."
+  (let ((items (bufferline-pick--assign (or windows (bufferline-pick--windows)))))
+    (when items
+      (let ((chosen (cdr (assoc (bufferline-pick--read-window-key prompt items) items))))
+        (and chosen (window-live-p chosen) chosen)))))
 
 ;;;###autoload
 (defun bufferline-pick ()
