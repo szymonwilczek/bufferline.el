@@ -2000,6 +2000,119 @@ Errors and warnings are colored by faces batch Emacs can resolve."
                                         :type 'user-error))
                     "Current buffer is not a tab")))))
 
+(ert-deftest bufferline-test-move-to-picked-window-split-keys-default ()
+  (should (equal (default-value 'bufferline-move-tab-split-keys)
+                 '((?| . right) (?- . below)))))
+
+(ert-deftest bufferline-test-move-to-picked-window-split ()
+  (dolist (spec '((?| right) (?- below)))
+    (bufferline-test-with-frame
+     (let* ((source (selected-window))
+            (a (bufferline-test--buffer "a"))
+            (b (bufferline-test--buffer "b"))
+            (bufferline-pick-in-place nil))
+       (bufferline-test--show source b a)
+       (bufferline-test-with-keys (list (car spec))
+                                  (bufferline-move-tab-to-window)
+                                  ;; a lone window offers only the splits
+                                  (should (equal bufferline-test--prompts
+                                                 '("Move a to window: [|] split right  [-] split below "))))
+       (let ((target (selected-window)))
+         (should-not (eq target source))
+         (should (eq (window-in-direction (nth 1 spec) source) target))
+         (should (equal (bufferline-test--tabs target) (list a)))
+         (should (equal (bufferline-test--tabs source) (list b))))))))
+
+(ert-deftest bufferline-test-move-to-picked-window-split-beside-windows ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-pick-alphabet "a"))
+     (bufferline-test--show right c)
+     (bufferline-test--show left b a)
+     (bufferline-test-with-keys '(?-)
+                                (bufferline-move-tab-to-window)
+                                ;; in place, the prompt still lists the splits
+                                (should (equal bufferline-test--prompts
+                                               '("Move a to window: [|] split right  [-] split below "))))
+     (should (eq (window-in-direction 'below left) (selected-window)))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a)))
+     (should (equal (bufferline-test--tabs right) (list c))))))
+
+(ert-deftest bufferline-test-move-to-picked-window-custom-split-keys ()
+  (bufferline-test-with-frame
+   (let* ((source (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-move-tab-split-keys '((?v . left) (?x . above)))
+          (bufferline-pick-in-place nil))
+     (bufferline-test--show source b a)
+     (bufferline-test-with-keys '(?x)
+                                (bufferline-move-tab-to-window)
+                                (should (equal bufferline-test--prompts
+                                               '("Move a to window: [v] split left  [x] split above "))))
+     (should (eq (window-in-direction 'above source) (selected-window))))))
+
+(ert-deftest bufferline-test-move-to-picked-window-only-tab-gets-no-split ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-pick-window-auto-select nil)
+          (bufferline-pick-in-place nil)
+          (bufferline-pick-alphabet "a"))
+     (bufferline-test--show right c)
+     (bufferline-test--show left a)
+     (bufferline-test-with-keys '(?|)
+                                (should (equal (bufferline-move-tab-to-window) "Move cancelled"))
+                                (should (equal bufferline-test--prompts '("Move a to window: [a] c "))))
+     (should (equal (length (window-list)) 2))
+     (should (eq (window-buffer left) a)))))
+
+(ert-deftest bufferline-test-move-to-picked-window-only-tab-alone ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-test-with-keys '(?|)
+                                (should-error (bufferline-move-tab-to-window) :type 'user-error)
+                                (should-not bufferline-test--prompts))
+     (should (equal (length (window-list)) 1)))))
+
+(ert-deftest bufferline-test-move-to-picked-window-auto-split ()
+  (bufferline-test-with-frame
+   (let* ((source (selected-window))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-move-tab-split-keys '((?| . right))))
+     (bufferline-test--show source b a)
+     ;; a lone window with a single split key has one choice
+     (bufferline-test-with-keys '()
+                                (bufferline-move-tab-to-window)
+                                (should-not bufferline-test--prompts))
+     (should (eq (window-in-direction 'right source) (selected-window)))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a))))))
+
+(ert-deftest bufferline-test-pick-read-window-letter-before-extra-key ()
+  (bufferline-test-with-frame
+   (let ((right (split-window-right))
+         (bufferline-pick-alphabet "|"))
+     (bufferline-test-with-keys '(?|)
+                                (should (eq (bufferline-pick-read-window "To window: " nil '((?| . "split")))
+                                            right))))))
+
+(ert-deftest bufferline-test-pick-read-window-extra-key ()
+  (bufferline-test-with-frame
+   (let ((right (split-window-right))
+         (bufferline-pick-alphabet "a"))
+     (ignore right)
+     (bufferline-test-with-keys '(?x)
+                                (should (eq (bufferline-pick-read-window "To window: " nil '((?x . "other")))
+                                            ?x))))))
+
 ;;; Dragging tabs
 
 (defun bufferline-test--tab-posn (window buffer)
