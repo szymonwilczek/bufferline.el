@@ -265,23 +265,19 @@ stays where it was."
        ((eq other buf) (message "That is the current tab"))
        (t (bufferline-commands--swap-order buf other))))))
 
-(defun bufferline-commands--move-to-window (direction)
-  "Move the current tab to the window in DIRECTION and follow it there.
-DIRECTION is one of `left', `right', `above' or `below'.  The tab joins
-the end of the target window's tabs.  When it was the last tab of its
+(defun bufferline-commands--move-to-window (target)
+  "Move the current tab to window TARGET and follow it there.
+The tab joins the end of TARGET's tabs.  When it was the last tab of its
 window, that window is closed once the tab has moved."
   (let* ((buf (current-buffer))
          (source (selected-window))
-         (tabs (bufferline-buffers-all))
-         (target (window-in-direction direction source)))
+         (tabs (bufferline-buffers-all)))
     (unless (memq buf tabs)
       (user-error "Current buffer is not a tab"))
-    (unless target
-      (user-error "No window %s" (if (memq direction '(left right))
-                                     (format "to the %s" direction)
-                                   direction)))
+    (when (eq target source)
+      (user-error "The tab is already in that window"))
     (when (window-dedicated-p target)
-      (user-error "Window %s is dedicated to its buffer" direction))
+      (user-error "That window is dedicated to its buffer"))
     (let ((rest (delq buf tabs)))
       (when (and (null rest) (not (eq (window-deletable-p source) t)))
         (user-error "Cannot close this window after moving its last tab"))
@@ -297,29 +293,42 @@ window, that window is closed once the tab has moved."
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
 
+(defun bufferline-commands--move-in-direction (direction)
+  "Move the current tab to the window in DIRECTION and follow it there.
+DIRECTION is one of `left', `right', `above' or `below'.  See
+`bufferline-commands--move-to-window'."
+  (let ((target (window-in-direction direction)))
+    (unless target
+      (user-error "No window %s" (if (memq direction '(left right))
+                                     (format "to the %s" direction)
+                                   direction)))
+    (when (window-dedicated-p target)
+      (user-error "Window %s is dedicated to its buffer" direction))
+    (bufferline-commands--move-to-window target)))
+
 ;;;###autoload
 (defun bufferline-move-tab-to-window-left ()
   "Move the current tab to the window on the left."
   (interactive)
-  (bufferline-commands--move-to-window 'left))
+  (bufferline-commands--move-in-direction 'left))
 
 ;;;###autoload
 (defun bufferline-move-tab-to-window-right ()
   "Move the current tab to the window on the right."
   (interactive)
-  (bufferline-commands--move-to-window 'right))
+  (bufferline-commands--move-in-direction 'right))
 
 ;;;###autoload
 (defun bufferline-move-tab-to-window-up ()
   "Move the current tab to the window above."
   (interactive)
-  (bufferline-commands--move-to-window 'above))
+  (bufferline-commands--move-in-direction 'above))
 
 ;;;###autoload
 (defun bufferline-move-tab-to-window-down ()
   "Move the current tab to the window below."
   (interactive)
-  (bufferline-commands--move-to-window 'below))
+  (bufferline-commands--move-in-direction 'below))
 
 ;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)
