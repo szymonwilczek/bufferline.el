@@ -25,13 +25,13 @@
 - Truncation to the window width, with markers counting the hidden tabs
 - Picking a tab by letter, drawn in place on the tabs, to switch to, close or swap it
 - Reordering tabs from the keyboard or by dragging them with the mouse
-- Moving tabs between windows
+- Moving tabs between windows: to the one in a direction, to one picked by its letter drawn in place on the windows, to a new split, or by dragging them onto it
 - Closing other tabs, or every tab to the left or right, sparing pinned ones
 - Optional tab numbers, close buttons, Flymake/Flycheck diagnostics badges and highlights
 - Optional new tab button, tab counter and previous/next tab buttons
 - Hiding the tab line when it holds a single tab or over excluded buffers
 - A custom filter deciding which buffers get a tab
-- =bufferline-evil-mode=: Vim's =gt=, =gT= and =:tab= Ex commands acting on bufferline tabs
+- =bufferline-evil-mode=: Vim's =gt=, =gT= and =:tab= Ex commands acting on bufferline tabs, and =C-w m= to move a tab to a picked window
 
 * Requirements
 
@@ -79,7 +79,7 @@
 
 * Evil
 
-=bufferline-evil-mode= points Evil's tab page keys and Ex commands at bufferline tabs instead of =tab-bar= tabs: =gt= and =gT= with Vim counts, =:tabnext=, =:tabprevious=, =:tabfirst=, =:tablast=, =:tabclose=, =:tabonly=, =:tabmove= and =:tabnew=. It is off by default and loads Evil only when turned on.
+=bufferline-evil-mode= points Evil's tab page keys and Ex commands at bufferline tabs instead of =tab-bar= tabs: =gt= and =gT= with Vim counts, =:tabnext=, =:tabprevious=, =:tabfirst=, =:tablast=, =:tabclose=, =:tabonly=, =:tabmove= and =:tabnew=, and adds =C-w m= to move the current tab to a window picked by its letter. It is off by default and loads Evil only when turned on.
 
 #+begin_src emacs-lisp
   (use-package bufferline
