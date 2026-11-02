@@ -864,10 +864,11 @@
             <li>
               <code>bufferline-evil-mode</code> points Evil's Vim tab page keys
               and Ex commands at bufferline tabs instead of
-              <code>tab-bar</code> tabs. It is off by default and loads Evil
-              when turned on, so bufferline itself never depends on it. Turning
-              it off brings back what those keys and commands did before, unless
-              they were rebound in the meantime.
+              <code>tab-bar</code> tabs, and adds <code>C-w m</code> to Evil's
+              window keys. It is off by default and loads Evil when turned on,
+              so bufferline itself never depends on it. Turning it off brings
+              back what those keys and commands did before, unless they were
+              rebound in the meantime.
             </li>
           </ul>
           <pre class="doc-code"><code>(use-package bufferline
@@ -909,6 +910,11 @@
               <code>:tabnew [FILE]</code>, <code>:tabe[dit] [FILE]</code>: Open
               FILE, or an empty untitled buffer through
               <code>bufferline-new-tab</code>.
+            </li>
+            <li>
+              <code>C-w m</code>: Move the current tab to another window picked
+              by its letter, as <code>bufferline-move-tab-to-window</code> does
+              (window, move); with a count, pick the tab to move first.
             </li>
           </ul>
         </div>
