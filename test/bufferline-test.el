@@ -1890,7 +1890,8 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      ;; the window two to the right, past the one in between
      (bufferline-test-with-keys '(?s)
                                 (bufferline-move-tab-to-window)
-                                (should (equal bufferline-test--prompts '("Move a to window: [a] c  [s] d "))))
+                                (should (equal bufferline-test--prompts
+                                               '("Move a to window: [a] c  [s] d  [|] split right  [-] split below "))))
      (should (eq (selected-window) right))
      (should (equal (bufferline-test--tabs right) (list d a)))
      (should (equal (bufferline-test--tabs middle) (list c)))
@@ -1936,6 +1937,7 @@ Errors and warnings are colored by faces batch Emacs can resolve."
           (a (bufferline-test--buffer "a"))
           (b (bufferline-test--buffer "b"))
           (c (bufferline-test--buffer "c"))
+          (bufferline-move-tab-split-keys nil)
           (bufferline-pick-window-auto-select t))
      (bufferline-test--show right c)
      (bufferline-test--show left b a)
@@ -1969,7 +1971,8 @@ Errors and warnings are colored by faces batch Emacs can resolve."
           (a (bufferline-test--buffer "a"))
           (b (bufferline-test--buffer "b"))
           (c (bufferline-test--buffer "c"))
-          (d (bufferline-test--buffer "d")))
+          (d (bufferline-test--buffer "d"))
+          (bufferline-move-tab-split-keys nil))
      (bufferline-test--show middle c)
      (set-window-dedicated-p middle t)
      (bufferline-test--show right d)

@@ -420,10 +420,25 @@ used while `bufferline-pick-in-place' is non-nil."
                  (const :tag "Both" both))
   :group 'bufferline)
 
+(defcustom bufferline-move-tab-split-keys '((?| . right) (?- . below))
+  "Keys that move a tab to a new window during a window pick.
+An alist of (CHAR . SIDE).  Pressing CHAR while
+`bufferline-move-tab-to-window' asks for a window splits the selected
+window on SIDE, one of `right', `below', `left' or `above', and moves
+the tab to the new window.  The keys are not offered when the tab is
+the only one of its window, as there would be nothing left beside it.
+Use characters outside of `bufferline-pick-alphabet'."
+  :type '(alist :key-type character
+                :value-type (choice (const right) (const below)
+                                    (const left) (const above)))
+  :group 'bufferline)
+
 (defcustom bufferline-pick-window-auto-select t
-  "Whether a window pick with a single window to choose skips asking.
-When non-nil, `bufferline-move-tab-to-window' moves the tab straight to
-the only other window it can go to.  When nil, it asks even then."
+  "Whether a window pick with a single choice skips asking.
+When non-nil and `bufferline-move-tab-to-window' has only one place
+to move the tab to, counting every key of
+`bufferline-move-tab-split-keys' it offers as one, it moves the tab
+there without asking.  When nil, it asks even then."
   :type 'boolean
   :group 'bufferline)
 

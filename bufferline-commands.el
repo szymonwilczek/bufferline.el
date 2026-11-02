@@ -334,25 +334,36 @@ DIRECTION is one of `left', `right', `above' or `below'.  See
 (defun bufferline-move-tab-to-window ()
   "Move the current tab to a window picked by its letter and follow it.
 Every other window of the frame that is not dedicated to its buffer gets
-a letter, as `bufferline-pick-window-style' draws it.  When only one
-window can be chosen and `bufferline-pick-window-auto-select' is
-non-nil, the tab moves there without asking."
+a letter, as `bufferline-pick-window-style' draws it, and the keys of
+`bufferline-move-tab-split-keys' move the tab to a new window split off
+the selected one instead.  When there is only one choice and
+`bufferline-pick-window-auto-select' is non-nil, the tab moves there
+without asking."
   (interactive)
-  (let ((buf (current-buffer))
-        (windows (bufferline-pick--windows)))
-    (unless (memq buf (bufferline-buffers-all))
+  (let* ((buf (current-buffer))
+         (tabs (bufferline-buffers-all))
+         (windows (bufferline-pick--windows))
+         (splits (when (cdr tabs)
+                   (mapcar (lambda (pair)
+                             (cons (car pair) (format "split %s" (cdr pair))))
+                           bufferline-move-tab-split-keys))))
+    (unless (memq buf tabs)
       (user-error "Current buffer is not a tab"))
-    (unless windows
+    (unless (or windows splits)
       (user-error "No other window to move the tab to"))
-    (let ((target (if (and bufferline-pick-window-auto-select
-                           (null (cdr windows)))
-                      (car windows)
-                    (bufferline-pick-read-window
-                     (format "Move %s to window: " (buffer-name buf))
-                     windows))))
-      (if target
-          (bufferline-commands--move-to-window target)
-        (message "Move cancelled")))))
+    (let ((choice (cond ((not (and bufferline-pick-window-auto-select
+                                   (= (+ (length windows) (length splits)) 1)))
+                         (bufferline-pick-read-window
+                          (format "Move %s to window: " (buffer-name buf))
+                          windows splits))
+                        (windows (car windows))
+                        (t (caar splits)))))
+      (cond ((windowp choice)
+             (bufferline-commands--move-to-window choice))
+            (choice
+             (bufferline-commands--move-to-window
+              (split-window nil nil (cdr (assq choice bufferline-move-tab-split-keys)))))
+            (t (message "Move cancelled"))))))
 
 ;;;###autoload
 (defun bufferline-toggle-pin (&optional buffer)

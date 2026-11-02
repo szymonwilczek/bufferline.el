@@ -136,18 +136,31 @@ selected window and every window dedicated to its buffer."
                     (window-dedicated-p win)))
               (window-list nil 'no-minibuf (frame-first-window))))
 
-(defun bufferline-pick--read-window-key (prompt items)
-  "Read a key with PROMPT, showing the letters of ITEMS.
-ITEMS is an alist of (CHAR . WINDOW).  The letters go into the prompt,
-naming the buffer each window shows, or, when `bufferline-pick-in-place'
-is non-nil, onto the windows themselves, where
-`bufferline-pick-window-style' says."
+(defun bufferline-pick--extra-hint (extra)
+  "Return the prompt text listing the keys of EXTRA with their labels.
+EXTRA is an alist of (CHAR . LABEL)."
+  (mapconcat (lambda (pair) (format "[%c] %s" (car pair) (cdr pair)))
+             extra
+             "  "))
+
+(defun bufferline-pick--read-window-key (prompt items &optional extra)
+  "Read a key with PROMPT, showing the letters of ITEMS and keys of EXTRA.
+ITEMS is an alist of (CHAR . WINDOW) and EXTRA one of (CHAR . LABEL).
+The letters go into the prompt, naming the buffer each window shows,
+or, when `bufferline-pick-in-place' is non-nil, onto the windows
+themselves, where `bufferline-pick-window-style' says.  The keys of
+EXTRA always go into the prompt, with their labels."
   (if (not bufferline-pick-in-place)
       (read-key (concat prompt
-                        (mapconcat (lambda (pair)
-                                     (format "[%c] %s" (car pair)
-                                             (buffer-name (window-buffer (cdr pair)))))
-                                   items
+                        (mapconcat #'identity
+                                   (delete ""
+                                           (list
+                                            (mapconcat (lambda (pair)
+                                                         (format "[%c] %s" (car pair)
+                                                                 (buffer-name (window-buffer (cdr pair)))))
+                                                       items
+                                                       "  ")
+                                            (bufferline-pick--extra-hint extra)))
                                    "  ")
                         " "))
     (let (overlays)
@@ -158,19 +171,25 @@ is non-nil, onto the windows themselves, where
               (when (bufferline-pick--overlay-p (cdr pair))
                 (push (bufferline-pick--window-overlay (cdr pair) (car pair)) overlays)))
             (bufferline-pick--redraw)
-            (read-key prompt))
+            (read-key (if extra
+                          (concat prompt (bufferline-pick--extra-hint extra) " ")
+                        prompt)))
         (mapc #'delete-overlay overlays)
         (bufferline-pick--redraw)))))
 
-(defun bufferline-pick-read-window (prompt &optional windows)
+(defun bufferline-pick-read-window (prompt &optional windows extra)
   "Ask for one of WINDOWS by its assigned letter with PROMPT.
 WINDOWS defaults to `bufferline-pick--windows'.  Return the chosen live
-window, or nil when there is none to choose or the key matches no
-window."
+window, or nil when there is nothing to choose or the key matches no
+window.  EXTRA is an alist of (CHAR . LABEL) of further keys to offer,
+listed in the prompt with their labels; pressing one of them returns
+its CHAR.  A window letter takes precedence over an EXTRA key."
   (let ((items (bufferline-pick--assign (or windows (bufferline-pick--windows)))))
-    (when items
-      (let ((chosen (cdr (assoc (bufferline-pick--read-window-key prompt items) items))))
-        (and chosen (window-live-p chosen) chosen)))))
+    (when (or items extra)
+      (let* ((key (bufferline-pick--read-window-key prompt items extra))
+             (chosen (cdr (assoc key items))))
+        (cond (chosen (and (window-live-p chosen) chosen))
+              ((assoc key extra) key))))))
 
 ;;;###autoload
 (defun bufferline-pick ()
