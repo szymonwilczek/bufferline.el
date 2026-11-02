@@ -333,17 +333,29 @@ DIRECTION is one of `left', `right', `above' or `below'.  See
   (bufferline-commands--move-in-direction 'below))
 
 ;;;###autoload
-(defun bufferline-move-tab-to-window ()
+(defun bufferline-move-tab-to-window (&optional pick)
   "Move the current tab to a window picked by its letter and follow it.
 Every other window of the frame that is not dedicated to its buffer gets
 a letter, as `bufferline-pick-window-style' draws it, and the keys of
 `bufferline-move-tab-split-keys' move the tab to a new window split off
 the selected one instead.  When there is only one choice and
 `bufferline-pick-window-auto-select' is non-nil, the tab moves there
-without asking."
-  (interactive)
-  (let* ((buf (current-buffer))
-         (tabs (bufferline-buffers-all))
+without asking.
+
+With a prefix argument PICK, first pick the tab to move by its letter,
+as `bufferline-pick' does, instead of moving the current one."
+  (interactive "P")
+  (let ((buf (if pick
+                 (bufferline-pick-read-buffer "Move tab: ")
+               (current-buffer))))
+    (if buf
+        (bufferline-commands--move-to-picked-window buf)
+      (message "Move cancelled"))))
+
+(defun bufferline-commands--move-to-picked-window (buf)
+  "Move the tab of BUF to a window picked by its letter and follow it.
+See `bufferline-move-tab-to-window'."
+  (let* ((tabs (bufferline-buffers-all))
          (windows (bufferline-pick--windows))
          (splits (when (cdr tabs)
                    (mapcar (lambda (pair)
@@ -361,10 +373,11 @@ without asking."
                         (windows (car windows))
                         (t (caar splits)))))
       (cond ((windowp choice)
-             (bufferline-commands--move-to-window choice))
+             (bufferline-commands--move-to-window choice buf))
             (choice
              (bufferline-commands--move-to-window
-              (split-window nil nil (cdr (assq choice bufferline-move-tab-split-keys)))))
+              (split-window nil nil (cdr (assq choice bufferline-move-tab-split-keys)))
+              buf))
             (t (message "Move cancelled"))))))
 
 ;;;###autoload
