@@ -2316,7 +2316,7 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      (bufferline-test--drag (bufferline-test--tab-posn left a)
                             (bufferline-test--tab-posn right d))
      (should (equal (bufferline-test--tabs left) (list b)))
-     (should (equal (bufferline-test--tabs right) (list c d a)))
+     (should (equal (bufferline-test--tabs right) (list c a d)))
      (should (eq (selected-window) right)))))
 
 (defun bufferline-test--text-posn (window)
