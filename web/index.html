@@ -263,6 +263,17 @@
             </div>
 
             <div class="field-row">
+              <label for="pickWindowStyle">pick-window-style</label>
+              <select id="pickWindowStyle" class="raw-select">
+                <option value="both" selected>
+                  'both (badge and large letter)
+                </option>
+                <option value="tab-line">'tab-line (badge only)</option>
+                <option value="overlay">'overlay (large letter only)</option>
+              </select>
+            </div>
+
+            <div class="field-row">
               <label for="diagHighlight">diagnostics-highlight</label>
               <select id="diagHighlight" class="raw-select">
                 <option value="none" selected>nil (badge only)</option>
@@ -375,6 +386,10 @@
               <label class="raw-checkbox"
                 ><input type="checkbox" id="pickInPlace" checked />
                 pick-in-place</label
+              >
+              <label class="raw-checkbox"
+                ><input type="checkbox" id="pickWindowAutoSelect" checked />
+                pick-window-auto-select</label
               >
               <label class="raw-checkbox"
                 ><input type="checkbox" id="showNewTabButton" />

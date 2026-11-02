@@ -483,6 +483,8 @@ Close every tab of the selected window except the current one.`,
     showSpecialBuffers: true,
     closeKeepPinned: true,
     pickInPlace: true,
+    pickWindowStyle: "both",
+    pickWindowAutoSelect: true,
     closeIcon: "none",
     showNewTabButton: false,
     showTabCount: false,
@@ -568,6 +570,8 @@ Close every tab of the selected window except the current one.`,
     showNavigation: document.getElementById("showNavigation"),
     evilMode: document.getElementById("evilMode"),
     pickInPlace: document.getElementById("pickInPlace"),
+    pickWindowStyle: document.getElementById("pickWindowStyle"),
+    pickWindowAutoSelect: document.getElementById("pickWindowAutoSelect"),
 
     // tab line visibility
     hideSingleTab: document.getElementById("hideSingleTab"),
@@ -1637,6 +1641,12 @@ Close every tab of the selected window except the current one.`,
       customLines.push("  (bufferline-close-keep-pinned nil)");
     if (!state.pickInPlace)
       customLines.push("  (bufferline-pick-in-place nil)");
+    if (state.pickWindowStyle !== "both")
+      customLines.push(
+        `  (bufferline-pick-window-style '${state.pickWindowStyle})`,
+      );
+    if (!state.pickWindowAutoSelect)
+      customLines.push("  (bufferline-pick-window-auto-select nil)");
     if (state.closeIcon === "t")
       customLines.push("  (bufferline-show-tab-close-icon t)");
     if (state.closeIcon === "active")
@@ -1854,6 +1864,7 @@ Close every tab of the selected window except the current one.`,
       { el: DOM.showSpecialBuffers, prop: "showSpecialBuffers" },
       { el: DOM.closeKeepPinned, prop: "closeKeepPinned" },
       { el: DOM.pickInPlace, prop: "pickInPlace" },
+      { el: DOM.pickWindowAutoSelect, prop: "pickWindowAutoSelect" },
       { el: DOM.showNewTabButton, prop: "showNewTabButton" },
       { el: DOM.showTabCount, prop: "showTabCount" },
       { el: DOM.showNavigation, prop: "showNavigation" },
@@ -1866,6 +1877,11 @@ Close every tab of the selected window except the current one.`,
         state[prop] = e.target.checked;
         renderAll();
       });
+    });
+
+    DOM.pickWindowStyle.addEventListener("change", (e) => {
+      state.pickWindowStyle = e.target.value;
+      renderAll();
     });
 
     DOM.closeIcon.addEventListener("change", (e) => {
