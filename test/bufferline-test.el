@@ -771,6 +771,71 @@ The letter is the only character drawn in the color of `bufferline-pick-face'."
                                             'quit)))
      (should-not (bufferline-pick-window-label right)))))
 
+(defun bufferline-test--window-badge (string)
+  "Return the window pick letter drawn as a badge in STRING, or nil.
+The badge is the only text drawn on the color of `bufferline-pick-face'."
+  (let ((bg (face-foreground bufferline-pick-face nil t))
+        found)
+    (dotimes (i (length string))
+      (let ((face (get-text-property i 'face string)))
+        (when (and (not found)
+                   (consp face)
+                   (equal (plist-get face :background) bg)
+                   (not (eq (aref string i) ?\s)))
+          (setq found (aref string i)))))
+    found))
+
+(ert-deftest bufferline-test-pick-window-badge-on-first-tab ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-pick-in-place t)
+          badges)
+     (bufferline-test--show right b c)
+     (bufferline-test--show left a)
+     (bufferline-test-with-keys
+      (list (lambda (_prompt)
+              (setq badges
+                    (list (bufferline-test--window-badge (bufferline-test--render right b))
+                          (bufferline-test--window-badge (bufferline-test--render right c))
+                          (bufferline-test--window-badge (bufferline-test--render left a))))
+              ?q))
+      (bufferline-pick-read-window "To window: "))
+     ;; only the first tab of the labelled window carries the letter
+     (should (equal badges '(?s nil nil)))
+     ;; and it goes away with the pick
+     (should-not (bufferline-test--window-badge (bufferline-test--render right b))))))
+
+(ert-deftest bufferline-test-pick-window-badge-leads-the-tab-line ()
+  (bufferline-test-with-frame
+   (let* ((right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          (bufferline-pick-alphabet "s")
+          (bufferline-left-margin "<margin>")
+          string)
+     (bufferline-test--show right b)
+     (let ((bufferline-pick--window-labels (list (cons right ?s))))
+       (setq string (bufferline-test--render right b)))
+     (should (string-prefix-p " s " string))
+     (should (string-match-p "<margin>" string))
+     (should (< (string-match " s " string) (string-match "<margin>" string)))
+     (should (eq (plist-get (get-text-property 1 'face string) :weight) 'bold)))))
+
+(ert-deftest bufferline-test-pick-window-badge-is-not-a-tab-letter ()
+  (bufferline-test-with-frame
+   (let* ((right (split-window-right))
+          (b (bufferline-test--buffer "b"))
+          letter)
+     (bufferline-test--show right b)
+     (let ((bufferline-pick--window-labels (list (cons right ?s))))
+       (setq letter (bufferline-test--pick-letter (bufferline-test--render right b))))
+     ;; the tab keeps its icon, the letter belongs to the window
+     (should-not letter))))
+
 ;;; Hiding the tab line
 
 (define-derived-mode bufferline-test-tool-mode special-mode "Tool"
