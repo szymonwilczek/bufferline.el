@@ -1873,6 +1873,37 @@ Errors and warnings are colored by faces batch Emacs can resolve."
      (should (eq (window-buffer right) c))
      (should (eq (window-buffer left) a)))))
 
+(ert-deftest bufferline-test-move-other-tab-to-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right d)
+     (bufferline-test--show left a b c)
+     (bufferline-commands--move-to-window right a)
+     (should (eq (selected-window) right))
+     (should (eq (window-buffer right) a))
+     (should (equal (bufferline-test--tabs right) (list d a)))
+     ;; the source window keeps showing what it showed
+     (should (eq (window-buffer left) c))
+     (should (equal (bufferline-test--tabs left) (list b c))))))
+
+(ert-deftest bufferline-test-move-other-tab-to-window-not-a-tab-here ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (d (bufferline-test--buffer "d")))
+     (bufferline-test--show right d)
+     (bufferline-test--show left a)
+     ;; d is the tab of the other window
+     (should (equal (cadr (should-error (bufferline-commands--move-to-window right d)
+                                        :type 'user-error))
+                    "Buffer is not a tab here")))))
+
 (ert-deftest bufferline-test-move-to-picked-window ()
   (bufferline-test-with-frame
    (let* ((left (selected-window))
