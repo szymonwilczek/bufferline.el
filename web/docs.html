@@ -638,8 +638,9 @@
               <code>bufferline-drag-tab</code>: Move the tab dragged with the
               mouse into the place of the tab it is dropped on; bound to
               drag-mouse-1 on every tab. The tabs in between shift toward the
-              place it left, and a tab dropped anywhere else stays put (FIFO
-              sort order only, pinned tabs stay ahead of unpinned ones).
+              place it left (FIFO sort order only, pinned tabs stay ahead of
+              unpinned ones). Dropped on another window, the tab moves there and
+              focus follows it; a tab dropped anywhere else stays put.
             </li>
             <li>
               <code>bufferline-swap-tab</code>: Swap the current tab with
@@ -741,6 +742,12 @@
               When it was the last tab of its window, that window closes. With
               <code>C-u</code>, the tab to move is picked first and the selected
               window keeps showing its own buffer.
+            </li>
+            <li>
+              Tabs can also be dragged with the mouse onto another window: onto
+              one of its tabs to take that tab's place, or anywhere else in it,
+              tab line or text, to join the end of its tabs. When the tabs there
+              may not be reordered, the tab still moves and stays last.
             </li>
           </ul>
         </div>
