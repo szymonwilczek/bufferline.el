@@ -35,19 +35,81 @@
 
 ;;;###autoload
 (defun bufferline-close-tab (&optional buffer)
-  "Close current or specified BUFFER without disturbing window layout."
+  "Close the tab of BUFFER in the selected window.
+BUFFER defaults to the current buffer.  When the window shows it, the
+tab to its right takes its place, or the one to its left when it was
+the last tab.  A buffer that is no tab, like a terminal, makes way for
+the tab the window showed most recently.
+
+When no other tab is left, the window is closed with it, provided
+`window-deletable-p' allows that.  Otherwise the buffer is killed and
+Emacs decides what the window shows next.
+
+The buffer is killed only when no other window shows it or has it as a
+tab; otherwise only its tab in the selected window goes.  When killing
+it is refused, for example by declining to discard unsaved changes,
+the window shows it again."
   (interactive)
   (let* ((buf (or buffer (current-buffer)))
          (win (selected-window))
-         (tabs (delq buf (bufferline-buffers-all))))
-    (when (eq buf (window-buffer win))
-      (if tabs
-          (switch-to-buffer (car tabs))
-        (previous-buffer)))
-    (kill-buffer buf)
+         (shown (eq buf (window-buffer win)))
+         (next (bufferline-commands--next-tab buf win))
+         (kept (bufferline-commands--tab-elsewhere-p buf win)))
+    (cond
+     ((and next (not shown))
+      (if kept
+          (bufferline-buffers-forget buf win)
+        (kill-buffer buf)))
+     (next
+      (let ((start (window-start win))
+            (point (window-point win)))
+        (switch-to-buffer next nil t)
+        (if kept
+            (bufferline-buffers-forget buf win)
+          (unless (kill-buffer buf)
+            (set-window-buffer-start-and-point win buf start point)))))
+     ((eq (window-deletable-p win) t)
+      (if kept
+          (delete-window win)
+        (bufferline-commands--kill-with-window buf win)))
+     (t
+      (kill-buffer buf)))
     (if (fboundp 'bufferline-ui-refresh)
         (bufferline-ui-refresh)
       (force-mode-line-update t))))
+
+(defun bufferline-commands--next-tab (buffer window)
+  "Return the tab WINDOW shows once the tab of BUFFER is closed, or nil.
+That is the tab right of BUFFER, else the one left of it.  When BUFFER
+is no tab, it is the tab WINDOW showed most recently."
+  (let* ((tabs (with-selected-window window (bufferline-buffers-all)))
+         (pos (seq-position tabs buffer)))
+    (if pos
+        (or (nth (1+ pos) tabs)
+            (and (> pos 0) (nth (1- pos) tabs)))
+      (seq-find (lambda (prev) (memq prev tabs))
+                (mapcar #'car (window-prev-buffers window))))))
+
+(defun bufferline-commands--tab-elsewhere-p (buffer window)
+  "Return non-nil if a window other than WINDOW shows BUFFER or has its tab."
+  (seq-some (lambda (other)
+              (and (not (eq other window))
+                   (or (eq (window-buffer other) buffer)
+                       (assq buffer (window-prev-buffers other))
+                       (memq buffer (window-next-buffers other)))))
+            (window-list-1 nil 'nomini t)))
+
+(defun bufferline-commands--kill-with-window (buffer window)
+  "Kill BUFFER and close WINDOW, which shows it and can be deleted.
+WINDOW is dedicated to BUFFER while it is killed, so `kill-buffer'
+deletes it, and only when the killing goes through.  Any question that
+killing asks is thus asked while WINDOW still shows BUFFER."
+  (let ((dedicated (window-dedicated-p window)))
+    (set-window-dedicated-p window t)
+    (unwind-protect
+        (kill-buffer buffer)
+      (when (window-live-p window)
+        (set-window-dedicated-p window dedicated)))))
 
 (defun bufferline-commands--posn-tab (posn)
   "Return the buffer of the tab at mouse position POSN.

@@ -10,6 +10,8 @@
 (require 'bufferline-config)
 (require 'bufferline-buffers)
 
+(declare-function bufferline-close-tab "bufferline-commands" (&optional buffer))
+
 (defun bufferline-pick--assign (buffers)
   "Pair BUFFERS with the letters of `bufferline-pick-alphabet' in order.
 Return an alist of (CHAR . BUFFER).  Buffers beyond the length of the
@@ -213,10 +215,7 @@ its CHAR.  A window letter takes precedence over an EXTRA key."
       (let ((chosen (bufferline-pick--read "Close buffer: " items)))
         (if chosen
             (let ((name (buffer-name chosen)))
-              (kill-buffer chosen)
-              (if (fboundp 'bufferline-ui-refresh)
-                  (bufferline-ui-refresh)
-                (force-mode-line-update t))
+              (bufferline-close-tab chosen)
               (message "Closed buffer: %s" name))
           (message "Pick close cancelled"))))))
 
