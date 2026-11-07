@@ -35,7 +35,7 @@
 
 * Requirements
 
-- GNU Emacs >= 28.1
+- GNU Emacs >= 31.1
 - =nerd-icons.el= (for filetype icon rendering)
 - Optionally =evil=, for =bufferline-evil-mode=
 
