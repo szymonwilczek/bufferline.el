@@ -588,8 +588,14 @@
               INTEGRATION.
             </li>
             <li>
-              <code>bufferline-close-tab</code>: Close current or specified
-              buffer without altering window split layout.
+              <code>bufferline-close-tab</code>: Close the tab of the current or
+              specified buffer in the selected window. The tab to its right
+              takes its place, or the one to its left when it was the last tab;
+              a buffer without a tab, like a terminal, makes way for the most
+              recently shown tab. When no other tab is left, the window closes
+              with it if <code>window-deletable-p</code> allows. The buffer is
+              killed only when no other window shows it or has it as a tab; when
+              killing is refused, the window shows it again.
             </li>
             <li>
               <code>bufferline-close-tab-at-click</code>: Close the tab whose
@@ -683,7 +689,8 @@
             </li>
             <li>
               <code>bufferline-pick-close</code>: Interactively close a visible
-              buffer using single-letter tags.
+              tab using single-letter tags, the way
+              <code>bufferline-close-tab</code> does.
             </li>
             <li>
               The pick commands draw each letter on its tab for as long as the
