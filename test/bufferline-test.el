@@ -399,6 +399,174 @@ prompt, and its value is the key."
      (should-error (bufferline-close-tabs-to-left) :type 'user-error)
      (should (buffer-live-p a)))))
 
+;;; Closing a tab
+
+(ert-deftest bufferline-test-close-tab-shows-right-neighbour ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (switch-to-buffer b nil t)
+     (bufferline-close-tab)
+     (should-not (buffer-live-p b))
+     (should (eq (window-buffer) c))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a c))))))
+
+(ert-deftest bufferline-test-close-last-tab-shows-left-neighbour ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (c (bufferline-test--buffer "c")))
+     (bufferline-test--show (selected-window) a b c)
+     (bufferline-close-tab)
+     (should-not (buffer-live-p c))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-close-tab-not-shown ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b")))
+     (bufferline-test--show (selected-window) a b)
+     (bufferline-close-tab a)
+     (should-not (buffer-live-p a))
+     (should (eq (window-buffer) b)))))
+
+(ert-deftest bufferline-test-close-non-tab-buffer-shows-latest-tab ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a"))
+         (b (bufferline-test--buffer "b"))
+         (other (bufferline-test--buffer "other"))
+         (bufferline-exclude-modes '(special-mode)))
+     (with-current-buffer other (special-mode))
+     (bufferline-test--show (selected-window) a b)
+     (switch-to-buffer a nil t)
+     (switch-to-buffer other nil t)
+     (bufferline-close-tab)
+     (should-not (buffer-live-p other))
+     (should (eq (window-buffer) a)))))
+
+(ert-deftest bufferline-test-close-only-tab-closes-split ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b")))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (bufferline-close-tab)
+     (should-not (window-live-p left))
+     (should-not (buffer-live-p a))
+     (should (window-live-p right))
+     (should-not (window-dedicated-p right))
+     (should (eq (window-buffer right) b)))))
+
+(ert-deftest bufferline-test-close-only-tab-of-sole-window-kills-buffer ()
+  (bufferline-test-with-frame
+   (let ((a (bufferline-test--buffer "a")))
+     (bufferline-test--show (selected-window) a)
+     (bufferline-close-tab)
+     (should-not (buffer-live-p a))
+     (should (one-window-p)))))
+
+(ert-deftest bufferline-test-close-only-tab-respects-window-deletable-functions ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (window-deletable-functions (list (lambda (&rest _) nil))))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (bufferline-close-tab)
+     (should (window-live-p left))
+     (should-not (buffer-live-p a)))))
+
+(ert-deftest bufferline-test-close-tab-keeps-buffer-shown-elsewhere ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b")))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a b)
+     (bufferline-close-tab)
+     (should (buffer-live-p b))
+     (should (eq (window-buffer left) a))
+     (should (eq (window-buffer right) b))
+     (should (equal (bufferline-test--tabs left) (list a))))))
+
+(ert-deftest bufferline-test-close-tab-keeps-tab-of-other-window ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c")))
+     (bufferline-test--show right b c)
+     (bufferline-test--show left a b)
+     (bufferline-close-tab)
+     (should (buffer-live-p b))
+     (should (eq (window-buffer left) a))
+     (should (equal (bufferline-test--tabs left) (list a)))
+     (should (equal (bufferline-test--tabs right) (list b c))))))
+
+(ert-deftest bufferline-test-close-only-tab-shown-elsewhere-closes-split ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a")))
+     (bufferline-test--show right a)
+     (bufferline-test--show left a)
+     (bufferline-close-tab)
+     (should-not (window-live-p left))
+     (should (buffer-live-p a))
+     (should (eq (window-buffer right) a)))))
+
+(ert-deftest bufferline-test-close-tab-refused-shows-buffer-again ()
+  (bufferline-test-with-frame
+   (let* ((a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (c (bufferline-test--buffer "c"))
+          (kill-buffer-query-functions
+           (list (lambda () (not (eq (current-buffer) b))))))
+     (bufferline-test--show (selected-window) a b c)
+     (switch-to-buffer b nil t)
+     (bufferline-close-tab)
+     (should (buffer-live-p b))
+     (should (eq (window-buffer) b))
+     (should (equal (bufferline-test--tabs (selected-window)) (list a b c))))))
+
+(ert-deftest bufferline-test-close-only-tab-refused-keeps-split ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (kill-buffer-query-functions
+           (list (lambda () (not (eq (current-buffer) a))))))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (bufferline-close-tab)
+     (should (window-live-p left))
+     (should (eq (window-buffer left) a))
+     (should-not (window-dedicated-p left)))))
+
+(ert-deftest bufferline-test-close-only-tab-error-keeps-split ()
+  (bufferline-test-with-frame
+   (let* ((left (selected-window))
+          (right (split-window-right))
+          (a (bufferline-test--buffer "a"))
+          (b (bufferline-test--buffer "b"))
+          (kill-buffer-query-functions
+           (list (lambda () (user-error "Refused")))))
+     (bufferline-test--show right b)
+     (bufferline-test--show left a)
+     (should-error (bufferline-close-tab) :type 'user-error)
+     (should (window-live-p left))
+     (should (eq (window-buffer left) a))
+     (should-not (window-dedicated-p left)))))
+
 ;;; Picking tabs by letter
 
 (ert-deftest bufferline-test-pick-assigns-letters-in-order ()
